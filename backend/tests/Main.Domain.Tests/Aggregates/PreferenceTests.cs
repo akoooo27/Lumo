@@ -65,6 +65,18 @@ public sealed class PreferenceTests
     }
 
     [Fact]
+    public void AddInstruction_WithWhitespace_ShouldTrimContent()
+    {
+        Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
+        string paddedContent = $"  {ValidInstructionContent}  ";
+
+        Outcome<Instruction> outcome = preference.AddInstruction(ValidInstructionId, paddedContent, UtcNow);
+
+        outcome.IsSuccess.Should().BeTrue();
+        preference.Instructions.First().Content.Should().Be(ValidInstructionContent);
+    }
+
+    [Fact]
     public void AddInstruction_MultipleInstructions_ShouldIncrementPriority()
     {
         Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
@@ -155,6 +167,20 @@ public sealed class PreferenceTests
         outcome.IsSuccess.Should().BeTrue();
         preference.Instructions.First().Content.Should().Be(newContent);
         preference.UpdatedAt.Should().Be(updateTime);
+    }
+
+    [Fact]
+    public void UpdateInstruction_WithWhitespace_ShouldTrimContent()
+    {
+        Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
+        preference.AddInstruction(ValidInstructionId, ValidInstructionContent, UtcNow);
+        string newContent = new('b', InstructionConstants.MinContentLength);
+        string paddedContent = $"  {newContent}  ";
+
+        Outcome outcome = preference.UpdateInstruction(ValidInstructionId, paddedContent, UtcNow);
+
+        outcome.IsSuccess.Should().BeTrue();
+        preference.Instructions.First().Content.Should().Be(newContent);
     }
 
     [Fact]

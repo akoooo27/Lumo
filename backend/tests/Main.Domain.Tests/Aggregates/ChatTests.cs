@@ -3,6 +3,7 @@ using FluentAssertions;
 using Main.Domain.Aggregates;
 using Main.Domain.Constants;
 using Main.Domain.Entities;
+using Main.Domain.Enums;
 using Main.Domain.Faults;
 using Main.Domain.ValueObjects;
 
@@ -204,6 +205,8 @@ public sealed class ChatTests
         outcome.IsSuccess.Should().BeTrue();
         chat.Messages.Should().HaveCount(1);
         chat.Messages.First().MessageContent.Should().Be(messageContent);
+        chat.Messages.First().MessageRole.Should().Be(MessageRole.User);
+        chat.Messages.First().SequenceNumber.Should().Be(0);
         chat.UpdatedAt.Should().Be(updateTime);
     }
 
@@ -217,6 +220,11 @@ public sealed class ChatTests
         chat.AddUserMessage(MessageId.UnsafeFrom("msg_01JGX123456789012345678903"), "Third message", UtcNow.AddMinutes(3));
 
         chat.Messages.Should().HaveCount(3);
+
+        List<Message> messages = chat.Messages.OrderBy(m => m.SequenceNumber).ToList();
+        messages[0].SequenceNumber.Should().Be(0);
+        messages[1].SequenceNumber.Should().Be(1);
+        messages[2].SequenceNumber.Should().Be(2);
     }
 
     [Theory]
@@ -257,6 +265,7 @@ public sealed class ChatTests
         outcome.IsSuccess.Should().BeTrue();
         chat.Messages.Should().HaveCount(1);
         chat.Messages.First().MessageContent.Should().Be(messageContent);
+        chat.Messages.First().MessageRole.Should().Be(MessageRole.Assistant);
         chat.UpdatedAt.Should().Be(updateTime);
     }
 

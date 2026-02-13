@@ -38,6 +38,7 @@ public sealed class SharedChatTests
         outcome.Value.OwnerId.Should().Be(ValidOwnerId);
         outcome.Value.Title.Should().Be(ValidTitle);
         outcome.Value.ModelId.Should().Be(ValidModelId);
+        outcome.Value.ViewCount.Should().Be(0);
         outcome.Value.SnapshotAt.Should().Be(UtcNow);
         outcome.Value.CreatedAt.Should().Be(UtcNow);
         outcome.Value.UpdatedAt.Should().Be(UtcNow);
