@@ -9,7 +9,9 @@ internal sealed class StartChatValidator : AbstractValidator<StartChatCommand>
     public StartChatValidator()
     {
         RuleFor(scc => scc.Message)
-            .NotEmpty().WithMessage("Message is required");
+            .NotEmpty().WithMessage("Message is required")
+            .MaximumLength(MessageConstants.MaxContentLength)
+            .WithMessage($"Message must not exceed {MessageConstants.MaxContentLength} characters");
 
         When(scc => scc.ModelId is not null, () =>
         {

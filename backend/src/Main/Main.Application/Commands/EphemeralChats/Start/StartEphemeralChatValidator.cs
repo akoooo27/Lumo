@@ -9,7 +9,9 @@ internal sealed class StartEphemeralChatValidator : AbstractValidator<StartEphem
     public StartEphemeralChatValidator()
     {
         RuleFor(cmd => cmd.Message)
-            .NotEmpty().WithMessage("Message is required");
+            .NotEmpty().WithMessage("Message is required")
+            .MaximumLength(MessageConstants.MaxContentLength)
+            .WithMessage($"Message must not exceed {MessageConstants.MaxContentLength} characters");
 
         When(cmd => cmd.ModelId is not null, () =>
         {
