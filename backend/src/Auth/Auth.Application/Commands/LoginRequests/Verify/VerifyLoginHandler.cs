@@ -1,6 +1,7 @@
 using Auth.Application.Abstractions.Authentication;
 using Auth.Application.Abstractions.Data;
 using Auth.Application.Abstractions.Generators;
+using Auth.Application.Faults;
 using Auth.Domain.Aggregates;
 using Auth.Domain.Constants;
 using Auth.Domain.Faults;
@@ -20,6 +21,7 @@ internal sealed class VerifyLoginHandler(
     IAuthDbContext dbContext,
     IRequestContext requestContext,
     ISecureTokenGenerator secureTokenGenerator,
+    IAttemptTracker attemptTracker,
     IIdGenerator idGenerator,
     ITokenProvider tokenProvider,
     IMessageBus messageBus,
@@ -28,6 +30,11 @@ internal sealed class VerifyLoginHandler(
     public async ValueTask<Outcome<VerifyLoginResponse>> Handle(VerifyLoginCommand request,
         CancellationToken cancellationToken)
     {
+        bool isLocked = await attemptTracker.IsLockedAsync(request.TokenKey, cancellationToken);
+
+        if (isLocked)
+            return LoginRequestOperationFaults.TooManyAttempts;
+
         Outcome<Fingerprint> fingerprintOutcome = Fingerprint.Create
         (
             ipAddress: requestContext.IpAddress,
@@ -67,7 +74,10 @@ internal sealed class VerifyLoginHandler(
         bool isValid = isOtpValid || isMagicLinkValid;
 
         if (!isValid)
+        {
+            await attemptTracker.TrackFailedAttemptAsync(request.TokenKey, cancellationToken);
             return LoginRequestFaults.InvalidOrExpired;
+        }
 
         Outcome consumeOutcome = loginRequest.Consume(dateTimeProvider.UtcNow);
 

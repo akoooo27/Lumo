@@ -15,4 +15,10 @@ internal static class RecoveryRequestOperationFaults
         title: "RecoveryRequest.InvalidOrExpired",
         detail: "The recovery request is invalid or has expired."
     );
+
+    internal static readonly Fault TooManyAttempts = Fault.TooManyRequests
+    (
+        title: "RecoveryRequest.TooManyAttempts",
+        detail: "Too many verification attempts. Please start a new recovery request."
+    );
 }

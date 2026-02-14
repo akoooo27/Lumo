@@ -13,10 +13,16 @@ namespace Auth.Application.Commands.RecoveryRequests.VerifyNewEmail;
 internal sealed class VerifyNewEmailCommandHandler(
     IAuthDbContext dbContext,
     ISecureTokenGenerator secureTokenGenerator,
+    IAttemptTracker attemptTracker,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<VerifyNewEmailCommand>
 {
     public async ValueTask<Outcome> Handle(VerifyNewEmailCommand request, CancellationToken cancellationToken)
     {
+        bool isLocked = await attemptTracker.IsLockedAsync(request.TokenKey, cancellationToken);
+
+        if (isLocked)
+            return RecoveryRequestOperationFaults.TooManyAttempts;
+
         RecoveryRequest? recoveryRequest = await dbContext.RecoveryRequests
             .FirstOrDefaultAsync(rr => rr.TokenKey == request.TokenKey, cancellationToken);
 
@@ -30,7 +36,10 @@ internal sealed class VerifyNewEmailCommandHandler(
                                 secureTokenGenerator.VerifyToken(request.MagicLinkToken, recoveryRequest.MagicLinkTokenHash);
 
         if (!isOtpValid && !isMagicLinkValid)
+        {
+            await attemptTracker.TrackFailedAttemptAsync(request.TokenKey, cancellationToken);
             return RecoveryRequestOperationFaults.InvalidOrExpired;
+        }
 
         Outcome verifyOutcome = recoveryRequest.VerifyNewEmail(dateTimeProvider.UtcNow);
 

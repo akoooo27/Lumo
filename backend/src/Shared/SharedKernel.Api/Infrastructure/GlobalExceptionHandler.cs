@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace SharedKernel.Api.Infrastructure;
 
-public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
+public sealed class GlobalExceptionHandler(
+    IProblemDetailsService problemDetailsService,
+    ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
@@ -22,6 +25,10 @@ public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetails
 
         string type = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
 
+        logger.LogError(exception,
+            "An unexpected error occurred while processing the request. RequestId: {RequestId}, TraceId: {TraceId}",
+            httpContext.TraceIdentifier, activity?.Id);
+
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
@@ -30,7 +37,7 @@ public sealed class GlobalExceptionHandler(IProblemDetailsService problemDetails
             {
                 Type = type,
                 Title = title,
-                Detail = exception.Message,
+                Detail = "An unexpected error occurred",
                 Instance = $"{httpContext.Request.Method}:{httpContext.Request.Path}",
                 Status = httpContext.Response.StatusCode,
                 Extensions = new Dictionary<string, object?>

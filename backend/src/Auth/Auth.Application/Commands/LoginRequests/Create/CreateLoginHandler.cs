@@ -20,6 +20,7 @@ internal sealed class CreateLoginHandler(
     ISecureTokenGenerator secureTokenGenerator,
     IRequestContext requestContext,
     IIdGenerator idGenerator,
+    IAttemptTracker attemptTracker,
     IMessageBus messageBus,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<CreateLoginCommand, CreateLoginResponse>
 {
@@ -49,6 +50,18 @@ internal sealed class CreateLoginHandler(
         Fingerprint fingerprint = fingerprintOutcome.Value;
 
         (string tokenKey, string otpToken, string magicLinkToken) = GenerateTokens();
+
+#pragma warning disable CA1308
+        string cooldownKey = emailAddress.Value.ToLowerInvariant();
+#pragma warning restore CA1308
+        bool isOnCooldown = await attemptTracker.IsCooldownActiveAsync(cooldownKey, cancellationToken);
+
+        if (isOnCooldown)
+            return new CreateLoginResponse
+            (
+                TokenKey: tokenKey,
+                ExpiresAt: dateTimeProvider.UtcNow.AddMinutes(LoginRequestConstants.ExpirationMinutes)
+            );
 
         string otpTokenHash = secureTokenGenerator.HashToken(otpToken);
         string magicLinkTokenHash = secureTokenGenerator.HashToken(magicLinkToken);
@@ -97,6 +110,8 @@ internal sealed class CreateLoginHandler(
         await dbContext.LoginRequests.AddAsync(loginRequest, cancellationToken);
         await messageBus.PublishAsync(loginRequested, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await attemptTracker.SetCooldownAsync(cooldownKey, cancellationToken);
 
         return new CreateLoginResponse
         (
