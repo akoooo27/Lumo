@@ -31,8 +31,8 @@ internal static class DependencyInjection
             {
                 policy
                     .WithOrigins(configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
+                    .WithMethods("GET", "POST", "PATCH", "DELETE", "OPTIONS")
+                    .WithHeaders("Content-Type", "Authorization")
                     .AllowCredentials();
             });
         });

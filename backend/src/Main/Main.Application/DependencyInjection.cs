@@ -19,6 +19,7 @@ public static class DependencyInjection
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddScoped<IChatAccessValidator, ChatAccessValidator>();
+        services.AddScoped<IEphemeralChatAccessValidator, EphemeralChatAccessValidator>();
 
         return services;
     }
