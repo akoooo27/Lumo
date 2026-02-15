@@ -1,6 +1,7 @@
 using FastEndpoints;
 
 using Main.Application.Queries.Chats.GetChats;
+using Main.Domain.Constants;
 
 using Mediator;
 
@@ -40,7 +41,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
         GetChatsQuery query = new
         (
             Cursor: request.Cursor,
-            Limit: request.Limit
+            Limit: Math.Min(request.Limit, ChatConstants.MaxPageSize)
         );
 
         await SendOutcomeAsync
