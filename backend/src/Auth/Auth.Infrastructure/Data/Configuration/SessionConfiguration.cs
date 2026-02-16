@@ -44,6 +44,16 @@ internal sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
             .HasMaxLength(DataConfigurationConstants.DefaultStringMaxLength)
             .HasColumnType(DataConfigurationConstants.DefaultStringColumnType);
 
+        b.Property(s => s.OldRefreshTokenKey)
+            .IsRequired(false)
+            .HasMaxLength(DataConfigurationConstants.DefaultStringMaxLength)
+            .HasColumnType(DataConfigurationConstants.DefaultStringColumnType);
+
+        b.Property(s => s.OldRefreshTokenHash)
+            .IsRequired(false)
+            .HasMaxLength(DataConfigurationConstants.DefaultStringMaxLength)
+            .HasColumnType(DataConfigurationConstants.DefaultStringColumnType);
+
         b.Property(s => s.CreatedAt)
             .IsRequired()
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
@@ -73,6 +83,8 @@ internal sealed class SessionConfiguration : IEntityTypeConfiguration<Session>
 
         b.HasIndex(s => s.RefreshTokenKey)
             .IsUnique();
+
+        b.HasIndex(s => s.OldRefreshTokenKey);
 
         b.HasIndex(s => s.ExpiresAt);
 
