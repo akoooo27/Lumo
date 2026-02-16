@@ -27,14 +27,14 @@ internal sealed class StreamReader(IConnectionMultiplexer connectionMultiplexer)
 
         Channel<bool> notificationChannel = Channel.CreateUnbounded<bool>();
 
-        await sub.SubscribeAsync
-        (
-            RedisChannel.Literal(notifyChannel),
-            (_, _) => notificationChannel.Writer.TryWrite(true)
-        );
-
         try
         {
+            await sub.SubscribeAsync
+            (
+                RedisChannel.Literal(notifyChannel),
+                (_, _) => notificationChannel.Writer.TryWrite(true)
+            );
+
             // PHASE 1: Read any existing messages (late-joiner scenario)
             StreamEntry[] existingEntries = await db.StreamReadAsync
             (
@@ -103,7 +103,16 @@ internal sealed class StreamReader(IConnectionMultiplexer connectionMultiplexer)
         }
         finally
         {
-            await sub.UnsubscribeAsync(RedisChannel.Literal(notifyChannel));
+            notificationChannel.Writer.Complete();
+
+            try
+            {
+                await sub.UnsubscribeAsync(RedisChannel.Literal(notifyChannel));
+            }
+            catch (RedisException)
+            {
+                // Connection already lost
+            }
         }
     }
 
