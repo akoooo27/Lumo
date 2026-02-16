@@ -6,4 +6,4 @@ public record SendEphemeralMessageCommand
 (
     string EphemeralChatId,
     string Message
-) : ICommand<SendEphemeralMessageResponse>;
+) : ICommand<SendEphemeralMessageResponse>, ISensitiveRequest;

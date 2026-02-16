@@ -6,4 +6,4 @@ public sealed record VerifyEmailChangeCommand
 (
     string RequestId,
     string OtpToken
-) : ICommand<VerifyEmailChangeResponse>;
+) : ICommand<VerifyEmailChangeResponse>, ISensitiveRequest;

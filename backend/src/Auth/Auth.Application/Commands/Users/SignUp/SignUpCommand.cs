@@ -6,4 +6,4 @@ public sealed record SignUpCommand
 (
     string DisplayName,
     string EmailAddress
-) : ICommand<SignUpResponse>;
+) : ICommand<SignUpResponse>, ISensitiveRequest;

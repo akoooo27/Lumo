@@ -7,4 +7,4 @@ public sealed record VerifyLoginCommand
     string TokenKey,
     string? OtpToken,
     string? MagicLinkToken
-) : ICommand<VerifyLoginResponse>;
+) : ICommand<VerifyLoginResponse>, ISensitiveRequest;

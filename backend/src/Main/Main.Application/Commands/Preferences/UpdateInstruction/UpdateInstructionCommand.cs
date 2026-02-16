@@ -6,4 +6,4 @@ public sealed record UpdateInstructionCommand
 (
     string InstructionId,
     string NewContent
-) : ICommand<UpdateInstructionResponse>;
+) : ICommand<UpdateInstructionResponse>, ISensitiveRequest;
