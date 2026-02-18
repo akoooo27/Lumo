@@ -22,26 +22,10 @@ internal sealed class MemoryStore(
     IDateTimeProvider dateTimeProvider,
     ILogger<MemoryStore> logger) : IMemoryStore
 {
-    public async Task<string> SaveAsync(Guid userId, string content, MemoryCategory memoryCategory,
+    public async Task<string> SaveAsync(Guid userId, string content, MemoryCategory memoryCategory, int importance,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(content))
-            throw new ArgumentException("Memory content cannot be empty.", nameof(content));
-
-        if (content.Length > MemoryConstants.MaxContentLength)
-            throw new ArgumentException(
-                $"Memory content exceeds maximum length of {MemoryConstants.MaxContentLength}.",
-                nameof(content));
-
-        int count = await dbContext.Memories
-            .CountAsync(m => m.UserId == userId, cancellationToken: cancellationToken);
-
-#pragma warning disable S1135
-        // TODO: Implement memory merging instead of just limiting the count
-#pragma warning restore S1135
-        if (count >= MemoryConstants.MaxMemoriesPerUser)
-            throw new InvalidOperationException(
-                $"User has reached the maximum of {MemoryConstants.MaxMemoriesPerUser} memories.");
+        int clampedImportance = Math.Clamp(importance, MemoryConstants.MinImportance, MemoryConstants.MaxImportance);
 
         float[] embedding = await GenerateEmbeddingAsync(content, cancellationToken);
 
@@ -53,23 +37,50 @@ internal sealed class MemoryStore(
             Category = memoryCategory,
             Embedding = new Vector(embedding),
             CreatedAt = dateTimeProvider.UtcNow,
+            LastAccessedAt = dateTimeProvider.UtcNow,
+            AccessCount = 0,
+            Importance = clampedImportance,
+            IsActive = true,
         };
 
-        dbContext.Memories.Add(memoryRecord);
+        await dbContext.Memories.AddAsync(memoryRecord, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        if (logger.IsEnabled(LogLevel.Information))
-            logger.LogInformation
-            (
-                "Saved memory {MemoryId} for user {UserId} with category {Category}",
-                memoryRecord.Id, userId, memoryRecord.Category
-            );
 
         return memoryRecord.Id;
     }
 
-    public async Task<IReadOnlyList<MemoryEntry>> GetRelevantAsync(Guid userId, string context, int limit,
-        CancellationToken cancellationToken)
+    public async Task UpdateAsync(Guid userId, string memoryId, string newContent, CancellationToken cancellationToken)
+    {
+        MemoryRecord? memoryRecord = await dbContext.Memories
+            .FirstOrDefaultAsync(m => m.Id == memoryId && m.UserId == userId && m.IsActive, cancellationToken);
+
+        if (memoryRecord is null)
+            throw new InvalidOperationException("Memory not found.");
+
+        float[] newEmbedding = await GenerateEmbeddingAsync(newContent, cancellationToken);
+
+        memoryRecord.Content = newContent;
+        memoryRecord.Embedding = new Vector(newEmbedding);
+        memoryRecord.UpdatedAt = dateTimeProvider.UtcNow;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<MemoryEntry>> SearchAsync(Guid userId, string query, int limit, CancellationToken cancellationToken)
+    {
+        float[] queryEmbedding = await GenerateEmbeddingAsync(query, cancellationToken);
+        Vector queryVector = new(queryEmbedding);
+
+        List<MemoryRecord> memoryRecords = await dbContext.Memories
+            .Where(m => m.UserId == userId && m.IsActive)
+            .OrderBy(m => m.Embedding.CosineDistance(queryVector))
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+
+        return [.. memoryRecords.Select(ToEntry)];
+    }
+
+    public async Task<IReadOnlyList<MemoryEntry>> GetRelevantAsync(Guid userId, string context, int limit, CancellationToken cancellationToken)
     {
         float[]? queryEmbedding;
 
@@ -91,19 +102,30 @@ internal sealed class MemoryStore(
         Vector queryVector = new(queryEmbedding);
 
         List<MemoryRecord> memoryRecords = await dbContext.Memories
-            .Where(m => m.UserId == userId)
+            .Where(m => m.UserId == userId && m.IsActive)
             .OrderBy(m => m.Embedding.CosineDistance(queryVector))
             .Take(limit)
             .ToListAsync(cancellationToken);
 
+        // Track access for retrieved memories
+        if (memoryRecords.Count > 0)
+        {
+            List<string> ids = memoryRecords.Select(m => m.Id).ToList();
+            await dbContext.Memories
+                .Where(m => ids.Contains(m.Id))
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(m => m.LastAccessedAt, dateTimeProvider.UtcNow)
+                    .SetProperty(m => m.AccessCount, m => m.AccessCount + 1),
+                    cancellationToken);
+        }
+
         return [.. memoryRecords.Select(ToEntry)];
     }
 
-    public async Task<IReadOnlyList<MemoryEntry>> GetRecentAsync(Guid userId, int limit,
-        CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<MemoryEntry>> GetRecentAsync(Guid userId, int limit, CancellationToken cancellationToken)
     {
         List<MemoryRecord> records = await dbContext.Memories
-            .Where(m => m.UserId == userId)
+            .Where(m => m.UserId == userId && m.IsActive)
             .OrderByDescending(m => m.CreatedAt)
             .Take(limit)
             .ToListAsync(cancellationToken);
@@ -111,35 +133,33 @@ internal sealed class MemoryStore(
         return [.. records.Select(ToEntry)];
     }
 
+    public async Task<MemoryEntry?> GetByIdAsync(Guid userId, string memoryId, CancellationToken cancellationToken)
+    {
+        MemoryRecord? memoryRecord = await dbContext.Memories
+            .FirstOrDefaultAsync(m => m.Id == memoryId && m.UserId == userId && m.IsActive, cancellationToken);
+
+        return memoryRecord is null
+            ? null
+            : ToEntry(memoryRecord);
+    }
+
     public async Task<int> GetCountAsync(Guid userId, CancellationToken cancellationToken) =>
         await dbContext.Memories
-            .CountAsync(m => m.UserId == userId, cancellationToken: cancellationToken);
+            .Where(m => m.UserId == userId && m.IsActive)
+            .CountAsync(cancellationToken);
 
-    public async Task DeleteAsync(Guid userId, string? memoryId, CancellationToken cancellationToken)
+    public async Task SoftDeleteAsync(Guid userId, string memoryId, CancellationToken cancellationToken)
     {
-        MemoryRecord? memoryRecord;
+        MemoryRecord? memoryRecord = await dbContext.Memories
+            .FirstOrDefaultAsync(m => m.Id == memoryId && m.UserId == userId, cancellationToken);
 
-        if (memoryId is not null)
-        {
-            memoryRecord = await dbContext.Memories
-                .FirstOrDefaultAsync(m => m.UserId == userId && m.Id == memoryId, cancellationToken);
-        }
-        else
-        {
-            memoryRecord = await dbContext.Memories
-                .Where(m => m.UserId == userId)
-                .OrderBy(m => m.CreatedAt)
-                .FirstOrDefaultAsync(cancellationToken);
-        }
+        if (memoryRecord is null)
+            return;
 
-        if (memoryRecord is not null)
-        {
-            dbContext.Memories.Remove(memoryRecord);
-            await dbContext.SaveChangesAsync(cancellationToken);
+        memoryRecord.IsActive = false;
+        memoryRecord.UpdatedAt = dateTimeProvider.UtcNow;
 
-            if (logger.IsEnabled(LogLevel.Information))
-                logger.LogInformation("Deleted memory {MemoryId} for user {UserId}", memoryRecord.Id, userId);
-        }
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAllAsync(Guid userId, CancellationToken cancellationToken)
@@ -147,10 +167,21 @@ internal sealed class MemoryStore(
         await dbContext.Memories
             .Where(m => m.UserId == userId)
             .ExecuteDeleteAsync(cancellationToken);
-
-        if (logger.IsEnabled(LogLevel.Information))
-            logger.LogInformation("Deleted all memories for user {UserId}", userId);
     }
+
+    private static MemoryEntry ToEntry(MemoryRecord memoryRecord) =>
+        new
+        (
+            Id: memoryRecord.Id,
+            Content: memoryRecord.Content,
+            MemoryCategory: memoryRecord.Category,
+            CreatedAt: memoryRecord.CreatedAt,
+            UpdatedAt: memoryRecord.UpdatedAt,
+            LastAccessedAt: memoryRecord.LastAccessedAt,
+            AccessCount: memoryRecord.AccessCount,
+            Importance: memoryRecord.Importance
+        );
+
 
     private async Task<float[]> GenerateEmbeddingAsync(string content, CancellationToken cancellationToken)
     {
@@ -167,7 +198,4 @@ internal sealed class MemoryStore(
             throw;
         }
     }
-
-    private static MemoryEntry ToEntry(MemoryRecord record) =>
-        new(record.Id, record.Content, record.Category, record.CreatedAt);
 }

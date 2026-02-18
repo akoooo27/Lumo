@@ -15,20 +15,20 @@ internal sealed class MemoryPlugin
 )
 {
     [KernelFunction("__sm")]
-    [Description
-        (
-            "Save important information about the user to memory for future conversations. " +
-            "Use when the user shares preferences, personal facts, or instructions they want remembered. " +
-            "Examples: 'I prefer dark mode', 'My name is John', 'Always respond in Spanish'."
-        )
-    ]
+    [Description(
+        "Save important information about the user to memory for future conversations. " +
+        "Before saving, always search existing memories first to avoid duplicates. " +
+        "If a similar memory exists, update it instead of creating a new one. " +
+        "Use when the user shares preferences, personal facts, or instructions they want remembered. " +
+        "Examples: 'I prefer dark mode', 'My name is John', 'Always respond in Spanish'.")]
     public async Task<string> SaveMemoryAsync
     (
         [Description("The specific information to remember about the user. Be concise but complete.")]
         string content,
-        [Description(
-            "The type of memory: 'preference' for user preferences, 'fact' for personal information, 'instruction' for behavioral guidelines.")]
+        [Description("The type of memory: 'preference' for user preferences, 'fact' for personal information, 'instruction' for behavioral guidelines.")]
         string category,
+        [Description("How important this memory is from 1-10. Use 8-10 for core identity/critical preferences, 5-7 for useful context, 1-4 for minor details.")]
+        int importance,
         CancellationToken cancellationToken
     )
     {
@@ -41,7 +41,7 @@ internal sealed class MemoryPlugin
 
         try
         {
-            if (!Enum.TryParse<MemoryCategory>(category, ignoreCase: true, out MemoryCategory memoryCategory))
+            if (!Enum.TryParse(category, ignoreCase: true, out MemoryCategory memoryCategory))
             {
                 logger.LogWarning("Invalid category {Category} for user {UserId}", category, userId);
                 return $"Invalid category: {category}. Must be 'preference', 'fact', or 'instruction'.";
@@ -52,6 +52,7 @@ internal sealed class MemoryPlugin
                 userId: userId,
                 content: content,
                 memoryCategory: memoryCategory,
+                importance: importance,
                 cancellationToken: cancellationToken
             );
 
