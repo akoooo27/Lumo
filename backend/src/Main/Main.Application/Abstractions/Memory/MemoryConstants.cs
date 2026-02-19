@@ -10,6 +10,8 @@ public static class MemoryConstants
     public const int MaxImportance = 10;
     public const int DefaultImportance = 5;
 
+    public const int MaxMemorySearchResults = 5;
+
     // Consolidation thresholds
     public const int ConsolidationThreshold = 90;
     public const double DuplicateThreshold = 0.92;

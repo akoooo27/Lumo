@@ -1,3 +1,4 @@
+using System.ClientModel;
 using System.ComponentModel;
 
 using Main.Application.Abstractions.Memory;
@@ -69,6 +70,132 @@ internal sealed class MemoryPlugin
         {
             logger.LogWarning(exception, "Memory limit reached for user {UserId}", userId);
             return $"Failed to save memory: {exception.Message}";
+        }
+    }
+
+    [KernelFunction("__um")]
+    [Description(
+        "Update an existing memory when information changes. " +
+        "Use when the user corrects or updates previously saved information. " +
+        "Example: user previously said 'I work at Google' but now says 'I switched to Microsoft'. " +
+        "You must provide the memory ID from a previous search result.")]
+    public async Task<string> UpdateMemoryAsync
+    (
+        [Description("The ID of the memory to update (from search results).")]
+        string memoryId,
+        [Description("The updated content for this memory.")]
+        string newContent,
+        CancellationToken cancellationToken
+    )
+    {
+        Guid userId = userContext.UserId;
+
+        if (logger.IsEnabled(LogLevel.Information))
+            logger.LogInformation(
+                "UpdateMemoryAsync called for user {UserId}, memoryId: {MemoryId}",
+                userId, memoryId);
+
+        try
+        {
+            await memoryStore.UpdateAsync
+            (
+                userId: userId,
+                memoryId: memoryId,
+                newContent: newContent,
+                cancellationToken: cancellationToken
+            );
+
+            if (logger.IsEnabled(LogLevel.Information))
+                logger.LogInformation("Memory updated: {MemoryId} for user {UserId}", memoryId, userId);
+
+            return $"Memory {memoryId} updated successfully.";
+        }
+        catch (InvalidOperationException exception)
+        {
+            logger.LogWarning(exception, "Memory not found for update: {MemoryId}", memoryId);
+            return $"Failed to update memory: {exception.Message}";
+        }
+    }
+
+    [KernelFunction("__dm")]
+    [Description(
+        "Delete a memory that is no longer accurate or relevant. " +
+        "Use when the user explicitly asks you to forget something, " +
+        "or when information is clearly outdated and no update makes sense. " +
+        "You must provide the memory ID from a previous search result.")]
+    public async Task<string> DeleteMemoryAsync
+    (
+        [Description("The ID of the memory to delete (from search results).")]
+        string memoryId,
+        CancellationToken cancellationToken
+    )
+    {
+        Guid userId = userContext.UserId;
+
+        if (logger.IsEnabled(LogLevel.Information))
+            logger.LogInformation
+            (
+                "DeleteMemoryAsync called for user {UserId}, memoryId: {MemoryId}",
+                userId, memoryId
+            );
+
+        await memoryStore.SoftDeleteAsync
+        (
+            userId: userId,
+            memoryId: memoryId,
+            cancellationToken: cancellationToken
+        );
+
+        if (logger.IsEnabled(LogLevel.Information))
+            logger.LogInformation("Memory deleted: {MemoryId} for user {UserId}", memoryId, userId);
+
+        return $"Memory {memoryId} deleted successfully.";
+    }
+
+    [KernelFunction("__fm")]
+    [Description(
+        "Search your stored memories about this user. " +
+        "Use before saving a new memory to check for duplicates. " +
+        "Use when you need to recall specific stored information or find a memory ID for update/delete.")]
+    public async Task<string> FindMemoriesAsync
+    (
+        [Description("What to search for in memories. Be specific.")]
+        string query,
+        CancellationToken cancellationToken
+    )
+    {
+        Guid userId = userContext.UserId;
+
+        if (logger.IsEnabled(LogLevel.Information))
+            logger.LogInformation(
+                "FindMemoriesAsync called for user {UserId}, query: {Query}",
+                userId, query);
+
+        try
+        {
+            IReadOnlyList<MemoryEntry> memories = await memoryStore.SearchAsync
+            (
+                userId: userId,
+                query: query,
+                limit: MemoryConstants.MaxMemorySearchResults,
+                cancellationToken: cancellationToken
+            );
+
+            if (memories.Count == 0)
+                return "No matching memories found.";
+
+            return string.Join("\n", memories.Select(m =>
+                $"[{m.Id}] [{m.MemoryCategory}] {m.Content}"));
+        }
+        catch (ClientResultException exception)
+        {
+            logger.LogWarning(exception, "Failed to search memories for user {UserId} (API error)", userId);
+            return "Failed to search memories. You may save a new memory instead.";
+        }
+        catch (HttpRequestException exception)
+        {
+            logger.LogWarning(exception, "Failed to search memories for user {UserId} (network error)", userId);
+            return "Failed to search memories. You may save a new memory instead.";
         }
     }
 }

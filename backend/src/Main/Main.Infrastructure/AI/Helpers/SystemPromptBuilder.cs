@@ -101,6 +101,7 @@ internal static class SystemPromptBuilder
         // Memory persistence
         sb.AppendLine();
         sb.AppendLine("When the user shares important information about themselves (preferences, facts, or instructions), persist it so you can recall it in future conversations. Do NOT just say you will remember — actually persist it.");
+        sb.AppendLine("Before saving a new memory, always search existing memories first to check for duplicates. If a similar memory already exists, update it instead of creating a new one.");
 
         // Web search tool
         sb.AppendLine();

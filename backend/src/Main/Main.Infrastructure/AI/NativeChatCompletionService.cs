@@ -138,6 +138,16 @@ internal sealed class NativeChatCompletionService(
                 cancellationToken: cancellationToken
             );
         }
+        catch (ArgumentOutOfRangeException exception) when (exception.ParamName == "value")
+        {
+            // OpenAI SDK throws when it encounters a finish_reason it doesn't recognise.
+            // This happens with OpenRouter-proxied models (e.g. Gemini MALFORMED_FUNCTION_CALL → "error").
+            // Retrying won't help — mark stream as failed and swallow so MassTransit doesn't retry.
+            logger.LogWarning(exception,
+                "Model returned an unrecognized finish reason for chat {ChatId}. The model may not support function calling.",
+                chatId);
+            await HandleStreamingErrorAsync(chatId, streamId, exception, cancellationToken);
+        }
         catch (Exception exception)
         {
             await HandleStreamingErrorAsync(chatId, streamId, exception, cancellationToken);
