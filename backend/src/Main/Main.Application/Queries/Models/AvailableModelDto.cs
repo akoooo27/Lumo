@@ -7,5 +7,6 @@ public sealed record AvailableModelDto
     string Provider,
     bool IsDefault,
     int MaxContextTokens,
-    bool SupportsVision
+    bool SupportsVision,
+    bool SupportsFunctionCalling
 );

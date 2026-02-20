@@ -56,7 +56,8 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
                     Provider: m.Provider,
                     IsDefault: m.IsDefault,
                     MaxContextTokens: m.MaxContextTokens,
-                    SupportsVision: m.SupportsVision
+                    SupportsVision: m.SupportsVision,
+                    SupportsFunctionCalling: m.SupportsFunctionCalling
                 ))
                 .ToList()
         );

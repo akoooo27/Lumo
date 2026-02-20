@@ -170,11 +170,18 @@ internal sealed class NativeChatCompletionService(
         CancellationToken cancellationToken
     )
     {
+        ModelInfo? modelInfo = modelRegistry.GetModelInfo(modelId);
+        bool supportsFunctionCalling = modelInfo?.ModelCapabilities.SupportsFunctionCalling ?? true;
+        bool memoryToolsEnabled = supportsFunctionCalling;
+        bool webSearchToolEnabled = supportsFunctionCalling && webSearchEnabled;
+
         ChatHistory chatHistory = await BuildChatHistoryAsync
         (
             messages: messages,
             userId: userId,
-            modelId: modelId,
+            modelInfo: modelInfo,
+            memoryToolsEnabled: memoryToolsEnabled,
+            webSearchToolEnabled: webSearchToolEnabled,
             cancellationToken: cancellationToken
         );
 
@@ -182,23 +189,29 @@ internal sealed class NativeChatCompletionService(
 
         pluginStreamContext.StreamId = streamId;
 
-        List<KernelFunction> functions = kernel.Plugins
-            .GetFunctionsMetadata()
-            .Where(f => webSearchEnabled || f.PluginName != "search")
-            .Select(f => kernel.Plugins.GetFunction(f.PluginName, f.Name))
-            .ToList();
+        List<KernelFunction> functions = supportsFunctionCalling
+            ? kernel.Plugins
+                .GetFunctionsMetadata()
+                .Where(f => webSearchToolEnabled || f.PluginName != "search")
+                .Select(f => kernel.Plugins.GetFunction(f.PluginName, f.Name))
+                .ToList()
+            : [];
 
         OpenAIPromptExecutionSettings settings = new()
         {
             ModelId = openRouterId,
-            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto(
-                functions: functions,
-                autoInvoke: true,
-                options: new FunctionChoiceBehaviorOptions
-                {
-                    AllowConcurrentInvocation = false,
-                    AllowParallelCalls = true
-                }),
+            FunctionChoiceBehavior = functions.Count > 0
+                ? FunctionChoiceBehavior.Auto
+                    (
+                        functions: functions,
+                        autoInvoke: true,
+                        options: new FunctionChoiceBehaviorOptions
+                        {
+                            AllowConcurrentInvocation = false,
+                            AllowParallelCalls = true
+                        }
+                    )
+                : FunctionChoiceBehavior.None(),
             MaxTokens = null
         };
 
@@ -256,7 +269,9 @@ internal sealed class NativeChatCompletionService(
     (
         IReadOnlyList<ChatCompletionMessage> messages,
         Guid userId,
-        string modelId,
+        ModelInfo? modelInfo,
+        bool memoryToolsEnabled,
+        bool webSearchToolEnabled,
         CancellationToken cancellationToken
     )
     {
@@ -271,13 +286,13 @@ internal sealed class NativeChatCompletionService(
         IReadOnlyList<InstructionEntry> instructions = await instructionStore
             .GetForUserAsync(userId, cancellationToken);
 
-        ModelInfo? modelInfo = modelRegistry.GetModelInfo(modelId);
-
         string systemPrompt = SystemPromptBuilder.Build
         (
             instructions: instructions,
             memories: memories,
             modelInfo: modelInfo,
+            memoryToolsEnabled: memoryToolsEnabled,
+            webSearchToolEnabled: webSearchToolEnabled,
             dateTimeProvider: dateTimeProvider
         );
 

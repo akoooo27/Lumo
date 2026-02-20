@@ -15,7 +15,7 @@ internal sealed class MemoryPlugin
     ILogger<MemoryPlugin> logger
 )
 {
-    [KernelFunction("__sm")]
+    [KernelFunction("save")]
     [Description(
         "Save important information about the user to memory for future conversations. " +
         "Before saving, always search existing memories first to avoid duplicates. " +
@@ -27,7 +27,7 @@ internal sealed class MemoryPlugin
         [Description("The specific information to remember about the user. Be concise but complete.")]
         string content,
         [Description("The type of memory: 'preference' for user preferences, 'fact' for personal information, 'instruction' for behavioral guidelines.")]
-        string category,
+        MemoryCategory category,
         [Description("How important this memory is from 1-10. Use 8-10 for core identity/critical preferences, 5-7 for useful context, 1-4 for minor details.")]
         int importance,
         CancellationToken cancellationToken
@@ -42,17 +42,11 @@ internal sealed class MemoryPlugin
 
         try
         {
-            if (!Enum.TryParse(category, ignoreCase: true, out MemoryCategory memoryCategory))
-            {
-                logger.LogWarning("Invalid category {Category} for user {UserId}", category, userId);
-                return $"Invalid category: {category}. Must be 'preference', 'fact', or 'instruction'.";
-            }
-
             string memoryId = await memoryStore.SaveAsync
             (
                 userId: userId,
                 content: content,
-                memoryCategory: memoryCategory,
+                memoryCategory: category,
                 importance: importance,
                 cancellationToken: cancellationToken
             );
@@ -73,7 +67,7 @@ internal sealed class MemoryPlugin
         }
     }
 
-    [KernelFunction("__um")]
+    [KernelFunction("update")]
     [Description(
         "Update an existing memory when information changes. " +
         "Use when the user corrects or updates previously saved information. " +
@@ -94,6 +88,9 @@ internal sealed class MemoryPlugin
             logger.LogInformation(
                 "UpdateMemoryAsync called for user {UserId}, memoryId: {MemoryId}",
                 userId, memoryId);
+
+        if (string.IsNullOrWhiteSpace(newContent))
+            return "Failed to update memory: content cannot be empty.";
 
         try
         {
@@ -117,7 +114,7 @@ internal sealed class MemoryPlugin
         }
     }
 
-    [KernelFunction("__dm")]
+    [KernelFunction("delete")]
     [Description(
         "Delete a memory that is no longer accurate or relevant. " +
         "Use when the user explicitly asks you to forget something, " +
@@ -139,20 +136,28 @@ internal sealed class MemoryPlugin
                 userId, memoryId
             );
 
-        await memoryStore.SoftDeleteAsync
-        (
-            userId: userId,
-            memoryId: memoryId,
-            cancellationToken: cancellationToken
-        );
+        try
+        {
+            await memoryStore.SoftDeleteAsync
+            (
+                userId: userId,
+                memoryId: memoryId,
+                cancellationToken: cancellationToken
+            );
 
-        if (logger.IsEnabled(LogLevel.Information))
-            logger.LogInformation("Memory deleted: {MemoryId} for user {UserId}", memoryId, userId);
+            if (logger.IsEnabled(LogLevel.Information))
+                logger.LogInformation("Memory deleted: {MemoryId} for user {UserId}", memoryId, userId);
 
-        return $"Memory {memoryId} deleted successfully.";
+            return $"Memory {memoryId} deleted successfully.";
+        }
+        catch (InvalidOperationException exception)
+        {
+            logger.LogWarning(exception, "Memory not found for delete: {MemoryId}", memoryId);
+            return $"Failed to delete memory: {exception.Message}";
+        }
     }
 
-    [KernelFunction("__fm")]
+    [KernelFunction("find")]
     [Description(
         "Search your stored memories about this user. " +
         "Use before saving a new memory to check for duplicates. " +
@@ -168,8 +173,8 @@ internal sealed class MemoryPlugin
 
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(
-                "FindMemoriesAsync called for user {UserId}, query: {Query}",
-                userId, query);
+                "FindMemoriesAsync called for user {UserId}, query length: {QueryLength}",
+                userId, query.Length);
 
         try
         {
@@ -185,7 +190,7 @@ internal sealed class MemoryPlugin
                 return "No matching memories found.";
 
             return string.Join("\n", memories.Select(m =>
-                $"[{m.Id}] [{m.MemoryCategory}] {m.Content}"));
+                $"[{m.Id}] [{m.MemoryCategory}] [importance:{m.Importance}] {m.Content}"));
         }
         catch (ClientResultException exception)
         {

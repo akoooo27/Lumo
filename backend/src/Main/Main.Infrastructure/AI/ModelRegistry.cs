@@ -26,7 +26,8 @@ internal sealed class ModelRegistry : IModelRegistry
                 (
                     MaxContextTokens: m.MaxContextTokens,
                     SupportsVision: m.SupportsVision,
-                    SupportsStreaming: m.SupportsStreaming
+                    SupportsStreaming: m.SupportsStreaming,
+                    SupportsFunctionCalling: m.SupportsFunctionCalling
                 )
                 )).ToList();
 

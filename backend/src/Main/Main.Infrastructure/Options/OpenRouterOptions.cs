@@ -47,4 +47,6 @@ public sealed class ModelConfiguration
     public bool SupportsVision { get; init; }
 
     public bool SupportsStreaming { get; init; } = true;
+
+    public bool SupportsFunctionCalling { get; init; } = true;
 }

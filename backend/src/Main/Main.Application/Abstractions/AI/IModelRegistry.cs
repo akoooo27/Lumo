@@ -26,5 +26,6 @@ public sealed record ModelCapabilities
 (
     int MaxContextTokens,
     bool SupportsVision,
-    bool SupportsStreaming
+    bool SupportsStreaming,
+    bool SupportsFunctionCalling
 );
