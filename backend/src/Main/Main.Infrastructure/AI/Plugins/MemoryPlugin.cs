@@ -77,9 +77,13 @@ internal sealed class MemoryPlugin
     (
         [Description("The ID of the memory to update (from search results).")]
         string memoryId,
-        [Description("The updated content for this memory.")]
-        string newContent,
-        CancellationToken cancellationToken
+        [Description("The updated content for this memory. Leave null if only updating category/importance.")]
+        string? newContent = null,
+        [Description("Optional new category: 'preference', 'fact', or 'instruction'.")]
+        MemoryCategory? newCategory = null,
+        [Description("Optional new importance from 1-10.")]
+        int? newImportance = null,
+        CancellationToken cancellationToken = default
     )
     {
         Guid userId = userContext.UserId;
@@ -89,7 +93,10 @@ internal sealed class MemoryPlugin
                 "UpdateMemoryAsync called for user {UserId}, memoryId: {MemoryId}",
                 userId, memoryId);
 
-        if (string.IsNullOrWhiteSpace(newContent))
+        if (newContent is null && newCategory is null && newImportance is null)
+            return "Failed to update memory: provide at least one field (content, category, or importance).";
+
+        if (newContent is not null && string.IsNullOrWhiteSpace(newContent))
             return "Failed to update memory: content cannot be empty.";
 
         try
@@ -99,6 +106,8 @@ internal sealed class MemoryPlugin
                 userId: userId,
                 memoryId: memoryId,
                 newContent: newContent,
+                newCategory: newCategory,
+                newImportance: newImportance,
                 cancellationToken: cancellationToken
             );
 

@@ -31,13 +31,15 @@ internal sealed class UpdateMemoryHandler(
             userId: userId,
             memoryId: request.MemoryId,
             newContent: request.Content,
+            newCategory: request.Category,
+            newImportance: request.Importance,
             cancellationToken: cancellationToken
         );
 
         UpdateMemoryResponse response = new
         (
             MemoryId: request.MemoryId,
-            Content: request.Content,
+            Content: request.Content ?? existing.Content,
             UpdatedAt: dateTimeProvider.UtcNow
         );
 

@@ -49,7 +49,8 @@ internal sealed class MemoryStore(
         return memoryRecord.Id;
     }
 
-    public async Task UpdateAsync(Guid userId, string memoryId, string newContent, CancellationToken cancellationToken)
+    public async Task UpdateAsync(Guid userId, string memoryId, string? newContent, MemoryCategory? newCategory,
+        int? newImportance, CancellationToken cancellationToken)
     {
         MemoryRecord? memoryRecord = await dbContext.Memories
             .FirstOrDefaultAsync(m => m.Id == memoryId && m.UserId == userId && m.IsActive, cancellationToken);
@@ -57,10 +58,21 @@ internal sealed class MemoryStore(
         if (memoryRecord is null)
             throw new InvalidOperationException("Memory not found.");
 
-        float[] newEmbedding = await GenerateEmbeddingAsync(newContent, cancellationToken);
+        if (newContent is not null)
+        {
+            float[] newEmbedding = await GenerateEmbeddingAsync(newContent, cancellationToken);
 
-        memoryRecord.Content = newContent;
-        memoryRecord.Embedding = new Vector(newEmbedding);
+            memoryRecord.Content = newContent;
+            memoryRecord.Embedding = new Vector(newEmbedding);
+        }
+
+        if (newCategory is not null)
+            memoryRecord.Category = newCategory.Value;
+
+        if (newImportance is not null)
+            memoryRecord.Importance = Math.Clamp(newImportance.Value,
+                MemoryConstants.MinImportance, MemoryConstants.MaxImportance);
+
         memoryRecord.UpdatedAt = dateTimeProvider.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);

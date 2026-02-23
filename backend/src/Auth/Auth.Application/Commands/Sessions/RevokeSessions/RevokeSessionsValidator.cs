@@ -6,7 +6,7 @@ internal sealed class RevokeSessionsValidator : AbstractValidator<RevokeSessions
 {
     public RevokeSessionsValidator()
     {
-        RuleFor(x => x.SessionIds)
+        RuleFor(rsc => rsc.SessionIds)
             .NotEmpty().WithMessage("At least one session ID is required.");
     }
 }

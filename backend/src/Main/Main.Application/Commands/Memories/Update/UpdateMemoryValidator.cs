@@ -9,11 +9,30 @@ internal sealed class UpdateMemoryValidator : AbstractValidator<UpdateMemoryComm
     public UpdateMemoryValidator()
     {
         RuleFor(umc => umc.MemoryId)
-            .NotEmpty().WithMessage("Memory ID is required");
+            .NotEmpty()
+            .WithMessage("Memory ID is required");
 
-        RuleFor(umc => umc.Content)
-            .NotEmpty().WithMessage("Content is required")
-            .MaximumLength(MemoryConstants.MaxContentLength)
-            .WithMessage($"Content must not exceed {MemoryConstants.MaxContentLength} characters");
+        RuleFor(umc => umc)
+            .Must(umc => umc.Content is not null || umc.Category is not null || umc.Importance is not null)
+            .WithMessage("At least one field (Content, Category, or Importance) must be provided.");
+
+        When(umc => umc.Content is not null, () =>
+        {
+            RuleFor(umc => umc.Content!)
+                .NotEmpty()
+                .MaximumLength(MemoryConstants.MaxContentLength);
+        });
+
+        When(umc => umc.Category is not null, () =>
+        {
+            RuleFor(umc => umc.Category!.Value)
+                .IsInEnum();
+        });
+
+        When(umc => umc.Importance is not null, () =>
+        {
+            RuleFor(umc => umc.Importance!.Value)
+                .InclusiveBetween(MemoryConstants.MinImportance, MemoryConstants.MaxImportance);
+        });
     }
 }

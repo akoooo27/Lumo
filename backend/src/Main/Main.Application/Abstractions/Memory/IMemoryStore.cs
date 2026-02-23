@@ -5,7 +5,8 @@ public interface IMemoryStore
     Task<string> SaveAsync(Guid userId, string content, MemoryCategory memoryCategory,
         int importance, CancellationToken cancellationToken);
 
-    Task UpdateAsync(Guid userId, string memoryId, string newContent,
+    Task UpdateAsync(Guid userId, string memoryId, string? newContent,
+        MemoryCategory? newCategory, int? newImportance,
         CancellationToken cancellationToken);
 
     Task<IReadOnlyList<MemoryEntry>> SearchAsync(Guid userId, string query, int limit,

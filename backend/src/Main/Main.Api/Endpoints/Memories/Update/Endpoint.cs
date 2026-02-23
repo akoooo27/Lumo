@@ -25,7 +25,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
         Description(d =>
         {
             d.WithSummary("Update Memory")
-                .WithDescription("Updates the content of an existing memory. Regenerates the embedding.")
+                .WithDescription("Updates one or more fields of an existing memory (content, category, importance).")
                 .Produces<Response>(200, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(400, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(404, HttpContentTypeConstants.Json)
@@ -38,7 +38,9 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
         UpdateMemoryCommand command = new
         (
             MemoryId: request.MemoryId,
-            Content: request.Content
+            Content: request.Content,
+            Category: request.Category,
+            Importance: request.Importance
         );
 
         await SendOutcomeAsync
