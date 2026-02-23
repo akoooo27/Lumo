@@ -1,0 +1,67 @@
+using Main.Application.Abstractions.Data;
+using Main.Application.Abstractions.Generators;
+using Main.Application.Faults;
+using Main.Domain.Aggregates;
+using Main.Domain.ValueObjects;
+
+using Microsoft.EntityFrameworkCore;
+
+using SharedKernel;
+using SharedKernel.Application.Authentication;
+using SharedKernel.Application.Messaging;
+
+namespace Main.Application.Commands.Preferences.DisableMemory;
+
+internal sealed class DisableMemoryHandler(
+    IMainDbContext dbContext,
+    IUserContext userContext,
+    IIdGenerator idGenerator,
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<DisableMemoryCommand>
+{
+    public async ValueTask<Outcome> Handle(DisableMemoryCommand request, CancellationToken cancellationToken)
+    {
+        Guid userId = userContext.UserId;
+
+        Preference? preference = await dbContext.Preferences
+            .FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+
+        bool isNewPreference = false;
+
+        if (preference is null)
+        {
+            PreferenceId preferenceId = idGenerator.NewPreferenceId();
+
+            Outcome<Preference> preferenceOutcome = Preference.Create
+            (
+                id: preferenceId,
+                userId: userId,
+                utcNow: dateTimeProvider.UtcNow
+            );
+
+            if (preferenceOutcome.IsFailure)
+                return preferenceOutcome.Fault;
+
+            preference = preferenceOutcome.Value;
+            isNewPreference = true;
+        }
+
+        Outcome disableOutcome = preference.DisableMemory(dateTimeProvider.UtcNow);
+
+        if (disableOutcome.IsFailure)
+            return disableOutcome.Fault;
+
+        if (isNewPreference)
+            await dbContext.Preferences.AddAsync(preference, cancellationToken);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return PreferenceOperationFaults.Conflict;
+        }
+
+        return Outcome.Success();
+    }
+}
