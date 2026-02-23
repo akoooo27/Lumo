@@ -24,6 +24,8 @@
         <PackageReference Include="MassTransit" />
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="MassTransit.EntityFrameworkCore" />
+        <PackageReference Include="TickerQ" />
+        <PackageReference Include="TickerQ.EntityFrameworkCore" />
         <PackageReference Include="OpenAI" />
         <PackageReference Include="Ulid" />
         <PackageReference Include="Pgvector" />

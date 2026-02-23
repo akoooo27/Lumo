@@ -68,21 +68,31 @@ internal sealed class MemoryStore(
 
     public async Task<IReadOnlyList<MemoryEntry>> SearchAsync(Guid userId, string query, int limit, CancellationToken cancellationToken)
     {
-        float[] queryEmbedding = await GenerateEmbeddingAsync(query, cancellationToken);
-        Vector queryVector = new(queryEmbedding);
+        float[] queryEmbedding;
 
-        List<MemoryRecord> memoryRecords = await dbContext.Memories
-            .Where(m => m.UserId == userId && m.IsActive)
-            .OrderBy(m => m.Embedding.CosineDistance(queryVector))
-            .Take(limit)
-            .ToListAsync(cancellationToken);
+        try
+        {
+            queryEmbedding = await GenerateEmbeddingAsync(query, cancellationToken);
+        }
+        catch (ClientResultException exception)
+        {
+            logger.LogWarning(exception, "Failed to generate query embedding (API error)");
+            return [];
+        }
+        catch (HttpRequestException exception)
+        {
+            logger.LogWarning(exception, "Failed to generate query embedding (network error)");
+            return [];
+        }
 
-        return [.. memoryRecords.Select(ToEntry)];
+        List<MemoryRecord> searchResults = await SearchByVectorAsync(userId, new Vector(queryEmbedding), limit, cancellationToken);
+
+        return [.. searchResults.Select(ToEntry)];
     }
 
     public async Task<IReadOnlyList<MemoryEntry>> GetRelevantAsync(Guid userId, string context, int limit, CancellationToken cancellationToken)
     {
-        float[]? queryEmbedding;
+        float[] queryEmbedding;
 
         try
         {
@@ -101,25 +111,38 @@ internal sealed class MemoryStore(
 
         Vector queryVector = new(queryEmbedding);
 
+        List<MemoryRecord> relevantRecords = await SearchByVectorAsync
+        (
+            userId: userId,
+            queryVector: queryVector,
+            limit: limit,
+            cancellationToken: cancellationToken
+        );
+
+        return [.. relevantRecords.Select(ToEntry)];
+    }
+
+    private async Task<List<MemoryRecord>> SearchByVectorAsync(Guid userId, Vector queryVector, int limit, CancellationToken cancellationToken)
+    {
         List<MemoryRecord> memoryRecords = await dbContext.Memories
             .Where(m => m.UserId == userId && m.IsActive)
             .OrderBy(m => m.Embedding.CosineDistance(queryVector))
             .Take(limit)
             .ToListAsync(cancellationToken);
 
-        // Track access for retrieved memories
         if (memoryRecords.Count > 0)
         {
             List<string> ids = memoryRecords.Select(m => m.Id).ToList();
+
             await dbContext.Memories
                 .Where(m => ids.Contains(m.Id))
                 .ExecuteUpdateAsync(s => s
-                    .SetProperty(m => m.LastAccessedAt, dateTimeProvider.UtcNow)
-                    .SetProperty(m => m.AccessCount, m => m.AccessCount + 1),
+                        .SetProperty(m => m.LastAccessedAt, dateTimeProvider.UtcNow)
+                        .SetProperty(m => m.AccessCount, m => m.AccessCount + 1),
                     cancellationToken);
         }
 
-        return [.. memoryRecords.Select(ToEntry)];
+        return memoryRecords;
     }
 
     public async Task<IReadOnlyList<MemoryEntry>> GetRecentAsync(Guid userId, int limit, CancellationToken cancellationToken)

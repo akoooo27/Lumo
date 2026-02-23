@@ -16,6 +16,8 @@ using Scalar.AspNetCore;
 using SharedKernel.Api.Constants;
 using SharedKernel.Infrastructure.Observability;
 
+using TickerQ.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
@@ -57,6 +59,7 @@ HealthCheckOptions healthCheckOptions = new()
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseTickerQ();
 app.UseRateLimiter();
 
 app.UseFastEndpoints(c =>
