@@ -29,6 +29,33 @@ internal sealed class MemoryStore(
     {
         int clampedImportance = Math.Clamp(importance, MemoryConstants.MinImportance, MemoryConstants.MaxImportance);
 
+        int currentCount = await dbContext.Memories
+            .Where(m => m.UserId == userId && m.IsActive)
+            .CountAsync(cancellationToken);
+
+        if (currentCount >= MemoryConstants.MaxMemoriesPerUser)
+        {
+            MemoryRecord? evictionTarget = await dbContext.Memories
+                .Where(m => m.UserId == userId && m.IsActive)
+                .OrderBy(m => m.Importance)
+                .ThenBy(m => m.LastAccessedAt)
+                .ThenBy(m => m.AccessCount)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (evictionTarget is not null)
+            {
+                evictionTarget.IsActive = false;
+                evictionTarget.UpdatedAt = dateTimeProvider.UtcNow;
+
+                if (logger.IsEnabled(LogLevel.Information))
+                    logger.LogInformation(
+                        "Evicted memory {MemoryId} (importance: {Importance}, accessCount: {AccessCount}) for user {UserId} to stay within limit",
+                        evictionTarget.Id, evictionTarget.Importance, evictionTarget.AccessCount, userId);
+            }
+
+
+        }
+
         float[] embedding = await GenerateEmbeddingAsync(content, cancellationToken);
 
         MemoryRecord memoryRecord = new()
