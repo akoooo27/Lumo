@@ -45,13 +45,17 @@ internal sealed class EnableMemoryHandler(
             isNewPreference = true;
         }
 
-        Outcome enableOutcome = preference.EnableMemory(dateTimeProvider.UtcNow);
+        if (!isNewPreference)
+        {
+            Outcome enableOutcome = preference.EnableMemory(dateTimeProvider.UtcNow);
 
-        if (enableOutcome.IsFailure)
-            return enableOutcome.Fault;
-
-        if (isNewPreference)
+            if (enableOutcome.IsFailure)
+                return enableOutcome.Fault;
+        }
+        else
+        {
             await dbContext.Preferences.AddAsync(preference, cancellationToken);
+        }
 
         try
         {

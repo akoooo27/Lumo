@@ -27,6 +27,14 @@ internal sealed class MemoryStore(
     public async Task<string> SaveAsync(Guid userId, string content, MemoryCategory memoryCategory, int importance,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(content))
+            throw new ArgumentException("Memory content cannot be empty.", nameof(content));
+
+        if (content.Length > MemoryConstants.MaxContentLength)
+            throw new ArgumentException(
+                $"Memory content exceeds maximum length of {MemoryConstants.MaxContentLength} characters.",
+                nameof(content));
+
         int clampedImportance = Math.Clamp(importance, MemoryConstants.MinImportance, MemoryConstants.MaxImportance);
 
         int currentCount = await dbContext.Memories
