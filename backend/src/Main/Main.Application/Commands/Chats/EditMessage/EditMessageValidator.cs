@@ -1,5 +1,7 @@
 using FluentValidation;
 
+using Main.Domain.Constants;
+
 namespace Main.Application.Commands.Chats.EditMessage;
 
 internal sealed class EditMessageValidator : AbstractValidator<EditMessageCommand>
@@ -13,6 +15,8 @@ internal sealed class EditMessageValidator : AbstractValidator<EditMessageComman
             .NotEmpty().WithMessage("Message ID is required");
 
         RuleFor(emc => emc.NewContent)
-            .NotEmpty().WithMessage("New content is required");
+            .NotEmpty().WithMessage("New content is required")
+            .MaximumLength(MessageConstants.MaxContentLength)
+            .WithMessage($"New content must not exceed {MessageConstants.MaxContentLength} characters");
     }
 }

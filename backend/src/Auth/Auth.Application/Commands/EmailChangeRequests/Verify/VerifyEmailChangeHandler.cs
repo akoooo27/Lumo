@@ -19,6 +19,7 @@ internal sealed class VerifyEmailChangeHandler(
     IUserContext userContext,
     IRequestContext requestContext,
     ISecureTokenGenerator secureTokenGenerator,
+    IAttemptTracker attemptTracker,
     IMessageBus messageBus,
     IDateTimeProvider dateTimeProvider
 ) : ICommandHandler<VerifyEmailChangeCommand, VerifyEmailChangeResponse>
@@ -27,6 +28,13 @@ internal sealed class VerifyEmailChangeHandler(
         CancellationToken cancellationToken)
 
     {
+        string attemptKey = $"email-change:{request.RequestId}";
+
+        bool isLocked = await attemptTracker.IsLockedAsync(attemptKey, cancellationToken);
+
+        if (isLocked)
+            return EmailChangeRequestOperationFaults.TooManyAttempts;
+
         Outcome<UserId> userIdOutcome = UserId.FromGuid(userContext.UserId);
 
         if (userIdOutcome.IsFailure)
@@ -65,7 +73,10 @@ internal sealed class VerifyEmailChangeHandler(
         );
 
         if (!tokenValid)
+        {
+            await attemptTracker.TrackFailedAttemptAsync(attemptKey, cancellationToken);
             return EmailChangeRequestOperationFaults.InvalidToken;
+        }
 
         bool emailExists = await dbContext.Users
             .AnyAsync(u => u.EmailAddress == emailChangeRequest.NewEmailAddress, cancellationToken);

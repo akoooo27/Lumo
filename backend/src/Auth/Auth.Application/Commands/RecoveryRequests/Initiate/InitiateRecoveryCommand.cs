@@ -6,4 +6,4 @@ public sealed record InitiateRecoveryCommand
 (
     string RecoveryKey,
     string NewEmailAddress
-) : ICommand<InitiateRecoveryResponse>;
+) : ICommand<InitiateRecoveryResponse>, ISensitiveRequest;

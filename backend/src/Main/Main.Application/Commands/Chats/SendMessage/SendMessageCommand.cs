@@ -7,4 +7,4 @@ public sealed record SendMessageCommand
     string ChatId,
     string Message,
     bool WebSearchEnabled
-) : ICommand<SendMessageResponse>;
+) : ICommand<SendMessageResponse>, ISensitiveRequest;

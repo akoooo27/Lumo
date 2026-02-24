@@ -7,7 +7,8 @@ internal sealed record ModelDto
     string Provider,
     bool IsDefault,
     int MaxContextTokens,
-    bool SupportsVision
+    bool SupportsVision,
+    bool SupportsFunctionCalling
 );
 
 internal sealed record Response(IReadOnlyList<ModelDto> Models);

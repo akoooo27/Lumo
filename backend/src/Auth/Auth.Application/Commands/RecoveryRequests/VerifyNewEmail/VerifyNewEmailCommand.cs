@@ -7,4 +7,4 @@ public sealed record VerifyNewEmailCommand
     string TokenKey,
     string? OtpToken,
     string? MagicLinkToken
-) : ICommand;
+) : ICommand, ISensitiveRequest;

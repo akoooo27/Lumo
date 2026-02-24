@@ -18,7 +18,7 @@ namespace Main.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.2")
+                .HasAnnotation("ProductVersion", "10.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
@@ -83,6 +83,10 @@ namespace Main.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamptz")
                         .HasColumnName("created_at");
+
+                    b.Property<bool>("MemoryEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("memory_enabled");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamptz")
@@ -323,6 +327,12 @@ namespace Main.Infrastructure.Migrations
                         .HasColumnType("varchar(30)")
                         .HasColumnName("id");
 
+                    b.Property<int>("AccessCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("access_count");
+
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -344,6 +354,26 @@ namespace Main.Infrastructure.Migrations
                         .HasColumnType("vector(1536)")
                         .HasColumnName("embedding");
 
+                    b.Property<int>("Importance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(5)
+                        .HasColumnName("importance");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset>("LastAccessedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("last_accessed_at");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
@@ -360,8 +390,8 @@ namespace Main.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_memories_user_id");
 
-                    b.HasIndex("UserId", "CreatedAt")
-                        .HasDatabaseName("ix_memories_user_id_created_at");
+                    b.HasIndex("UserId", "IsActive", "CreatedAt")
+                        .HasDatabaseName("ix_memories_user_id_is_active_created_at");
 
                     b.ToTable("memories", (string)null);
                 });

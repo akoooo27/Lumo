@@ -21,6 +21,8 @@ public sealed class Preference : AggregateRoot<PreferenceId>
 
     public IReadOnlyCollection<FavoriteModel> FavoriteModels => _favoriteModels.AsReadOnly();
 
+    public bool MemoryEnabled { get; private set; } = true;
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -185,6 +187,28 @@ public sealed class Preference : AggregateRoot<PreferenceId>
             return PreferenceFaults.ModelNotInFavorites;
 
         _favoriteModels.Remove(favoriteModel);
+        UpdatedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
+    public Outcome EnableMemory(DateTimeOffset utcNow)
+    {
+        if (MemoryEnabled)
+            return PreferenceFaults.MemoryAlreadyEnabled;
+
+        MemoryEnabled = true;
+        UpdatedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
+    public Outcome DisableMemory(DateTimeOffset utcNow)
+    {
+        if (!MemoryEnabled)
+            return PreferenceFaults.MemoryAlreadyDisabled;
+
+        MemoryEnabled = false;
         UpdatedAt = utcNow;
 
         return Outcome.Success();

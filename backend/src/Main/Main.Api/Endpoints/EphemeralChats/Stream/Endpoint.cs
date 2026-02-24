@@ -2,6 +2,7 @@ using System.Text;
 
 using FastEndpoints;
 
+using Main.Application.Abstractions.Services;
 using Main.Application.Abstractions.Stream;
 using Main.Domain.ValueObjects;
 
@@ -13,16 +14,18 @@ namespace Main.Api.Endpoints.EphemeralChats.Stream;
 
 internal sealed class Endpoint : Endpoint<Request>
 {
+    private readonly IEphemeralChatAccessValidator _accessValidator;
     private readonly IStreamReader _streamReader;
 
-    public Endpoint(IStreamReader streamReader)
+    public Endpoint(IEphemeralChatAccessValidator accessValidator, IStreamReader streamReader)
     {
+        _accessValidator = accessValidator;
         _streamReader = streamReader;
     }
 
     public override void Configure()
     {
-        Get("/api/ephemeral-chats/stream");
+        Get("/api/ephemeral-chats/{ephemeralChatId}/stream");
         Version(1);
 
         Description(d =>
@@ -51,6 +54,14 @@ internal sealed class Endpoint : Endpoint<Request>
         }
 
         StreamId safeStreamId = streamIdOutcome.Value;
+
+        Outcome accessOutcome = await _accessValidator.ValidateAccessAsync(endpointRequest.EphemeralChatId, ct);
+
+        if (accessOutcome.IsFailure)
+        {
+            await Send.ResponseAsync(CustomResults.Problem(accessOutcome, HttpContext), cancellation: ct);
+            return;
+        }
 
         HttpContext.Response.Headers.ContentType = "text/event-stream";
         HttpContext.Response.Headers.CacheControl = "no-cache";

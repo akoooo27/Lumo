@@ -18,7 +18,8 @@ internal sealed class GetAvailableModelsHandler(IModelRegistry modelRegistry) : 
             Provider: m.Provider,
             IsDefault: m.IsDefault,
             MaxContextTokens: m.ModelCapabilities.MaxContextTokens,
-            SupportsVision: m.ModelCapabilities.SupportsVision
+            SupportsVision: m.ModelCapabilities.SupportsVision,
+            SupportsFunctionCalling: m.ModelCapabilities.SupportsFunctionCalling
         )).ToList();
 
         GetAvailableModelsResponse response = new(dtos);

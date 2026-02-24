@@ -427,6 +427,16 @@ namespace Auth.Infrastructure.Migrations
                         .HasColumnType("timestamptz")
                         .HasColumnName("last_refreshed_at");
 
+                    b.Property<string>("OldRefreshTokenHash")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar")
+                        .HasColumnName("old_refresh_token_hash");
+
+                    b.Property<string>("OldRefreshTokenKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar")
+                        .HasColumnName("old_refresh_token_key");
+
                     b.Property<string>("RefreshTokenHash")
                         .IsRequired()
                         .HasMaxLength(512)
@@ -509,6 +519,9 @@ namespace Auth.Infrastructure.Migrations
 
                     b.HasIndex("ExpiresAt")
                         .HasDatabaseName("ix_sessions_expires_at");
+
+                    b.HasIndex("OldRefreshTokenKey")
+                        .HasDatabaseName("ix_sessions_old_refresh_token_key");
 
                     b.HasIndex("RefreshTokenKey")
                         .IsUnique()

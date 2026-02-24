@@ -8,4 +8,4 @@ public sealed record EditMessageCommand
     string MessageId,
     string NewContent,
     bool WebSearchEnabled
-) : ICommand<EditMessageResponse>;
+) : ICommand<EditMessageResponse>, ISensitiveRequest;

@@ -16,7 +16,10 @@ internal sealed class ToolCallStreamFilter(
     private static readonly Dictionary<string, string> ToolDisplayNames = new()
     {
         ["__ws"] = "web_search",
-        ["__sm"] = "save_memory"
+        ["save"] = "save_memory",
+        ["update"] = "update_memory",
+        ["delete"] = "delete_memory",
+        ["find"] = "find_memories"
     };
 
     public async Task OnAutoFunctionInvocationAsync(AutoFunctionInvocationContext context, Func<AutoFunctionInvocationContext, Task> next)

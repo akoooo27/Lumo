@@ -7,4 +7,4 @@ public sealed record StartChatCommand
     string Message,
     string? ModelId,
     bool WebSearchEnabled
-) : ICommand<StartChatResponse>;
+) : ICommand<StartChatResponse>, ISensitiveRequest;

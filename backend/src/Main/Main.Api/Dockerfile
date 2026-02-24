@@ -14,6 +14,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Directory.Build.props", "./"]
 COPY ["Directory.Packages.props", "./"]
+COPY ["Nuget.config", "./"]
 COPY ["src/Shared/SharedKernel/SharedKernel.csproj", "src/Shared/SharedKernel/"]
 COPY ["src/Shared/SharedKernel.Application/SharedKernel.Application.csproj", "src/Shared/SharedKernel.Application/"]
 COPY ["src/Shared/SharedKernel.Infrastructure/SharedKernel.Infrastructure.csproj", "src/Shared/SharedKernel.Infrastructure/"]

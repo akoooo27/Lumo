@@ -17,6 +17,10 @@ public sealed class Session : AggregateRoot<SessionId>
 
     public string RefreshTokenHash { get; private set; } = string.Empty;
 
+    public string? OldRefreshTokenKey { get; private set; }
+
+    public string? OldRefreshTokenHash { get; private set; }
+
     public Fingerprint Fingerprint { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
@@ -48,6 +52,8 @@ public sealed class Session : AggregateRoot<SessionId>
         UserId = userId;
         RefreshTokenKey = refreshTokenKey;
         RefreshTokenHash = refreshTokenHash;
+        OldRefreshTokenKey = null;
+        OldRefreshTokenHash = null;
         Fingerprint = fingerprint;
         CreatedAt = utcNow;
         ExpiresAt = utcNow.AddDays(SessionConstants.SessionExpirationDays);
@@ -108,6 +114,8 @@ public sealed class Session : AggregateRoot<SessionId>
         if (ensureActiveOutcome.IsFailure)
             return ensureActiveOutcome;
 
+        OldRefreshTokenKey = RefreshTokenKey;
+        OldRefreshTokenHash = RefreshTokenHash;
         RefreshTokenKey = newRefreshTokenKey;
         RefreshTokenHash = newRefreshTokenHash;
         Fingerprint = fingerprint;
@@ -152,6 +160,19 @@ public sealed class Session : AggregateRoot<SessionId>
             return ensureActiveOutcome;
 
         RevokeReason = SessionRevokeReason.AccountRecovery;
+        RevokedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
+    public Outcome RevokeDueToOldRefreshTokenUsage(DateTimeOffset utcNow)
+    {
+        Outcome ensureActiveOutcome = EnsureActive(utcNow);
+
+        if (ensureActiveOutcome.IsFailure)
+            return ensureActiveOutcome;
+
+        RevokeReason = SessionRevokeReason.OldRefreshTokenUsed;
         RevokedAt = utcNow;
 
         return Outcome.Success();

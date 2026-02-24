@@ -95,6 +95,7 @@ public static class DependencyInjection
         services.AddSingleton<ITokenProvider, TokenProvider>();
 
         services.AddSingleton<ISecureTokenGenerator, SecureTokenGenerator>();
+        services.AddSingleton<IAttemptTracker, AttemptTracker>();
 
         return services;
     }

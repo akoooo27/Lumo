@@ -33,4 +33,16 @@ public static class PreferenceFaults
         title: "Preference.ModelNotInFavorites",
         detail: "The specified model was not found in the user's favorites."
     );
+
+    public static readonly Fault MemoryAlreadyEnabled = Fault.Conflict
+    (
+        title: "Preference.MemoryAlreadyEnabled",
+        detail: "Memory is already enabled."
+    );
+
+    public static readonly Fault MemoryAlreadyDisabled = Fault.Conflict
+    (
+        title: "Preference.MemoryAlreadyDisabled",
+        detail: "Memory is already disabled."
+    );
 }

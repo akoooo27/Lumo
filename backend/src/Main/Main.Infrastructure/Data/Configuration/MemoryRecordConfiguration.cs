@@ -42,8 +42,28 @@ internal sealed class MemoryRecordConfiguration : IEntityTypeConfiguration<Memor
             .IsRequired()
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
 
+        b.Property(m => m.UpdatedAt)
+            .IsRequired(false)
+            .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
+
+        b.Property(m => m.LastAccessedAt)
+            .IsRequired()
+            .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
+
+        b.Property(m => m.AccessCount)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        b.Property(m => m.Importance)
+            .IsRequired()
+            .HasDefaultValue(MemoryConstants.DefaultImportance);
+
+        b.Property(m => m.IsActive)
+            .IsRequired()
+            .HasDefaultValue(true);
+
         b.HasIndex(m => m.UserId);
-        b.HasIndex(m => new { m.UserId, m.CreatedAt });
+        b.HasIndex(m => new { m.UserId, m.IsActive, m.CreatedAt });
 
         b.HasIndex(m => m.Embedding)
             .HasMethod("hnsw")

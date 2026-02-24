@@ -33,6 +33,7 @@ public sealed class PreferenceTests
         outcome.Value.UserId.Should().Be(ValidUserId);
         outcome.Value.CreatedAt.Should().Be(UtcNow);
         outcome.Value.UpdatedAt.Should().Be(UtcNow);
+        outcome.Value.MemoryEnabled.Should().BeTrue();
         outcome.Value.Instructions.Should().BeEmpty();
     }
 
@@ -43,6 +44,62 @@ public sealed class PreferenceTests
 
         outcome.IsFailure.Should().BeTrue();
         outcome.Fault.Should().Be(PreferenceFaults.UserIdRequired);
+    }
+
+    #endregion
+
+    #region Memory Toggle Tests
+
+    [Fact]
+    public void DisableMemory_WhenEnabled_ShouldUpdateFlagAndTimestamp()
+    {
+        Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
+        DateTimeOffset updateTime = UtcNow.AddHours(1);
+
+        Outcome outcome = preference.DisableMemory(updateTime);
+
+        outcome.IsSuccess.Should().BeTrue();
+        preference.MemoryEnabled.Should().BeFalse();
+        preference.UpdatedAt.Should().Be(updateTime);
+    }
+
+    [Fact]
+    public void EnableMemory_WhenDisabled_ShouldUpdateFlagAndTimestamp()
+    {
+        Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
+        preference.DisableMemory(UtcNow);
+        DateTimeOffset updateTime = UtcNow.AddHours(2);
+
+        Outcome outcome = preference.EnableMemory(updateTime);
+
+        outcome.IsSuccess.Should().BeTrue();
+        preference.MemoryEnabled.Should().BeTrue();
+        preference.UpdatedAt.Should().Be(updateTime);
+    }
+
+    [Fact]
+    public void EnableMemory_WhenAlreadyEnabled_ShouldReturnFailure()
+    {
+        Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
+
+        Outcome outcome = preference.EnableMemory(UtcNow.AddHours(1));
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(PreferenceFaults.MemoryAlreadyEnabled);
+        preference.MemoryEnabled.Should().BeTrue();
+    }
+
+    [Fact]
+    public void DisableMemory_WhenAlreadyDisabled_ShouldReturnFailure()
+    {
+        Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
+        preference.DisableMemory(UtcNow);
+
+        Outcome outcome = preference.DisableMemory(UtcNow.AddHours(1));
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(PreferenceFaults.MemoryAlreadyDisabled);
+        preference.MemoryEnabled.Should().BeFalse();
     }
 
     #endregion
@@ -62,6 +119,18 @@ public sealed class PreferenceTests
         preference.Instructions.First().Content.Should().Be(ValidInstructionContent);
         preference.Instructions.First().Priority.Should().Be(PreferenceConstants.MinInstructionPriority);
         preference.UpdatedAt.Should().Be(updateTime);
+    }
+
+    [Fact]
+    public void AddInstruction_WithWhitespace_ShouldTrimContent()
+    {
+        Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
+        string paddedContent = $"  {ValidInstructionContent}  ";
+
+        Outcome<Instruction> outcome = preference.AddInstruction(ValidInstructionId, paddedContent, UtcNow);
+
+        outcome.IsSuccess.Should().BeTrue();
+        preference.Instructions.First().Content.Should().Be(ValidInstructionContent);
     }
 
     [Fact]
@@ -155,6 +224,20 @@ public sealed class PreferenceTests
         outcome.IsSuccess.Should().BeTrue();
         preference.Instructions.First().Content.Should().Be(newContent);
         preference.UpdatedAt.Should().Be(updateTime);
+    }
+
+    [Fact]
+    public void UpdateInstruction_WithWhitespace_ShouldTrimContent()
+    {
+        Preference preference = Preference.Create(ValidPreferenceId, ValidUserId, UtcNow).Value;
+        preference.AddInstruction(ValidInstructionId, ValidInstructionContent, UtcNow);
+        string newContent = new('b', InstructionConstants.MinContentLength);
+        string paddedContent = $"  {newContent}  ";
+
+        Outcome outcome = preference.UpdateInstruction(ValidInstructionId, paddedContent, UtcNow);
+
+        outcome.IsSuccess.Should().BeTrue();
+        preference.Instructions.First().Content.Should().Be(newContent);
     }
 
     [Fact]

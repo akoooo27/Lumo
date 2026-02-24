@@ -6,4 +6,4 @@ public sealed record StartEphemeralChatCommand
 (
     string Message,
     string? ModelId
-) : ICommand<StartEphemeralChatResponse>;
+) : ICommand<StartEphemeralChatResponse>, ISensitiveRequest;

@@ -76,6 +76,7 @@ services:
             - OpenRouter__AllowedModels__0__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_0_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_0_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__0__SupportsVision=${OPENROUTER_ALLOWED_MODELS_0_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_0_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__0__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_0_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_0_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__0__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_0_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_0_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 1 (all values must be defined in .env)
             - OpenRouter__AllowedModels__1__Id=${OPENROUTER_ALLOWED_MODELS_1_ID:?OPENROUTER_ALLOWED_MODELS_1_ID is required}
@@ -86,6 +87,7 @@ services:
             - OpenRouter__AllowedModels__1__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_1_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_1_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__1__SupportsVision=${OPENROUTER_ALLOWED_MODELS_1_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_1_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__1__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_1_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_1_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__1__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_1_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_1_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 2 (all values must be defined in .env)
             - OpenRouter__AllowedModels__2__Id=${OPENROUTER_ALLOWED_MODELS_2_ID:?OPENROUTER_ALLOWED_MODELS_2_ID is required}
@@ -96,6 +98,7 @@ services:
             - OpenRouter__AllowedModels__2__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_2_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_2_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__2__SupportsVision=${OPENROUTER_ALLOWED_MODELS_2_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_2_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__2__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_2_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_2_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__2__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_2_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_2_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 3 (all values must be defined in .env)
             - OpenRouter__AllowedModels__3__Id=${OPENROUTER_ALLOWED_MODELS_3_ID:?OPENROUTER_ALLOWED_MODELS_3_ID is required}
@@ -106,6 +109,7 @@ services:
             - OpenRouter__AllowedModels__3__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_3_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_3_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__3__SupportsVision=${OPENROUTER_ALLOWED_MODELS_3_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_3_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__3__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_3_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_3_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__3__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_3_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_3_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 4 (all values must be defined in .env)
             - OpenRouter__AllowedModels__4__Id=${OPENROUTER_ALLOWED_MODELS_4_ID:?OPENROUTER_ALLOWED_MODELS_4_ID is required}
@@ -116,6 +120,7 @@ services:
             - OpenRouter__AllowedModels__4__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_4_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_4_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__4__SupportsVision=${OPENROUTER_ALLOWED_MODELS_4_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_4_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__4__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_4_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_4_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__4__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_4_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_4_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 5 (all values must be defined in .env)
             - OpenRouter__AllowedModels__5__Id=${OPENROUTER_ALLOWED_MODELS_5_ID:?OPENROUTER_ALLOWED_MODELS_5_ID is required}
@@ -126,6 +131,7 @@ services:
             - OpenRouter__AllowedModels__5__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_5_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_5_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__5__SupportsVision=${OPENROUTER_ALLOWED_MODELS_5_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_5_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__5__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_5_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_5_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__5__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_5_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_5_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 6 (all values must be defined in .env)
             - OpenRouter__AllowedModels__6__Id=${OPENROUTER_ALLOWED_MODELS_6_ID:?OPENROUTER_ALLOWED_MODELS_6_ID is required}
@@ -136,6 +142,7 @@ services:
             - OpenRouter__AllowedModels__6__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_6_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_6_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__6__SupportsVision=${OPENROUTER_ALLOWED_MODELS_6_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_6_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__6__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_6_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_6_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__6__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_6_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_6_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 7 (all values must be defined in .env)
             - OpenRouter__AllowedModels__7__Id=${OPENROUTER_ALLOWED_MODELS_7_ID:?OPENROUTER_ALLOWED_MODELS_7_ID is required}
@@ -146,6 +153,7 @@ services:
             - OpenRouter__AllowedModels__7__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_7_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_7_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__7__SupportsVision=${OPENROUTER_ALLOWED_MODELS_7_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_7_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__7__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_7_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_7_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__7__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_7_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_7_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 8 (all values must be defined in .env)
             - OpenRouter__AllowedModels__8__Id=${OPENROUTER_ALLOWED_MODELS_8_ID:?OPENROUTER_ALLOWED_MODELS_8_ID is required}
@@ -156,6 +164,7 @@ services:
             - OpenRouter__AllowedModels__8__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_8_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_8_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__8__SupportsVision=${OPENROUTER_ALLOWED_MODELS_8_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_8_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__8__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_8_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_8_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__8__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_8_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_8_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 9 (all values must be defined in .env)
             - OpenRouter__AllowedModels__9__Id=${OPENROUTER_ALLOWED_MODELS_9_ID:?OPENROUTER_ALLOWED_MODELS_9_ID is required}
@@ -166,6 +175,7 @@ services:
             - OpenRouter__AllowedModels__9__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_9_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_9_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__9__SupportsVision=${OPENROUTER_ALLOWED_MODELS_9_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_9_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__9__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_9_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_9_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__9__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_9_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_9_SUPPORTS_FUNCTION_CALLING is required}
 
             # OpenRouter AllowedModels - Model 10 (all values must be defined in .env)
             - OpenRouter__AllowedModels__10__Id=${OPENROUTER_ALLOWED_MODELS_10_ID:?OPENROUTER_ALLOWED_MODELS_10_ID is required}
@@ -176,6 +186,7 @@ services:
             - OpenRouter__AllowedModels__10__MaxContextTokens=${OPENROUTER_ALLOWED_MODELS_10_MAX_CONTEXT_TOKENS:?OPENROUTER_ALLOWED_MODELS_10_MAX_CONTEXT_TOKENS is required}
             - OpenRouter__AllowedModels__10__SupportsVision=${OPENROUTER_ALLOWED_MODELS_10_SUPPORTS_VISION:?OPENROUTER_ALLOWED_MODELS_10_SUPPORTS_VISION is required}
             - OpenRouter__AllowedModels__10__SupportsStreaming=${OPENROUTER_ALLOWED_MODELS_10_SUPPORTS_STREAMING:?OPENROUTER_ALLOWED_MODELS_10_SUPPORTS_STREAMING is required}
+            - OpenRouter__AllowedModels__10__SupportsFunctionCalling=${OPENROUTER_ALLOWED_MODELS_10_SUPPORTS_FUNCTION_CALLING:?OPENROUTER_ALLOWED_MODELS_10_SUPPORTS_FUNCTION_CALLING is required}
 
             - OpenRouter__EmbeddingModel=${OPENROUTER_EMBEDDING_MODEL:?OPENROUTER_EMBEDDING_MODEL is required}
 

@@ -7,6 +7,7 @@ using Main.Application.Abstractions.Ephemeral;
 using Main.Application.Abstractions.Generators;
 using Main.Application.Abstractions.Instructions;
 using Main.Application.Abstractions.Memory;
+using Main.Application.Abstractions.Services;
 using Main.Application.Abstractions.Stream;
 using Main.Infrastructure.AI;
 using Main.Infrastructure.AI.Filters;
@@ -17,8 +18,10 @@ using Main.Infrastructure.Data;
 using Main.Infrastructure.Ephemeral;
 using Main.Infrastructure.Generators;
 using Main.Infrastructure.Instructions;
+using Main.Infrastructure.Jobs;
 using Main.Infrastructure.Memory;
 using Main.Infrastructure.Options;
+using Main.Infrastructure.Preferences;
 using Main.Infrastructure.Stream;
 
 using MassTransit;
@@ -38,6 +41,8 @@ using SharedKernel.Infrastructure;
 using SharedKernel.Infrastructure.Messaging;
 using SharedKernel.Infrastructure.Options;
 
+using TickerQ.DependencyInjection;
+
 using StreamReader = Main.Infrastructure.Stream.StreamReader;
 
 namespace Main.Infrastructure;
@@ -52,11 +57,14 @@ public static class DependencyInjection
             .AddDatabase(configuration, environment)
             .AddAuthorization()
             .AddMessaging(configuration)
-            .AddAi(configuration);
+            .AddAi(configuration)
+            .AddBackgroundJobs();
 
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IIdGenerator, IdGenerator>();
+
+        services.AddScoped<IUserPreferenceResolver, UserPreferenceResolver>();
 
         return services;
     }
@@ -252,6 +260,15 @@ public static class DependencyInjection
         services.AddSingleton<IModelRegistry, ModelRegistry>();
 
         services.AddScoped<IEphemeralChatStore, EphemeralChatStore>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddBackgroundJobs(this IServiceCollection services)
+    {
+        services.AddScoped<ICronJobHelper, CronJobHelper>();
+
+        services.AddTickerQ();
 
         return services;
     }

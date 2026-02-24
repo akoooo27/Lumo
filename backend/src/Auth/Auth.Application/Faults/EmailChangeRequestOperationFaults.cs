@@ -27,4 +27,10 @@ internal static class EmailChangeRequestOperationFaults
         title: "EmailChangeRequest.SameAsCurrentEmail",
         detail: "The new email address must be different from your current email."
     );
+
+    internal static readonly Fault TooManyAttempts = Fault.TooManyRequests
+    (
+        title: "EmailChangeRequest.TooManyAttempts",
+        detail: "Too many verification attempts. Please request a new verification code."
+    );
 }

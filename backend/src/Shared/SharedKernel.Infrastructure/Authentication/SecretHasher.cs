@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 
 using SharedKernel.Application.Authentication;
 
@@ -18,6 +19,11 @@ public sealed class SecretHasher : ISecretHasher
         byte[] hash = Rfc2898DeriveBytes.Pbkdf2(secret, salt, Iterations, Algorithm, HashSize);
 
         return $"{Convert.ToHexString(hash)}-{Convert.ToHexString(salt)}";
+    }
+
+    public string HashDeterministic(string secret)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(secret)));
     }
 
     public bool Verify(string secret, string hashedSecret)

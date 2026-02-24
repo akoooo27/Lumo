@@ -5,6 +5,8 @@ using Auth.Domain.Constants;
 using Auth.Domain.Faults;
 using Auth.Domain.ValueObjects;
 
+using Contracts.IntegrationEvents.Auth;
+
 using Microsoft.EntityFrameworkCore;
 
 using SharedKernel;
@@ -18,6 +20,7 @@ internal sealed class RefreshTokenHandler(
     IRequestContext requestContext,
     ISecureTokenGenerator secureTokenGenerator,
     ITokenProvider tokenProvider,
+    IMessageBus messageBus,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<RefreshTokenCommand, RefreshTokenResponse>
 {
     public async ValueTask<Outcome<RefreshTokenResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
@@ -41,10 +44,47 @@ internal sealed class RefreshTokenHandler(
             return SessionFaults.RefreshTokenInvalidOrExpired;
 
         Session? session = await dbContext.Sessions
-            .FirstOrDefaultAsync(s => s.RefreshTokenKey == refreshTokenKey, cancellationToken);
+            .FirstOrDefaultAsync(s => s.RefreshTokenKey == refreshTokenKey || s.OldRefreshTokenKey == refreshTokenKey,
+                cancellationToken);
 
         if (session is null)
             return SessionFaults.RefreshTokenInvalidOrExpired;
+
+        if (session.OldRefreshTokenKey == refreshTokenKey)
+        {
+            if (session.OldRefreshTokenHash is not null)
+            {
+                bool isSameAsOldToken = secureTokenGenerator.VerifyToken(refreshToken, session.OldRefreshTokenHash);
+
+                if (isSameAsOldToken)
+                {
+                    session.RevokeDueToOldRefreshTokenUsage(dateTimeProvider.UtcNow);
+
+                    User? user = await dbContext.Users
+                        .FirstOrDefaultAsync(u => u.Id == session.UserId, cancellationToken);
+
+                    if (user is not null)
+                    {
+                        OldRefreshTokenUsed oldRefreshTokenUsed = new()
+                        {
+                            EventId = Guid.NewGuid(),
+                            OccurredAt = dateTimeProvider.UtcNow,
+                            CorrelationId = Guid.Parse(requestContext.CorrelationId),
+                            UserId = session.UserId.Value,
+                            EmailAddress = user.EmailAddress.Value,
+                            IpAddress = requestContext.IpAddress,
+                            UserAgent = requestContext.UserAgent
+                        };
+
+                        await messageBus.PublishAsync(oldRefreshTokenUsed, cancellationToken);
+                    }
+
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+            }
+
+            return SessionFaults.RefreshTokenInvalidOrExpired;
+        }
 
         bool isValid = secureTokenGenerator.VerifyToken(refreshToken, session.RefreshTokenHash);
 
