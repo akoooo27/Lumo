@@ -6,6 +6,7 @@ using Contracts.IntegrationEvents.EphemeralChat;
 using Main.Application.Abstractions.AI;
 using Main.Application.Abstractions.Instructions;
 using Main.Application.Abstractions.Memory;
+using Main.Application.Abstractions.Services;
 using Main.Application.Abstractions.Stream;
 using Main.Domain.Enums;
 using Main.Infrastructure.AI.Helpers;
@@ -32,6 +33,7 @@ internal sealed class NativeChatCompletionService(
     IStreamPublisher streamPublisher,
     IMessageBus messageBus,
     IChatLockService chatLockService,
+    IUserPreferenceResolver userPreferenceResolver,
     IInstructionStore instructionStore,
     IMemoryStore memoryStore,
     Kernel kernel,
@@ -172,7 +174,8 @@ internal sealed class NativeChatCompletionService(
     {
         ModelInfo? modelInfo = modelRegistry.GetModelInfo(modelId);
         bool supportsFunctionCalling = modelInfo?.ModelCapabilities.SupportsFunctionCalling ?? true;
-        bool memoryToolsEnabled = supportsFunctionCalling;
+        bool memoryEnabled = await userPreferenceResolver.IsMemoryEnabledAsync(userId, cancellationToken);
+        bool memoryToolsEnabled = supportsFunctionCalling && memoryEnabled;
         bool webSearchToolEnabled = supportsFunctionCalling && webSearchEnabled;
 
         ChatHistory chatHistory = await BuildChatHistoryAsync
@@ -192,7 +195,9 @@ internal sealed class NativeChatCompletionService(
         List<KernelFunction> functions = supportsFunctionCalling
             ? kernel.Plugins
                 .GetFunctionsMetadata()
-                .Where(f => webSearchToolEnabled || f.PluginName != "search")
+                .Where(f =>
+                    (webSearchToolEnabled || f.PluginName != "search") &&
+                    (memoryToolsEnabled || f.PluginName != "memory"))
                 .Select(f => kernel.Plugins.GetFunction(f.PluginName, f.Name))
                 .ToList()
             : [];
