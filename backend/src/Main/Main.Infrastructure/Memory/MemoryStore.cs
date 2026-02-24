@@ -22,6 +22,8 @@ internal sealed class MemoryStore(
     IDateTimeProvider dateTimeProvider,
     ILogger<MemoryStore> logger) : IMemoryStore
 {
+    private const float ImportanceRetrievalWeight = 0.03f;
+
     public async Task<string> SaveAsync(Guid userId, string content, MemoryCategory memoryCategory, int importance,
         CancellationToken cancellationToken)
     {
@@ -97,7 +99,25 @@ internal sealed class MemoryStore(
             return [];
         }
 
-        List<MemoryRecord> searchResults = await SearchByVectorAsync(userId, new Vector(queryEmbedding), limit, cancellationToken);
+        Vector queryVector = new(queryEmbedding);
+
+        List<MemoryRecord> searchResults = await dbContext.Memories
+            .Where(m => m.UserId == userId && m.IsActive)
+            .OrderBy(m => m.Embedding.CosineDistance(queryVector))
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+
+        if (searchResults.Count > 0)
+        {
+            List<string> ids = [.. searchResults.Select(m => m.Id)];
+
+            await dbContext.Memories
+                .Where(m => ids.Contains(m.Id))
+                .ExecuteUpdateAsync(s => s
+                        .SetProperty(m => m.LastAccessedAt, dateTimeProvider.UtcNow)
+                        .SetProperty(m => m.AccessCount, m => m.AccessCount + 1),
+                    cancellationToken);
+        }
 
         return [.. searchResults.Select(ToEntry)];
     }
@@ -122,29 +142,30 @@ internal sealed class MemoryStore(
         }
 
         Vector queryVector = new(queryEmbedding);
+        int fetchCount = limit * 2;
 
-        List<MemoryRecord> relevantRecords = await SearchByVectorAsync
-        (
-            userId: userId,
-            queryVector: queryVector,
-            limit: limit,
-            cancellationToken: cancellationToken
-        );
-
-        return [.. relevantRecords.Select(ToEntry)];
-    }
-
-    private async Task<List<MemoryRecord>> SearchByVectorAsync(Guid userId, Vector queryVector, int limit, CancellationToken cancellationToken)
-    {
-        List<MemoryRecord> memoryRecords = await dbContext.Memories
+        var candidates = await dbContext.Memories
             .Where(m => m.UserId == userId && m.IsActive)
             .OrderBy(m => m.Embedding.CosineDistance(queryVector))
-            .Take(limit)
+            .Take(fetchCount)
+            .Select(m => new
+            {
+                Record = m,
+                Distance = m.Embedding.CosineDistance(queryVector)
+            })
             .ToListAsync(cancellationToken);
 
-        if (memoryRecords.Count > 0)
+        // Lower the distance more important it becomes.
+        // This will account for the importance so that very important memories get pushed up list
+        // Even if they are not as close to the query.
+        List<MemoryRecord> reranked = [.. candidates
+            .OrderBy(c => c.Distance - c.Record.Importance * ImportanceRetrievalWeight)
+            .Take(limit)
+            .Select(c => c.Record)];
+
+        if (reranked.Count > 0)
         {
-            List<string> ids = memoryRecords.Select(m => m.Id).ToList();
+            List<string> ids = [.. reranked.Select(m => m.Id)];
 
             await dbContext.Memories
                 .Where(m => ids.Contains(m.Id))
@@ -154,7 +175,7 @@ internal sealed class MemoryStore(
                     cancellationToken);
         }
 
-        return memoryRecords;
+        return [.. reranked.Select(ToEntry)];
     }
 
     public async Task<IReadOnlyList<MemoryEntry>> GetRecentAsync(Guid userId, int limit, CancellationToken cancellationToken)
