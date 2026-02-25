@@ -1,4 +1,5 @@
 using Main.Application.Abstractions.Data;
+using Main.Application.Abstractions.Instructions;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
 using Main.Domain.Entities;
@@ -15,6 +16,7 @@ namespace Main.Application.Commands.Preferences.UpdateInstruction;
 internal sealed class UpdateInstructionHandler(
     IMainDbContext dbContext,
     IUserContext userContext,
+    IInstructionStore instructionStore,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateInstructionCommand, UpdateInstructionResponse>
 {
     public async ValueTask<Outcome<UpdateInstructionResponse>> Handle(UpdateInstructionCommand request, CancellationToken cancellationToken)
@@ -46,6 +48,8 @@ internal sealed class UpdateInstructionHandler(
             return updateOutcome.Fault;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await instructionStore.InvalidateCacheAsync(userId, cancellationToken);
 
         Instruction instruction = preference.Instructions.First(i => i.Id == instructionId);
 

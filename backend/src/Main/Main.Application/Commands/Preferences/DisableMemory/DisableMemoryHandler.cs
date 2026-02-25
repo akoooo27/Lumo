@@ -1,5 +1,6 @@
 using Main.Application.Abstractions.Data;
 using Main.Application.Abstractions.Generators;
+using Main.Application.Abstractions.Services;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
 using Main.Domain.ValueObjects;
@@ -16,6 +17,7 @@ internal sealed class DisableMemoryHandler(
     IMainDbContext dbContext,
     IUserContext userContext,
     IIdGenerator idGenerator,
+    IUserPreferenceResolver userPreferenceResolver,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<DisableMemoryCommand>
 {
     public async ValueTask<Outcome> Handle(DisableMemoryCommand request, CancellationToken cancellationToken)
@@ -66,6 +68,8 @@ internal sealed class DisableMemoryHandler(
         {
             return PreferenceOperationFaults.Conflict;
         }
+
+        await userPreferenceResolver.InvalidateCacheAsync(userId, cancellationToken);
 
         return Outcome.Success();
     }

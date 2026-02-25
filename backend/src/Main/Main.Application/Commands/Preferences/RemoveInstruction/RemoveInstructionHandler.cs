@@ -1,4 +1,5 @@
 using Main.Application.Abstractions.Data;
+using Main.Application.Abstractions.Instructions;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
 using Main.Domain.ValueObjects;
@@ -14,6 +15,7 @@ namespace Main.Application.Commands.Preferences.RemoveInstruction;
 internal sealed class RemoveInstructionHandler(
     IMainDbContext dbContext,
     IUserContext userContext,
+    IInstructionStore instructionStore,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<RemoveInstructionCommand>
 {
     public async ValueTask<Outcome> Handle(RemoveInstructionCommand request, CancellationToken cancellationToken)
@@ -44,6 +46,8 @@ internal sealed class RemoveInstructionHandler(
             return removeOutcome.Fault;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await instructionStore.InvalidateCacheAsync(userId, cancellationToken);
 
         return Outcome.Success();
     }
