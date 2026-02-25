@@ -1,4 +1,5 @@
 using Auth.Application.Abstractions.Data;
+using Auth.Application.Abstractions.Users;
 using Auth.Application.Faults;
 using Auth.Domain.Aggregates;
 using Auth.Domain.Constants;
@@ -19,6 +20,7 @@ internal sealed class RequestUserDeletionHandler(
     IUserContext userContext,
     IRequestContext requestContext,
     IMessageBus messageBus,
+    ICurrentUserReadStore currentUserReadStore,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<RequestUserDeletionCommand, RequestUserDeletionResponse>
 {
     public async ValueTask<Outcome<RequestUserDeletionResponse>> Handle(RequestUserDeletionCommand request, CancellationToken cancellationToken)
@@ -71,6 +73,8 @@ internal sealed class RequestUserDeletionHandler(
 
         await messageBus.PublishAsync(deletionRequested, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await currentUserReadStore.InvalidateCacheAsync(userId.Value, cancellationToken);
 
         RequestUserDeletionResponse response = new
         (

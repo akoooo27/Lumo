@@ -1,4 +1,5 @@
 using Auth.Application.Abstractions.Data;
+using Auth.Application.Abstractions.Users;
 using Auth.Application.Faults;
 using Auth.Domain.Aggregates;
 using Auth.Domain.ValueObjects;
@@ -18,6 +19,7 @@ internal sealed class CancelUserDeletionHandler(
     IUserContext userContext,
     IRequestContext requestContext,
     IMessageBus messageBus,
+    ICurrentUserReadStore currentUserReadStore,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<CancelUserDeletionCommand, CancelUserDeletionResponse>
 {
     public async ValueTask<Outcome<CancelUserDeletionResponse>> Handle(CancelUserDeletionCommand request, CancellationToken cancellationToken)
@@ -66,6 +68,8 @@ internal sealed class CancelUserDeletionHandler(
 
         await messageBus.PublishAsync(userDeletionCanceled, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await currentUserReadStore.InvalidateCacheAsync(userId.Value, cancellationToken);
 
         CancelUserDeletionResponse response = new
         (
