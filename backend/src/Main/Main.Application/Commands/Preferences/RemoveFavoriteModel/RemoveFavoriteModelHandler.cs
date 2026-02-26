@@ -1,4 +1,5 @@
 using Main.Application.Abstractions.Data;
+using Main.Application.Abstractions.Services;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
 using Main.Domain.ValueObjects;
@@ -11,7 +12,11 @@ using SharedKernel.Application.Messaging;
 
 namespace Main.Application.Commands.Preferences.RemoveFavoriteModel;
 
-internal sealed class RemoveFavoriteModelHandler(IMainDbContext dbContext, IUserContext userContext, IDateTimeProvider dateTimeProvider) : ICommandHandler<RemoveFavoriteModelCommand>
+internal sealed class RemoveFavoriteModelHandler(
+    IMainDbContext dbContext,
+    IUserContext userContext,
+    IFavoriteModelsReadStore favoriteModelsReadStore,
+    IDateTimeProvider dateTimeProvider) : ICommandHandler<RemoveFavoriteModelCommand>
 {
     public async ValueTask<Outcome> Handle(RemoveFavoriteModelCommand request, CancellationToken cancellationToken)
     {
@@ -41,6 +46,8 @@ internal sealed class RemoveFavoriteModelHandler(IMainDbContext dbContext, IUser
             return removeOutcome.Fault;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await favoriteModelsReadStore.InvalidateCacheAsync(userId, cancellationToken);
 
         return Outcome.Success();
     }

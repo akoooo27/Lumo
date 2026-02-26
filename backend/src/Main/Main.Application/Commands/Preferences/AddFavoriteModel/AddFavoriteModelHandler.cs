@@ -1,6 +1,7 @@
 using Main.Application.Abstractions.AI;
 using Main.Application.Abstractions.Data;
 using Main.Application.Abstractions.Generators;
+using Main.Application.Abstractions.Services;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
 using Main.Domain.Entities;
@@ -19,6 +20,7 @@ internal sealed class AddFavoriteModelHandler(
     IUserContext userContext,
     IIdGenerator idGenerator,
     IModelRegistry modelRegistry,
+    IFavoriteModelsReadStore favoriteModelsReadStore,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<AddFavoriteModelCommand, AddFavoriteModelResponse>
 {
     public async ValueTask<Outcome<AddFavoriteModelResponse>> Handle(AddFavoriteModelCommand request, CancellationToken cancellationToken)
@@ -74,6 +76,8 @@ internal sealed class AddFavoriteModelHandler(
         {
             return PreferenceOperationFaults.Conflict;
         }
+
+        await favoriteModelsReadStore.InvalidateCacheAsync(userId, cancellationToken);
 
         AddFavoriteModelResponse response = new
         (

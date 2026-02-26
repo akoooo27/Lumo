@@ -8,6 +8,7 @@ using Main.Application.Abstractions.Generators;
 using Main.Application.Abstractions.Instructions;
 using Main.Application.Abstractions.Memory;
 using Main.Application.Abstractions.Services;
+using Main.Application.Abstractions.SharedChats;
 using Main.Application.Abstractions.Stream;
 using Main.Infrastructure.AI;
 using Main.Infrastructure.AI.Filters;
@@ -22,6 +23,7 @@ using Main.Infrastructure.Jobs;
 using Main.Infrastructure.Memory;
 using Main.Infrastructure.Options;
 using Main.Infrastructure.Preferences;
+using Main.Infrastructure.SharedChats;
 using Main.Infrastructure.Stream;
 
 using MassTransit;
@@ -65,6 +67,8 @@ public static class DependencyInjection
         services.AddSingleton<IIdGenerator, IdGenerator>();
 
         services.AddScoped<IUserPreferenceResolver, UserPreferenceResolver>();
+        services.AddScoped<ISharedChatReadStore, SharedChatReadStore>();
+        services.AddScoped<IFavoriteModelsReadStore, FavoriteModelsReadStore>();
 
         return services;
     }
