@@ -2,39 +2,28 @@ using Contracts.IntegrationEvents.Auth;
 
 using MassTransit;
 
-using Microsoft.Extensions.Options;
-
-using Notifications.Api.Models;
-using Notifications.Api.Options;
-using Notifications.Api.Services;
+using Notifications.Api.Data;
+using Notifications.Api.ReadModels;
 
 namespace Notifications.Api.Consumers;
 
-internal sealed class UserSignedUpConsumer(
-    IEmailService emailService,
-    IOptions<EmailOptions> emailOptions,
-    ILogger<UserSignedUpConsumer> logger) : IConsumer<UserSignedUp>
+internal sealed class UserSignedUpConsumer(INotificationDbContext dbContext, ILogger<UserSignedUpConsumer> logger)
+    : IConsumer<UserSignedUp>
 {
-    private readonly EmailOptions _emailOptions = emailOptions.Value;
-
     public async Task Consume(ConsumeContext<UserSignedUp> context)
     {
         CancellationToken cancellationToken = context.CancellationToken;
         UserSignedUp message = context.Message;
 
-        WelcomeEmailTemplateData templateData = new()
+        User newUser = new()
         {
+            UserId = message.UserId,
             DisplayName = message.DisplayName,
-            ApplicationName = _emailOptions.ApplicationName
+            EmailAddress = message.EmailAddress,
         };
 
-        await emailService.SendTemplatedEmailAsync
-        (
-            recipientEmailAddress: message.EmailAddress,
-            templateName: _emailOptions.WelcomeEmailTemplateName,
-            templateData: templateData,
-            cancellationToken: cancellationToken
-        );
+        await dbContext.Users.AddAsync(newUser, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(

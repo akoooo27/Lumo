@@ -8,22 +8,22 @@ using Notifications.Api.Data;
 
 namespace Notifications.Api.Consumers;
 
-internal sealed class UserEmailAddressChangedConsumer(INotificationDbContext dbContext, ILogger<UserEmailAddressChangedConsumer> logger)
-    : IConsumer<UserEmailAddressChanged>
+internal sealed class UserDisplayNameChangedConsumer(INotificationDbContext dbContext, ILogger<UserDisplayNameChangedConsumer> logger)
+    : IConsumer<UserDisplayNameChanged>
 {
-    public async Task Consume(ConsumeContext<UserEmailAddressChanged> context)
+    public async Task Consume(ConsumeContext<UserDisplayNameChanged> context)
     {
         CancellationToken cancellationToken = context.CancellationToken;
-        UserEmailAddressChanged message = context.Message;
+        UserDisplayNameChanged message = context.Message;
 
         int rowsAffected = await dbContext.Users
             .Where(u => u.UserId == message.UserId)
-            .ExecuteUpdateAsync(s => s.SetProperty(u => u.EmailAddress, message.NewEmailAddress), cancellationToken);
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.DisplayName, message.DisplayName), cancellationToken);
 
         if (rowsAffected == 0)
         {
             logger.LogWarning(
-                "User with ID {UserId} not found for email address update. EventId: {EventId}, CorrelationId: {CorrelationId}, OccurredAt: {OccurredAt}",
+                "User with ID {UserId} not found for display name update. EventId: {EventId}, CorrelationId: {CorrelationId}, OccurredAt: {OccurredAt}",
                 message.UserId, message.EventId, message.CorrelationId, message.OccurredAt);
             return;
         }
@@ -31,6 +31,6 @@ internal sealed class UserEmailAddressChangedConsumer(INotificationDbContext dbC
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(
                 "Consumed {EventType}: {EventId}, CorrelationId: {CorrelationId}, OccurredAt: {OccurredAt}, UserId: {UserId}",
-                nameof(UserEmailAddressChanged), message.EventId, message.CorrelationId, message.OccurredAt, message.UserId);
+                nameof(UserDisplayNameChanged), message.EventId, message.CorrelationId, message.OccurredAt, message.UserId);
     }
 }

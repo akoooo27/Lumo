@@ -1,14 +1,15 @@
 using Contracts.IntegrationEvents.Auth;
 
+using Main.Application.Abstractions.Data;
+
 using MassTransit;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
-using Notifications.Api.Data;
+namespace Main.Infrastructure.Consumers;
 
-namespace Notifications.Api.Consumers;
-
-internal sealed class UserEmailAddressChangedConsumer(INotificationDbContext dbContext, ILogger<UserEmailAddressChangedConsumer> logger)
+internal sealed class UserEmailAddressChangedConsumer(IMainDbContext dbContext, ILogger<UserEmailAddressChangedConsumer> logger)
     : IConsumer<UserEmailAddressChanged>
 {
     public async Task Consume(ConsumeContext<UserEmailAddressChanged> context)

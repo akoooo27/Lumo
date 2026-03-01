@@ -132,6 +132,10 @@ public static class DependencyInjection
                 .Endpoint(e => e.Name = "main-user-signed-up");
             bus.AddConsumer<UserDeletedConsumer>()
                 .Endpoint(e => e.Name = "main-user-deleted");
+            bus.AddConsumer<UserDisplayNameChangedConsumer>()
+                .Endpoint(e => e.Name = "main-user-display-name-changed");
+            bus.AddConsumer<UserEmailAddressChangedConsumer>()
+                .Endpoint(e => e.Name = "main-user-email-address-changed");
             bus.AddConsumer<ChatStartedConsumer>();
             bus.AddConsumer<AssistantMessageGeneratedConsumer>();
             bus.AddConsumer<MessageSentConsumer>();

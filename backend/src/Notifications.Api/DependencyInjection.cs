@@ -7,6 +7,7 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 using Notifications.Api.Consumers;
+using Notifications.Api.Consumers.Audit;
 using Notifications.Api.Data;
 using Notifications.Api.Options;
 using Notifications.Api.Services;
@@ -77,14 +78,25 @@ internal static class DependencyInjection
         {
             bus.AddConsumer<UserSignedUpConsumer>()
                 .Endpoint(e => e.Name = "notifications-user-signed-up");
-            bus.AddConsumer<LoginRequestedConsumer>();
-            bus.AddConsumer<UserEmailAddressChangedConsumer>();
-            bus.AddConsumer<RecoveryInitiatedConsumer>();
-            bus.AddConsumer<EmailChangeRequestedConsumer>();
-            bus.AddConsumer<UserDeletionRequestedConsumer>();
-            bus.AddConsumer<UserDeletionCanceledConsumer>();
+
             bus.AddConsumer<UserDeletedConsumer>()
                 .Endpoint(e => e.Name = "notifications-user-deleted");
+            bus.AddConsumer<UserDisplayNameChangedConsumer>()
+                .Endpoint(e => e.Name = "notifications-user-display-name-changed");
+            bus.AddConsumer<UserEmailAddressChangedConsumer>()
+                .Endpoint(e => e.Name = "notifications-user-email-address-changed");
+
+            bus.AddConsumer<UserSignedUpAuditConsumer>()
+                .Endpoint(e => e.Name = "notifications-user-signed-up-audit");
+
+            bus.AddConsumer<LoginRequestedConsumerAudit>();
+            bus.AddConsumer<UserEmailAddressChangedAuditConsumer>();
+            bus.AddConsumer<RecoveryInitiatedAuditConsumer>();
+            bus.AddConsumer<EmailChangeRequestedAuditConsumer>();
+            bus.AddConsumer<UserDeletionRequestedAuditConsumer>();
+            bus.AddConsumer<UserDeletionCanceledAuditConsumer>();
+            bus.AddConsumer<UserDeletedAuditConsumer>()
+                .Endpoint(e => e.Name = "notifications-user-deleted-audit");
 
             bus.AddEntityFrameworkOutbox<NotificationDbContext>(outbox =>
             {

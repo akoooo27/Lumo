@@ -10,12 +10,12 @@ using Notifications.Api.Models;
 using Notifications.Api.Options;
 using Notifications.Api.Services;
 
-namespace Notifications.Api.Consumers;
+namespace Notifications.Api.Consumers.Audit;
 
-internal sealed class UserDeletionRequestedConsumer(
+internal sealed class UserDeletionRequestedAuditConsumer(
     IEmailService emailService,
     IOptions<EmailOptions> emailOptions,
-    ILogger<UserDeletionRequestedConsumer> logger) : IConsumer<UserDeletionRequested>
+    ILogger<UserDeletionRequestedAuditConsumer> logger) : IConsumer<UserDeletionRequested>
 {
     private readonly EmailOptions _emailOptions = emailOptions.Value;
 

@@ -8,12 +8,12 @@ using Notifications.Api.Models;
 using Notifications.Api.Options;
 using Notifications.Api.Services;
 
-namespace Notifications.Api.Consumers;
+namespace Notifications.Api.Consumers.Audit;
 
-internal sealed class LoginRequestedConsumer(
+internal sealed class LoginRequestedConsumerAudit(
     IEmailService emailService,
     IOptions<EmailOptions> emailOptions,
-    ILogger<LoginRequestedConsumer> logger) : IConsumer<LoginRequested>
+    ILogger<LoginRequestedConsumerAudit> logger) : IConsumer<LoginRequested>
 {
     private readonly EmailOptions _emailOptions = emailOptions.Value;
 
