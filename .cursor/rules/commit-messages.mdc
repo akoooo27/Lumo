@@ -1,0 +1,58 @@
+---
+description: Commit message format — conventional commits, bullet body, summary
+alwaysApply: true
+---
+
+# Commit Message Format
+
+When writing or suggesting commit messages for this project, follow this format. Do not add Co-authored-by, Made-with, or any other attribution lines.
+
+## Title (subject line)
+
+- Use **Conventional Commits**: `type: subject`
+- **Types**: `feat`, `fix`, `refactor`, `chore`, `test`
+- **Subject**: imperative, lowercase after the colon, no trailing period
+- Keep under ~50 characters when possible; longer is acceptable for complex changes
+
+### Examples (from this repo)
+
+- `feat: add user read model sync and split notification consumers into sync vs audit`
+- `feat: cache favorite models and shared chats with invalidation`
+- `fix: handle new preference in enable/disable memory handlers and restore SaveAsync validation`
+- `refactor: extract title generation and system prompt into dedicated components`
+- `chore: centralize varchar column type in EF configurations`
+- `test: add comprehensive domain tests for pin/unpin, favorite models, and value objects`
+
+### Verbs used in this project
+
+- **feat**: add, implement, extend, integrate, enhance
+- **fix**: handle, enforce, restrict, hash, remove, use
+- **refactor**: migrate, extract, consolidate, replace
+- **chore**: centralize, add, update
+- **test**: add, align
+
+Leave merge commits as-is (e.g. `Merge pull request #19 from Auxology/feature/memory`).
+
+## Body
+
+1. **Bullet list first** — one change per line, each line starting with `- `
+2. **Bullet style**: Start with a verb (Add, Implement, Refactor, In X:, Move, Register, Update, Create). Include component, handler, or file names where helpful.
+3. **Summary after bullets**: One or more short paragraphs in sentence case explaining why the change was made or its impact. Wrap at 72 characters.
+
+### Body example
+
+```
+- Add ICurrentUserReadStore with GetAsync and InvalidateCacheAsync
+- Implement CurrentUserReadStore with IDistributedCache and Dapper: cache key current-user:{userId}, 5-minute TTL
+- Refactor GetCurrentUserHandler to use ICurrentUserReadStore.GetAsync instead of direct Dapper query
+- Call currentUserReadStore.InvalidateCacheAsync in CancelUserDeletionHandler, RequestUserDeletionHandler, UpdateProfileHandler after successful save
+
+Reduces database load for get-current-user with 5-minute cache. Profile and deletion
+handlers invalidate cache on write so subsequent reads see fresh user data.
+```
+
+## Rules
+
+- Do **not** add `Co-authored-by`, `Made-with`, or any attribution lines.
+- Use present imperative in the subject ("add" not "added").
+- For small commits, a subject-only message is fine; add a body when the change benefits from bullets and context.

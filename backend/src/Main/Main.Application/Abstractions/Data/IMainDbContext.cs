@@ -19,5 +19,8 @@ public interface IMainDbContext
 
     DbSet<SharedChat> SharedChats { get; }
 
+    DbSet<Workflow> Workflows { get; }
+    DbSet<WorkflowRun> WorkflowRuns { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

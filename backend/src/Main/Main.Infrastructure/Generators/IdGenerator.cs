@@ -28,4 +28,7 @@ internal sealed class IdGenerator : IIdGenerator
 
     public FavoriteModelId NewFavoriteModelId() =>
         FavoriteModelId.UnsafeFrom($"{FavoriteModelId.PrefixValue}{Ulid.NewUlid()}");
+
+    public WorkflowId NewWorkflowId() =>
+        WorkflowId.UnsafeFrom($"{WorkflowId.PrefixValue}{Ulid.NewUlid()}");
 }
