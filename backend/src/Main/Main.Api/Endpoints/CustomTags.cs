@@ -9,4 +9,5 @@ internal static class CustomTags
     public const string Preferences = "Preferences";
     public const string SharedChats = "SharedChats";
     public const string EphemeralChats = "EphemeralChats";
+    public const string Workflows = "Workflows";
 }
