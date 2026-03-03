@@ -31,4 +31,7 @@ internal sealed class IdGenerator : IIdGenerator
 
     public WorkflowId NewWorkflowId() =>
         WorkflowId.UnsafeFrom($"{WorkflowId.PrefixValue}{Ulid.NewUlid()}");
+
+    public WorkflowRunId NewWorkflowRunId() =>
+        WorkflowRunId.UnsafeFrom($"{WorkflowRunId.PrefixValue}{Ulid.NewUlid()}");
 }

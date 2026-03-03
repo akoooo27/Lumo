@@ -21,4 +21,6 @@ public interface IIdGenerator
     FavoriteModelId NewFavoriteModelId();
 
     WorkflowId NewWorkflowId();
+
+    WorkflowRunId NewWorkflowRunId();
 }

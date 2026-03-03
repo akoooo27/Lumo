@@ -378,6 +378,51 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         return workflowRun;
     }
 
+    public Outcome StartRun(WorkflowRunId runId, DateTimeOffset utcNow)
+    {
+        WorkflowRun? run = _workflowRuns.FirstOrDefault(r => r.Id == runId);
+
+        if (run is null)
+            return WorkflowRunFaults.NotFound;
+
+        Outcome startOutcome = run.MarkRunning(utcNow);
+
+        if (startOutcome.IsFailure)
+            return startOutcome.Fault;
+
+        return Outcome.Success();
+    }
+
+    public Outcome CompleteRunWithSuccess(WorkflowRunId runId, string resultMarkdown, DateTimeOffset utcNow)
+    {
+        WorkflowRun? workflowRun = _workflowRuns.FirstOrDefault(r => r.Id == runId);
+
+        if (workflowRun is null)
+            return WorkflowRunFaults.NotFound;
+
+        Outcome successOutcome = workflowRun.MarkSucceeded(resultMarkdown, utcNow);
+
+        if (successOutcome.IsFailure)
+            return successOutcome.Fault;
+
+        return Outcome.Success();
+    }
+
+    public Outcome CompleteRunWithFailure(WorkflowRunId runId, string failureMessage, DateTimeOffset utcNow)
+    {
+        WorkflowRun? run = _workflowRuns.FirstOrDefault(r => r.Id == runId);
+
+        if (run is null)
+            return WorkflowRunFaults.NotFound;
+
+        Outcome failureOutcome = run.MarkFailed(failureMessage, utcNow);
+
+        if (failureOutcome.IsFailure)
+            return failureOutcome.Fault;
+
+        return Outcome.Success();
+    }
+
     private static Outcome ValidateTitle(string title)
     {
         if (string.IsNullOrWhiteSpace(title))
