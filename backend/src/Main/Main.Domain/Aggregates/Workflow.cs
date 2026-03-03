@@ -40,8 +40,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
 
     public string TimeZoneId { get; private set; } = string.Empty;
 
-    public string ScheduleSummary { get; private set; } = string.Empty;
-
     public DateTimeOffset NextRunAt { get; private set; }
 
     public DateTimeOffset? LastRunAt { get; private set; }
@@ -76,7 +74,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         int daysOfWeekMask,
         string localTime,
         string timeZoneId,
-        string scheduleSummary,
         DateTimeOffset nextRunAt,
         DateTimeOffset utcNow
     )
@@ -95,7 +92,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         DaysOfWeekMask = daysOfWeekMask;
         LocalTime = localTime;
         TimeZoneId = timeZoneId;
-        ScheduleSummary = scheduleSummary;
         NextRunAt = nextRunAt;
         ConsecutiveFailureCount = 0;
         CreatedAt = utcNow;
@@ -114,7 +110,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         IReadOnlyList<DayOfWeek>? daysOfWeek,
         string localTime,
         string timeZoneId,
-        string scheduleSummary,
         DateTimeOffset nextRunAt,
         DateTimeOffset utcNow
     )
@@ -161,7 +156,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
             daysOfWeekMask: mask,
             localTime: localTime,
             timeZoneId: timeZoneId,
-            scheduleSummary: scheduleSummary,
             nextRunAt: nextRunAt,
             utcNow: utcNow
         );
@@ -179,7 +173,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         IReadOnlyList<DayOfWeek>? daysOfWeek,
         string localTime,
         string timeZoneId,
-        string scheduleSummary,
         DateTimeOffset nextRunAt,
         DateTimeOffset utcNow
     )
@@ -214,7 +207,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         DaysOfWeekMask = ComputeDaysOfWeekMask(recurrenceKind, daysOfWeek);
         LocalTime = localTime;
         TimeZoneId = timeZoneId;
-        ScheduleSummary = scheduleSummary;
         NextRunAt = nextRunAt;
         UpdatedAt = utcNow;
 
@@ -342,7 +334,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
             useWebSearchUsed: UseWebSearch,
             instructionSnapshot: Instruction,
             titleSnapshot: Title,
-            scheduleSummarySnapshot: ScheduleSummary,
             utcNow: utcNow
         );
 
@@ -374,7 +365,6 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
             useWebSearchUsed: UseWebSearch,
             instructionSnapshot: Instruction,
             titleSnapshot: Title,
-            scheduleSummarySnapshot: ScheduleSummary,
             utcNow: utcNow
         );
 

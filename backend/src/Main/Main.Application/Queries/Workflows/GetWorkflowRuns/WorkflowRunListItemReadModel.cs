@@ -14,8 +14,6 @@ public sealed record class WorkflowRunListItemReadModel
 
     public DateTimeOffset? CompletedAt { get; init; }
 
-    public string? ResultPreview { get; init; }
-
     public string? FailureMessage { get; init; }
 
     public string? SkipReason { get; init; }

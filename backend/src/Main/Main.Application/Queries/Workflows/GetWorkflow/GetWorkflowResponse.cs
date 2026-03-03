@@ -26,8 +26,6 @@ public sealed record GetWorkflowResponse
 
     public required string TimeZoneId { get; init; }
 
-    public required string ScheduleSummary { get; init; }
-
     public DateTimeOffset NextRunAt { get; init; }
 
     public DateTimeOffset? LastRunAt { get; init; }

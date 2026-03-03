@@ -9,7 +9,6 @@ internal sealed record WorkflowRunListItemDto
     DateTimeOffset ScheduledFor,
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
-    string? ResultPreview,
     string? FailureMessage,
     string? SkipReason,
     DateTimeOffset CreatedAt

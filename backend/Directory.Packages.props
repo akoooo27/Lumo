@@ -80,6 +80,8 @@
     <PackageVersion Include="TickerQ.EntityFrameworkCore" Version="10.1.1" />
 
     <PackageVersion Include="Microsoft.SemanticKernel" Version="1.72.0" />
+
+    <PackageVersion Include="Cronos" Version="0.11.1" />
     <!-- Web.Api -->
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
     <PackageVersion Include="FastEndpoints" Version="8.0.0" />

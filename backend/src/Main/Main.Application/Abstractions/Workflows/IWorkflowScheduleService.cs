@@ -16,12 +16,4 @@ public interface IWorkflowScheduleService
         string timeZoneId,
         DateTimeOffset fromUtc
     );
-
-    string BuildScheduleSummary
-    (
-        WorkflowRecurrenceKind kind,
-        IReadOnlyList<DayOfWeek>? daysOfWeek,
-        string localTime,
-        string timeZoneId
-    );
 }

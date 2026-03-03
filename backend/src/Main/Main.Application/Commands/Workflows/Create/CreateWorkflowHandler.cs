@@ -52,14 +52,6 @@ internal sealed class CreateWorkflowHandler(
             ? GenerateTitle(request.Instruction)
             : request.Title;
 
-        string scheduleSummary = workflowScheduleService.BuildScheduleSummary
-        (
-            kind: request.RecurrenceKind,
-            daysOfWeek: request.DayOfWeeks,
-            localTime: request.LocalTime,
-            timeZoneId: request.TimeZoneId
-        );
-
         DateTimeOffset nextRunAt = workflowScheduleService.GetNextOccurrence
         (
             kind: request.RecurrenceKind,
@@ -83,7 +75,6 @@ internal sealed class CreateWorkflowHandler(
             daysOfWeek: request.DayOfWeeks,
             localTime: request.LocalTime,
             timeZoneId: request.TimeZoneId,
-            scheduleSummary: scheduleSummary,
             nextRunAt: nextRunAt,
             utcNow: dateTimeProvider.UtcNow
         );
@@ -114,7 +105,6 @@ internal sealed class CreateWorkflowHandler(
         (
             WorkflowId: workflow.Id.Value,
             Title: workflow.Title,
-            ScheduleSummary: workflow.ScheduleSummary,
             NextRunAt: workflow.NextRunAt,
             CreatedAt: workflow.CreatedAt
         );

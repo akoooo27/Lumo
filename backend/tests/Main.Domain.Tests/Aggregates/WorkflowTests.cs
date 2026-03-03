@@ -22,8 +22,6 @@ public sealed class WorkflowTests
     private const string ValidModelId = "gpt-5-mini";
     private const string ValidLocalTime = "09:00";
     private const string ValidTimeZoneId = "America/New_York";
-    private const string ValidScheduleSummary = "Every day at 09:00";
-
     #region Create Tests
 
     [Fact]
@@ -48,7 +46,6 @@ public sealed class WorkflowTests
         outcome.Value.DaysOfWeekMask.Should().Be(0b1111111);
         outcome.Value.LocalTime.Should().Be(ValidLocalTime);
         outcome.Value.TimeZoneId.Should().Be(ValidTimeZoneId);
-        outcome.Value.ScheduleSummary.Should().Be(ValidScheduleSummary);
         outcome.Value.NextRunAt.Should().Be(nextRunAt);
         outcome.Value.LastRunAt.Should().BeNull();
         outcome.Value.ConsecutiveFailureCount.Should().Be(0);
@@ -111,7 +108,6 @@ public sealed class WorkflowTests
             daysOfWeek: null,
             localTime: ValidLocalTime,
             timeZoneId: ValidTimeZoneId,
-            scheduleSummary: ValidScheduleSummary,
             nextRunAt: UtcNow.AddHours(1),
             utcNow: UtcNow);
 
@@ -229,7 +225,6 @@ public sealed class WorkflowTests
             daysOfWeek: daysOfWeek,
             localTime: "18:30",
             timeZoneId: "Europe/Berlin",
-            scheduleSummary: "Every Tuesday and Thursday at 18:30",
             nextRunAt: nextRunAt,
             utcNow: updateTime);
 
@@ -243,7 +238,6 @@ public sealed class WorkflowTests
         workflow.DaysOfWeekMask.Should().Be((1 << (int)DayOfWeek.Tuesday) | (1 << (int)DayOfWeek.Thursday));
         workflow.LocalTime.Should().Be("18:30");
         workflow.TimeZoneId.Should().Be("Europe/Berlin");
-        workflow.ScheduleSummary.Should().Be("Every Tuesday and Thursday at 18:30");
         workflow.NextRunAt.Should().Be(nextRunAt);
         workflow.UpdatedAt.Should().Be(updateTime);
     }
@@ -263,7 +257,6 @@ public sealed class WorkflowTests
             daysOfWeek: null,
             localTime: ValidLocalTime,
             timeZoneId: ValidTimeZoneId,
-            scheduleSummary: ValidScheduleSummary,
             nextRunAt: UtcNow.AddHours(2),
             utcNow: UtcNow.AddHours(1));
 
@@ -537,7 +530,6 @@ public sealed class WorkflowTests
         outcome.Value.UseWebSearchUsed.Should().BeTrue();
         outcome.Value.InstructionSnapshot.Should().Be(ValidInstruction);
         outcome.Value.TitleSnapshot.Should().Be(ValidTitle);
-        outcome.Value.ScheduleSummarySnapshot.Should().Be(ValidScheduleSummary);
         outcome.Value.CreatedAt.Should().Be(createTime);
         outcome.Value.StartedAt.Should().BeNull();
         outcome.Value.CompletedAt.Should().BeNull();
@@ -580,7 +572,6 @@ public sealed class WorkflowTests
         outcome.Value.UseWebSearchUsed.Should().BeTrue();
         outcome.Value.InstructionSnapshot.Should().Be(ValidInstruction);
         outcome.Value.TitleSnapshot.Should().Be(ValidTitle);
-        outcome.Value.ScheduleSummarySnapshot.Should().Be(ValidScheduleSummary);
     }
 
     [Theory]
@@ -623,7 +614,6 @@ public sealed class WorkflowTests
             daysOfWeek: daysOfWeek,
             localTime: ValidLocalTime,
             timeZoneId: ValidTimeZoneId,
-            scheduleSummary: ValidScheduleSummary,
             nextRunAt: nextRunAt ?? UtcNow.AddHours(1),
             utcNow: UtcNow);
     }

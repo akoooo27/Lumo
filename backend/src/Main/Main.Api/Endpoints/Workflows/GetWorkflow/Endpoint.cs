@@ -54,7 +54,6 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                 DaysOfWeek: r.DaysOfWeek,
                 LocalTime: r.LocalTime,
                 TimeZoneId: r.TimeZoneId,
-                ScheduleSummary: r.ScheduleSummary,
                 NextRunAt: r.NextRunAt,
                 LastRunAt: r.LastRunAt,
                 ConsecutiveFailureCount: r.ConsecutiveFailureCount,

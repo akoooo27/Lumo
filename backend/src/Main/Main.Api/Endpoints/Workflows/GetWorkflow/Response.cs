@@ -15,7 +15,6 @@ internal sealed record Response
     IReadOnlyList<DayOfWeek>? DaysOfWeek,
     string LocalTime,
     string TimeZoneId,
-    string ScheduleSummary,
     DateTimeOffset NextRunAt,
     DateTimeOffset? LastRunAt,
     int ConsecutiveFailureCount,

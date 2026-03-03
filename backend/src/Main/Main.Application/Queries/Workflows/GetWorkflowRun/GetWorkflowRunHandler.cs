@@ -27,14 +27,12 @@ internal sealed class GetWorkflowRunHandler(
             wr.started_at AS StartedAt,
             wr.completed_at AS CompletedAt,
             wr.result_markdown AS ResultMarkdown,
-            wr.result_preview AS ResultPreview,
             wr.failure_message AS FailureMessage,
             wr.skip_reason AS SkipReason,
             wr.model_id_used AS ModelIdUsed,
             wr.use_web_search_used AS UseWebSearchUsed,
             wr.instruction_snapshot AS InstructionSnapshot,
             wr.title_snapshot AS TitleSnapshot,
-            wr.schedule_summary_snapshot AS ScheduleSummarySnapshot,
             wr.created_at AS CreatedAt
         FROM workflow_runs wr
         INNER JOIN workflows w ON w.id = wr.workflow_id
@@ -74,14 +72,12 @@ internal sealed class GetWorkflowRunHandler(
             StartedAt = workflowRun.StartedAt,
             CompletedAt = workflowRun.CompletedAt,
             ResultMarkdown = workflowRun.ResultMarkdown,
-            ResultPreview = workflowRun.ResultPreview,
             FailureMessage = workflowRun.FailureMessage,
             SkipReason = workflowRun.SkipReason,
             ModelIdUsed = workflowRun.ModelIdUsed,
             UseWebSearchUsed = workflowRun.UseWebSearchUsed,
             InstructionSnapshot = workflowRun.InstructionSnapshot,
             TitleSnapshot = workflowRun.TitleSnapshot,
-            ScheduleSummarySnapshot = workflowRun.ScheduleSummarySnapshot,
             CreatedAt = workflowRun.CreatedAt
         };
 

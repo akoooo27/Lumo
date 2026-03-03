@@ -50,14 +50,12 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                 StartedAt: r.StartedAt,
                 CompletedAt: r.CompletedAt,
                 ResultMarkdown: r.ResultMarkdown,
-                ResultPreview: r.ResultPreview,
                 FailureMessage: r.FailureMessage,
                 SkipReason: r.SkipReason,
                 ModelIdUsed: r.ModelIdUsed,
                 UseWebSearchUsed: r.UseWebSearchUsed,
                 InstructionSnapshot: r.InstructionSnapshot,
                 TitleSnapshot: r.TitleSnapshot,
-                ScheduleSummarySnapshot: r.ScheduleSummarySnapshot,
                 CreatedAt: r.CreatedAt
             ),
             cancellationToken: ct

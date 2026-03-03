@@ -16,7 +16,13 @@ public sealed record class WorkflowListItemReadModel
 
     public bool UseWebSearch { get; init; }
 
-    public required string ScheduleSummary { get; init; }
+    public WorkflowRecurrenceKind RecurrenceKind { get; init; }
+
+    public int DaysOfWeekMask { get; init; }
+
+    public required string LocalTime { get; init; }
+
+    public required string TimeZoneId { get; init; }
 
     public DateTimeOffset NextRunAt { get; init; }
 

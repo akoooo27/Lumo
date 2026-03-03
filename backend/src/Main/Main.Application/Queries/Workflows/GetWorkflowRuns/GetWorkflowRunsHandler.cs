@@ -30,7 +30,6 @@ internal sealed class GetWorkflowRunsHandler(
             scheduled_for AS ScheduledFor,
             started_at AS StartedAt,
             completed_at AS CompletedAt,
-            result_preview AS ResultPreview,
             failure_message AS FailureMessage,
             skip_reason AS SkipReason,
             created_at AS CreatedAt

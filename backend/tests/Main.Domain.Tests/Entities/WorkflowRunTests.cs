@@ -1,6 +1,5 @@
 using FluentAssertions;
 
-using Main.Domain.Constants;
 using Main.Domain.Entities;
 using Main.Domain.Enums;
 using Main.Domain.Faults;
@@ -18,7 +17,6 @@ public sealed class WorkflowRunTests
     private const string ValidModelId = "gpt-5-mini";
     private const string ValidInstructionSnapshot = "Summarize the key updates";
     private const string ValidTitleSnapshot = "Daily Brief";
-    private const string ValidScheduleSummarySnapshot = "Every day at 09:00";
 
     [Fact]
     public void CreateQueued_WithValidData_ShouldReturnSuccess()
@@ -33,7 +31,6 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: true,
             instructionSnapshot: ValidInstructionSnapshot,
             titleSnapshot: ValidTitleSnapshot,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow);
 
         outcome.IsSuccess.Should().BeTrue();
@@ -45,7 +42,6 @@ public sealed class WorkflowRunTests
         outcome.Value.UseWebSearchUsed.Should().BeTrue();
         outcome.Value.InstructionSnapshot.Should().Be(ValidInstructionSnapshot);
         outcome.Value.TitleSnapshot.Should().Be(ValidTitleSnapshot);
-        outcome.Value.ScheduleSummarySnapshot.Should().Be(ValidScheduleSummarySnapshot);
         outcome.Value.CreatedAt.Should().Be(UtcNow);
         outcome.Value.StartedAt.Should().BeNull();
         outcome.Value.CompletedAt.Should().BeNull();
@@ -62,7 +58,6 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: true,
             instructionSnapshot: ValidInstructionSnapshot,
             titleSnapshot: ValidTitleSnapshot,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow);
 
         outcome.IsFailure.Should().BeTrue();
@@ -80,7 +75,6 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: true,
             instructionSnapshot: ValidInstructionSnapshot,
             titleSnapshot: ValidTitleSnapshot,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow);
 
         outcome.IsFailure.Should().BeTrue();
@@ -101,7 +95,6 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: true,
             instructionSnapshot: ValidInstructionSnapshot,
             titleSnapshot: ValidTitleSnapshot,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow);
 
         outcome.IsFailure.Should().BeTrue();
@@ -122,7 +115,6 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: true,
             instructionSnapshot: instructionSnapshot!,
             titleSnapshot: ValidTitleSnapshot,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow);
 
         outcome.IsFailure.Should().BeTrue();
@@ -143,7 +135,6 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: true,
             instructionSnapshot: ValidInstructionSnapshot,
             titleSnapshot: titleSnapshot!,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow);
 
         outcome.IsFailure.Should().BeTrue();
@@ -164,7 +155,6 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: false,
             instructionSnapshot: ValidInstructionSnapshot,
             titleSnapshot: ValidTitleSnapshot,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow);
 
         outcome.IsSuccess.Should().BeTrue();
@@ -190,7 +180,6 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: true,
             instructionSnapshot: ValidInstructionSnapshot,
             titleSnapshot: ValidTitleSnapshot,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow);
 
         outcome.IsFailure.Should().BeTrue();
@@ -223,11 +212,11 @@ public sealed class WorkflowRunTests
     }
 
     [Fact]
-    public void MarkSucceeded_WhenRunning_ShouldStoreResultAndPreview()
+    public void MarkSucceeded_WhenRunning_ShouldStoreResult()
     {
         WorkflowRun workflowRun = CreateQueuedWorkflowRun();
         workflowRun.MarkRunning(UtcNow);
-        string resultMarkdown = new('a', WorkflowConstants.ResultPreviewLength + 10);
+        string resultMarkdown = "This is the workflow result.";
         DateTimeOffset completedAt = UtcNow.AddMinutes(1);
 
         Outcome outcome = workflowRun.MarkSucceeded(resultMarkdown, completedAt);
@@ -236,7 +225,6 @@ public sealed class WorkflowRunTests
         workflowRun.Status.Should().Be(WorkflowRunStatus.Succeeded);
         workflowRun.CompletedAt.Should().Be(completedAt);
         workflowRun.ResultMarkdown.Should().Be(resultMarkdown);
-        workflowRun.ResultPreview.Should().Be(resultMarkdown[..WorkflowConstants.ResultPreviewLength]);
     }
 
     [Fact]
@@ -315,6 +303,5 @@ public sealed class WorkflowRunTests
             useWebSearchUsed: true,
             instructionSnapshot: ValidInstructionSnapshot,
             titleSnapshot: ValidTitleSnapshot,
-            scheduleSummarySnapshot: ValidScheduleSummarySnapshot,
             utcNow: UtcNow).Value;
 }

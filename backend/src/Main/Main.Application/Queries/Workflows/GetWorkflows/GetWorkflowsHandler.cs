@@ -21,7 +21,10 @@ internal sealed class GetWorkflowsHandler(
             pause_reason AS PauseReason,
             model_id AS ModelId,
             use_web_search AS UseWebSearch,
-            schedule_summary AS ScheduleSummary,
+            recurrence_kind AS RecurrenceKind,
+            days_of_week_mask AS DaysOfWeekMask,
+            local_time AS LocalTime,
+            time_zone_id AS TimeZoneId,
             next_run_at AS NextRunAt,
             last_run_at AS LastRunAt
         FROM workflows

@@ -18,8 +18,6 @@ public sealed record GetWorkflowRunResponse
 
     public string? ResultMarkdown { get; init; }
 
-    public string? ResultPreview { get; init; }
-
     public string? FailureMessage { get; init; }
 
     public string? SkipReason { get; init; }
@@ -31,8 +29,6 @@ public sealed record GetWorkflowRunResponse
     public required string InstructionSnapshot { get; init; }
 
     public required string TitleSnapshot { get; init; }
-
-    public required string ScheduleSummarySnapshot { get; init; }
 
     public DateTimeOffset CreatedAt { get; init; }
 }

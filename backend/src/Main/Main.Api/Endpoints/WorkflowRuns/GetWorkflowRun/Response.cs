@@ -11,13 +11,11 @@ internal sealed record Response
     DateTimeOffset? StartedAt,
     DateTimeOffset? CompletedAt,
     string? ResultMarkdown,
-    string? ResultPreview,
     string? FailureMessage,
     string? SkipReason,
     string ModelIdUsed,
     bool UseWebSearchUsed,
     string InstructionSnapshot,
     string TitleSnapshot,
-    string ScheduleSummarySnapshot,
     DateTimeOffset CreatedAt
 );

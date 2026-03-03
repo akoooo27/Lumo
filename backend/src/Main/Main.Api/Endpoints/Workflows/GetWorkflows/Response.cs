@@ -10,7 +10,10 @@ internal sealed record WorkflowListItemDto
     WorkflowPauseReason PauseReason,
     string ModelId,
     bool UseWebSearch,
-    string ScheduleSummary,
+    WorkflowRecurrenceKind RecurrenceKind,
+    int DaysOfWeekMask,
+    string LocalTime,
+    string TimeZoneId,
     DateTimeOffset NextRunAt,
     DateTimeOffset? LastRunAt
 );

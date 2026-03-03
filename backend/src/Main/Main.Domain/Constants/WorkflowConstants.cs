@@ -18,9 +18,5 @@ public static class WorkflowConstants
 
     public const int MaxLocalTimeLength = 5; // "HH:mm"
 
-    public const int MaxScheduleSummaryLength = 256;
-
     public const int MaxConsecutiveFailures = 3;
-
-    public const int ResultPreviewLength = 200;
 }

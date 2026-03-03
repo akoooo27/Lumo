@@ -51,7 +51,6 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                         ScheduledFor: run.ScheduledFor,
                         StartedAt: run.StartedAt,
                         CompletedAt: run.CompletedAt,
-                        ResultPreview: run.ResultPreview,
                         FailureMessage: run.FailureMessage,
                         SkipReason: run.SkipReason,
                         CreatedAt: run.CreatedAt

@@ -54,7 +54,6 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
             (
                 WorkflowId: r.WorkflowId,
                 Title: r.Title,
-                ScheduleSummary: r.ScheduleSummary,
                 NextRunAt: r.NextRunAt,
                 CreatedAt: r.CreatedAt
             ),

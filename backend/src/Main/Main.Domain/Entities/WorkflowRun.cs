@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 
-using Main.Domain.Constants;
 using Main.Domain.Enums;
 using Main.Domain.Faults;
 using Main.Domain.ValueObjects;
@@ -23,8 +22,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
 
     public string? ResultMarkdown { get; private set; }
 
-    public string? ResultPreview { get; private set; }
-
     public string? FailureMessage { get; private set; }
 
     public string? SkipReason { get; private set; }
@@ -36,8 +33,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
     public string InstructionSnapshot { get; private set; } = string.Empty;
 
     public string TitleSnapshot { get; private set; } = string.Empty;
-
-    public string ScheduleSummarySnapshot { get; private set; } = string.Empty;
 
     public DateTimeOffset CreatedAt { get; private set; }
 
@@ -54,7 +49,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
         bool useWebSearchUsed,
         string instructionSnapshot,
         string titleSnapshot,
-        string scheduleSummarySnapshot,
         DateTimeOffset utcNow
     )
     {
@@ -66,7 +60,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
         UseWebSearchUsed = useWebSearchUsed;
         InstructionSnapshot = instructionSnapshot;
         TitleSnapshot = titleSnapshot;
-        ScheduleSummarySnapshot = scheduleSummarySnapshot;
         CreatedAt = utcNow;
     }
 
@@ -79,7 +72,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
         bool useWebSearchUsed,
         string instructionSnapshot,
         string titleSnapshot,
-        string scheduleSummarySnapshot,
         DateTimeOffset utcNow
     )
     {
@@ -108,7 +100,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
             useWebSearchUsed: useWebSearchUsed,
             instructionSnapshot: instructionSnapshot,
             titleSnapshot: titleSnapshot,
-            scheduleSummarySnapshot: scheduleSummarySnapshot,
             utcNow: utcNow
         );
 
@@ -125,7 +116,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
         bool useWebSearchUsed,
         string instructionSnapshot,
         string titleSnapshot,
-        string scheduleSummarySnapshot,
         DateTimeOffset utcNow
     )
     {
@@ -157,7 +147,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
             useWebSearchUsed: useWebSearchUsed,
             instructionSnapshot: instructionSnapshot,
             titleSnapshot: titleSnapshot,
-            scheduleSummarySnapshot: scheduleSummarySnapshot,
             utcNow: utcNow
         )
         { SkipReason = skipReason, CompletedAt = utcNow };
@@ -187,9 +176,6 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
         Status = WorkflowRunStatus.Succeeded;
         CompletedAt = utcNow;
         ResultMarkdown = resultMarkdown;
-        ResultPreview = resultMarkdown.Length > WorkflowConstants.ResultPreviewLength
-            ? resultMarkdown[..WorkflowConstants.ResultPreviewLength]
-            : resultMarkdown;
 
         return Outcome.Success();
     }

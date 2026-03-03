@@ -55,7 +55,10 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
                     PauseReason: w.PauseReason,
                     ModelId: w.ModelId,
                     UseWebSearch: w.UseWebSearch,
-                    ScheduleSummary: w.ScheduleSummary,
+                    RecurrenceKind: w.RecurrenceKind,
+                    DaysOfWeekMask: w.DaysOfWeekMask,
+                    LocalTime: w.LocalTime,
+                    TimeZoneId: w.TimeZoneId,
                     NextRunAt: w.NextRunAt,
                     LastRunAt: w.LastRunAt
                 ))

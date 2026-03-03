@@ -10,6 +10,7 @@ using Main.Application.Abstractions.Memory;
 using Main.Application.Abstractions.Services;
 using Main.Application.Abstractions.SharedChats;
 using Main.Application.Abstractions.Stream;
+using Main.Application.Abstractions.Workflows;
 using Main.Infrastructure.AI;
 using Main.Infrastructure.AI.Filters;
 using Main.Infrastructure.AI.Plugins;
@@ -25,6 +26,7 @@ using Main.Infrastructure.Options;
 using Main.Infrastructure.Preferences;
 using Main.Infrastructure.SharedChats;
 using Main.Infrastructure.Stream;
+using Main.Infrastructure.Workflows;
 
 using MassTransit;
 
@@ -69,6 +71,9 @@ public static class DependencyInjection
         services.AddScoped<IUserPreferenceResolver, UserPreferenceResolver>();
         services.AddScoped<ISharedChatReadStore, SharedChatReadStore>();
         services.AddScoped<IFavoriteModelsReadStore, FavoriteModelsReadStore>();
+
+        services.AddSingleton<IWorkflowScheduleService, WorkflowScheduleService>();
+        services.AddScoped<IWorkflowExecutionService, WorkflowExecutionService>();
 
         return services;
     }
