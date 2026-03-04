@@ -457,6 +457,9 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         if (kind == WorkflowRecurrenceKind.Weekly && (daysOfWeek is null || daysOfWeek.Count == 0))
             return WorkflowFaults.WeeklyRequiresDays;
 
+        if (daysOfWeek is not null && daysOfWeek.Any(d => !Enum.IsDefined(d)))
+            return WorkflowFaults.InvalidDayOfWeek;
+
         return Outcome.Success();
     }
 

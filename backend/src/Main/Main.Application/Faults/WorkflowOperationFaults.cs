@@ -45,4 +45,10 @@ public static class WorkflowOperationFaults
         title: "Workflow.ModelNoLongerAvailable",
         detail: "The selected model is no longer available for workflows. Please select a different model."
     );
+
+    public static readonly Fault InvalidDayOfWeek = Fault.Validation
+    (
+        title: "Workflow.InvalidDayOfWeek",
+        detail: "One or more days of the week are invalid. Valid values are Sunday (0) through Saturday (6)."
+    );
 }

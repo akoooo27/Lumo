@@ -3,7 +3,6 @@ using Main.Application.Abstractions.Data;
 using Main.Application.Abstractions.Workflows;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
-using Main.Domain.Constants;
 using Main.Domain.Enums;
 using Main.Domain.Faults;
 using Main.Domain.ValueObjects;
@@ -57,8 +56,11 @@ internal sealed class UpdateWorkflowHandler(
         if (scheduleInputOutcome.IsFailure)
             return scheduleInputOutcome.Fault;
 
+        if (request.DaysOfWeek is not null && request.DaysOfWeek.Any(d => !Enum.IsDefined(d)))
+            return WorkflowOperationFaults.InvalidDayOfWeek;
+
         string title = string.IsNullOrWhiteSpace(request.Title)
-            ? GenerateTitle(request.Instruction)
+            ? WorkflowTitleGenerator.Generate(request.Instruction)
             : request.Title;
 
         DateTimeOffset utcNow = dateTimeProvider.UtcNow;
@@ -122,21 +124,5 @@ internal sealed class UpdateWorkflowHandler(
         );
 
         return response;
-    }
-
-    private static string GenerateTitle(string instruction)
-    {
-        const int maxWords = 8;
-        string trimmed = instruction.Trim();
-
-        string[] words = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        string title = words.Length <= maxWords
-            ? trimmed
-            : string.Join(' ', words.Take(maxWords)) + "...";
-
-        return title.Length > WorkflowConstants.MaxTitleLength
-            ? title[..WorkflowConstants.MaxTitleLength]
-            : title;
     }
 }

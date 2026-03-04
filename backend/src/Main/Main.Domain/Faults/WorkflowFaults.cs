@@ -52,6 +52,12 @@ public static class WorkflowFaults
         detail: "Weekly recurrence requires at least one weekday."
     );
 
+    public static readonly Fault InvalidDayOfWeek = Fault.Validation
+    (
+        title: "Workflow.InvalidDayOfWeek",
+        detail: "One or more days of the week are invalid. Valid values are Sunday (0) through Saturday (6)."
+    );
+
     public static readonly Fault CannotModifyArchived = Fault.Conflict
     (
         title: "Workflow.CannotModifyArchived",

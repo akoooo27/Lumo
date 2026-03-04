@@ -96,6 +96,18 @@ internal sealed class CronJobHelper(
                         workflow.Id.Value, skipOutcome.Fault.Detail);
                     continue;
                 }
+
+                DateTimeOffset nextRunAt = workflowScheduleService.GetNextOccurrence
+                (
+                    kind: workflow.RecurrenceKind,
+                    daysOfWeek: GetDaysFromMask(workflow.RecurrenceKind, workflow.DaysOfWeekMask),
+                    localTime: workflow.LocalTime,
+                    timeZoneId: workflow.TimeZoneId,
+                    fromUtc: utcNow
+                );
+
+                workflow.AdvanceNextRunAt(nextRunAt, utcNow);
+                workflow.ClearDispatchLease();
             }
             else
             {

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using FluentValidation;
 
 using Main.Domain.Constants;
@@ -20,7 +22,8 @@ internal sealed class CreateWorkflowValidator : AbstractValidator<CreateWorkflow
 
         RuleFor(cwc => cwc.LocalTime)
             .NotEmpty().WithMessage("Local time is required")
-            .Matches(@"^\d{2}:\d{2}$").WithMessage("Local time must be in HH:mm format");
+            .Must(lt => TimeOnly.TryParseExact(lt, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
+            .WithMessage("Local time must be in HH:mm format");
 
         RuleFor(cwc => cwc.TimeZoneId)
             .NotEmpty().WithMessage("Timezone is required")

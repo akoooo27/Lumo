@@ -48,8 +48,11 @@ internal sealed class CreateWorkflowHandler(
         if (scheduleInputOutcome.IsFailure)
             return scheduleInputOutcome.Fault;
 
+        if (request.DayOfWeeks is not null && request.DayOfWeeks.Any(d => !Enum.IsDefined(d)))
+            return WorkflowOperationFaults.InvalidDayOfWeek;
+
         string title = string.IsNullOrWhiteSpace(request.Title)
-            ? GenerateTitle(request.Instruction)
+            ? WorkflowTitleGenerator.Generate(request.Instruction)
             : request.Title;
 
         DateTimeOffset nextRunAt = workflowScheduleService.GetNextOccurrence
@@ -110,21 +113,5 @@ internal sealed class CreateWorkflowHandler(
         );
 
         return response;
-    }
-
-    private static string GenerateTitle(string instruction)
-    {
-        const int maxWords = 8;
-        string trimmed = instruction.Trim();
-
-        string[] words = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        string title = words.Length <= maxWords
-            ? trimmed
-            : string.Join(' ', words.Take(maxWords)) + "...";
-
-        return title.Length > WorkflowConstants.MaxTitleLength
-            ? title[..WorkflowConstants.MaxTitleLength]
-            : title;
     }
 }

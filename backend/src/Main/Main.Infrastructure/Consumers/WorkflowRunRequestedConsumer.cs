@@ -122,13 +122,15 @@ internal sealed class WorkflowRunRequestedConsumer(
 
         WorkflowExecutionResult result = await executionService.ExecuteAsync(request, cancellationToken);
 
+        DateTimeOffset completedAt = dateTimeProvider.UtcNow;
+
         if (result.Success)
         {
             Outcome successOutcome = workflow.CompleteWorkflowRunWithSuccess
             (
                 workflowRunId: workflowRunId,
                 resultMarkdown: result.ResultMarkdown!,
-                utcNow: dateTimeProvider.UtcNow
+                utcNow: completedAt
             );
 
             if (successOutcome.IsFailure)
@@ -137,7 +139,7 @@ internal sealed class WorkflowRunRequestedConsumer(
                 return;
             }
 
-            workflow.RecordWorkflowRunSuccess(utcNow);
+            workflow.RecordWorkflowRunSuccess(completedAt);
 
             await PublishNotification
             (
@@ -156,7 +158,7 @@ internal sealed class WorkflowRunRequestedConsumer(
             (
                 workflowRunId: workflowRunId,
                 failureMessage: result.FailureMessage ?? "Unknown error.",
-                utcNow: dateTimeProvider.UtcNow
+                utcNow: completedAt
             );
 
             if (failureOutcome.IsFailure)
@@ -165,7 +167,7 @@ internal sealed class WorkflowRunRequestedConsumer(
                 return;
             }
 
-            bool paused = workflow.RecordWorkflowRunFailure(utcNow);
+            bool paused = workflow.RecordWorkflowRunFailure(completedAt);
 
             await PublishNotification
             (
