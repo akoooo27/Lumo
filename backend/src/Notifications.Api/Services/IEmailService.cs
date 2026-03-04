@@ -1,3 +1,5 @@
+using Contracts.IntegrationEvents.Workflow;
+
 namespace Notifications.Api.Services;
 
 internal interface IEmailService
@@ -9,4 +11,10 @@ internal interface IEmailService
         TData templateData,
         CancellationToken cancellationToken = default
     ) where TData : notnull;
+
+    Task SendWorkflowNotificationAsync
+    (
+        WorkflowRunNotificationRequested message,
+        CancellationToken cancellationToken = default
+    );
 }

@@ -41,4 +41,10 @@ internal sealed class EmailOptions
 
     [Required, MinLength(1)]
     public string UserDeletedTemplateName { get; init; } = string.Empty;
+
+    [Required, MinLength(1)]
+    public string WorkflowRunSucceededTemplateName { get; init; } = string.Empty;
+
+    [Required, MinLength(1)]
+    public string WorkflowRunFailedTemplateName { get; init; } = string.Empty;
 }

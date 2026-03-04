@@ -70,8 +70,8 @@ internal sealed class WorkflowExecutionService(
         catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
         {
             logger.LogWarning(exception,
-                "Workflow execution timed out. WorkflowId={WorkflowId}, RunId={RunId}",
-                request.WorkflowId, request.RunId);
+                "Workflow execution timed out. WorkflowId={WorkflowId}, WorkflowRunId={WorkflowRunId}",
+                request.WorkflowId, request.WorkflowRunId);
 
             return new WorkflowExecutionResult
             (
@@ -89,8 +89,8 @@ internal sealed class WorkflowExecutionService(
 #pragma warning restore CA1031
         {
             logger.LogError(exception,
-                "Workflow execution failed. WorkflowId={WorkflowId}, RunId={RunId}",
-                request.WorkflowId, request.RunId);
+                "Workflow execution failed. WorkflowId={WorkflowId}, WorkflowRunId={WorkflowRunId}",
+                request.WorkflowId, request.WorkflowRunId);
 
             return new WorkflowExecutionResult
             (

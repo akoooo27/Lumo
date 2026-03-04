@@ -310,8 +310,8 @@ public sealed class WorkflowTests
     public void Resume_WhenPaused_ShouldResumeWorkflowAndResetFailureCount()
     {
         Workflow workflow = CreateValidWorkflow();
-        workflow.RecordRunFailure(UtcNow.AddMinutes(1));
-        workflow.RecordRunFailure(UtcNow.AddMinutes(2));
+        workflow.RecordWorkflowRunFailure(UtcNow.AddMinutes(1));
+        workflow.RecordWorkflowRunFailure(UtcNow.AddMinutes(2));
         workflow.Pause(UtcNow.AddMinutes(3));
         DateTimeOffset nextRunAt = UtcNow.AddHours(4);
         DateTimeOffset resumeTime = UtcNow.AddHours(5);
@@ -461,14 +461,14 @@ public sealed class WorkflowTests
     #region Run Recording Tests
 
     [Fact]
-    public void RecordRunSuccess_ShouldResetFailureCountAndUpdateTimestamps()
+    public void RecordWorkflowRunSuccess_ShouldResetFailureCountAndUpdateTimestamps()
     {
         Workflow workflow = CreateValidWorkflow();
-        workflow.RecordRunFailure(UtcNow.AddMinutes(1));
-        workflow.RecordRunFailure(UtcNow.AddMinutes(2));
+        workflow.RecordWorkflowRunFailure(UtcNow.AddMinutes(1));
+        workflow.RecordWorkflowRunFailure(UtcNow.AddMinutes(2));
         DateTimeOffset successTime = UtcNow.AddMinutes(3);
 
-        workflow.RecordRunSuccess(successTime);
+        workflow.RecordWorkflowRunSuccess(successTime);
 
         workflow.LastRunAt.Should().Be(successTime);
         workflow.ConsecutiveFailureCount.Should().Be(0);
@@ -476,12 +476,12 @@ public sealed class WorkflowTests
     }
 
     [Fact]
-    public void RecordRunFailure_BeforeThreshold_ShouldIncrementFailureCount()
+    public void RecordWorkflowRunFailure_BeforeThreshold_ShouldIncrementFailureCount()
     {
         Workflow workflow = CreateValidWorkflow();
         DateTimeOffset failureTime = UtcNow.AddMinutes(1);
 
-        bool reachedThreshold = workflow.RecordRunFailure(failureTime);
+        bool reachedThreshold = workflow.RecordWorkflowRunFailure(failureTime);
 
         reachedThreshold.Should().BeFalse();
         workflow.LastRunAt.Should().Be(failureTime);
@@ -492,13 +492,13 @@ public sealed class WorkflowTests
     }
 
     [Fact]
-    public void RecordRunFailure_WhenThresholdReached_ShouldPauseWorkflow()
+    public void RecordWorkflowRunFailure_WhenThresholdReached_ShouldPauseWorkflow()
     {
         Workflow workflow = CreateValidWorkflow();
 
-        workflow.RecordRunFailure(UtcNow.AddMinutes(1));
-        workflow.RecordRunFailure(UtcNow.AddMinutes(2));
-        bool reachedThreshold = workflow.RecordRunFailure(UtcNow.AddMinutes(3));
+        workflow.RecordWorkflowRunFailure(UtcNow.AddMinutes(1));
+        workflow.RecordWorkflowRunFailure(UtcNow.AddMinutes(2));
+        bool reachedThreshold = workflow.RecordWorkflowRunFailure(UtcNow.AddMinutes(3));
 
         reachedThreshold.Should().BeTrue();
         workflow.ConsecutiveFailureCount.Should().Be(WorkflowConstants.MaxConsecutiveFailures);
@@ -513,13 +513,13 @@ public sealed class WorkflowTests
     #region Workflow Run Tests
 
     [Fact]
-    public void CreateQueuedRun_WithValidData_ShouldAddQueuedRun()
+    public void CreateQueuedWorkflowRun_WithValidData_ShouldAddQueuedRun()
     {
         Workflow workflow = CreateValidWorkflow();
         DateTimeOffset scheduledFor = UtcNow.AddHours(2);
         DateTimeOffset createTime = UtcNow.AddHours(1);
 
-        Outcome<WorkflowRun> outcome = workflow.CreateQueuedRun(ValidWorkflowRunId, scheduledFor, createTime);
+        Outcome<WorkflowRun> outcome = workflow.CreateQueuedWorkflowRun(ValidWorkflowRunId, scheduledFor, createTime);
 
         outcome.IsSuccess.Should().BeTrue();
         workflow.WorkflowRuns.Should().ContainSingle();
@@ -536,11 +536,11 @@ public sealed class WorkflowTests
     }
 
     [Fact]
-    public void CreateQueuedRun_WithInvalidRunId_ShouldReturnFailure()
+    public void CreateQueuedWorkflowRun_WithInvalidRunId_ShouldReturnFailure()
     {
         Workflow workflow = CreateValidWorkflow();
 
-        Outcome<WorkflowRun> outcome = workflow.CreateQueuedRun(
+        Outcome<WorkflowRun> outcome = workflow.CreateQueuedWorkflowRun(
             WorkflowRunId.UnsafeFrom(string.Empty),
             UtcNow.AddHours(1),
             UtcNow);
@@ -551,13 +551,13 @@ public sealed class WorkflowTests
     }
 
     [Fact]
-    public void CreateSkippedRun_WithValidData_ShouldAddSkippedRun()
+    public void CreateSkippedWorkflowRun_WithValidData_ShouldAddSkippedRun()
     {
         Workflow workflow = CreateValidWorkflow();
         DateTimeOffset scheduledFor = UtcNow.AddHours(2);
         DateTimeOffset createTime = UtcNow.AddHours(1);
 
-        Outcome<WorkflowRun> outcome = workflow.CreateSkippedRun(
+        Outcome<WorkflowRun> outcome = workflow.CreateSkippedWorkflowRun(
             ValidWorkflowRunId,
             scheduledFor,
             "A newer run already exists.",
@@ -578,11 +578,11 @@ public sealed class WorkflowTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void CreateSkippedRun_WithEmptySkipReason_ShouldReturnFailure(string? skipReason)
+    public void CreateSkippedWorkflowRun_WithEmptySkipReason_ShouldReturnFailure(string? skipReason)
     {
         Workflow workflow = CreateValidWorkflow();
 
-        Outcome<WorkflowRun> outcome = workflow.CreateSkippedRun(
+        Outcome<WorkflowRun> outcome = workflow.CreateSkippedWorkflowRun(
             ValidWorkflowRunId,
             UtcNow.AddHours(1),
             skipReason!,

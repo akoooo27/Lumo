@@ -82,9 +82,9 @@ internal sealed class CronJobHelper(
 
             if (hasActiveRun)
             {
-                Outcome<WorkflowRun> skipOutcome = workflow.CreateSkippedRun
+                Outcome<WorkflowRun> skipOutcome = workflow.CreateSkippedWorkflowRun
                 (
-                    runId: workflowRunId,
+                    workflowRunId: workflowRunId,
                     scheduledFor: workflow.NextRunAt,
                     skipReason: "Previous run still in progress.",
                     utcNow: utcNow
@@ -99,9 +99,9 @@ internal sealed class CronJobHelper(
             }
             else
             {
-                Outcome<WorkflowRun> queueOutcome = workflow.CreateQueuedRun
+                Outcome<WorkflowRun> queueOutcome = workflow.CreateQueuedWorkflowRun
                 (
-                    runId: workflowRunId,
+                    workflowRunId: workflowRunId,
                     scheduledFor: workflow.NextRunAt,
                     utcNow: utcNow
                 );
@@ -120,7 +120,7 @@ internal sealed class CronJobHelper(
                     EventId = Guid.NewGuid(),
                     OccurredAt = utcNow,
                     WorkflowId = workflow.Id.Value,
-                    RunId = workflowRun.Id.Value,
+                    WorkflowRunId = workflowRun.Id.Value,
                     UserId = workflow.UserId,
                     ModelId = workflow.ModelId,
                     Instruction = workflow.Instruction,

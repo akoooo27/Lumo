@@ -97,6 +97,7 @@ internal static class DependencyInjection
             bus.AddConsumer<UserDeletionCanceledAuditConsumer>();
             bus.AddConsumer<UserDeletedAuditConsumer>()
                 .Endpoint(e => e.Name = "notifications-user-deleted-audit");
+            bus.AddConsumer<WorkflowRunNotificationRequestedConsumer>();
 
             bus.AddEntityFrameworkOutbox<NotificationDbContext>(outbox =>
             {

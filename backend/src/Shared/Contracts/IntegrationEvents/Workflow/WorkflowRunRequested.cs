@@ -8,7 +8,7 @@ public sealed record WorkflowRunRequested
 
     public required string WorkflowId { get; init; }
 
-    public required string RunId { get; init; }
+    public required string WorkflowRunId { get; init; }
 
     public required Guid UserId { get; init; }
 

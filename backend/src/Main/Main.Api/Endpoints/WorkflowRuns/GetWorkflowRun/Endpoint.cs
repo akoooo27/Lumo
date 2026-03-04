@@ -19,7 +19,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
 
     public override void Configure()
     {
-        Get("/api/workflow-runs/{runId}");
+        Get("/api/workflow-runs/{workflowRunId}");
         Version(1);
 
         Description(d =>
@@ -36,7 +36,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
 
     public override async Task HandleAsync(Request endpointRequest, CancellationToken ct)
     {
-        GetWorkflowRunQuery query = new(endpointRequest.RunId);
+        GetWorkflowRunQuery query = new(endpointRequest.WorkflowRunId);
 
         await SendOutcomeAsync
         (

@@ -10,13 +10,17 @@ public class WorkflowRunNotificationRequested
 
     public required string WorkflowId { get; init; }
 
-    public required string RunId { get; init; }
+    public required string WorkflowRunId { get; init; }
 
-    public required string Category { get; init; }
+    public required Guid IdempotencyId { get; init; }
+
+    public required WorkflowNotificationCategory Category { get; init; }
 
     public required string Title { get; init; }
 
     public required string BodyPreview { get; init; }
 
     public required string RecipientEmailAddress { get; init; }
+
+    public DateTimeOffset? NextRunAt { get; init; }
 }

@@ -41,7 +41,7 @@ internal sealed class WorkflowRunRequestedConsumer(
 
         WorkflowId workflowId = workflowIdOutcome.Value;
 
-        Outcome<WorkflowRunId> workflowRunIdOutcome = WorkflowRunId.From(message.RunId);
+        Outcome<WorkflowRunId> workflowRunIdOutcome = WorkflowRunId.From(message.WorkflowRunId);
 
         if (workflowRunIdOutcome.IsFailure)
         {
@@ -69,9 +69,9 @@ internal sealed class WorkflowRunRequestedConsumer(
 
         if (modelInfo is null || !modelInfo.ModelCapabilities.SupportsFunctionCalling)
         {
-            Outcome failOutcome = workflow.CompleteRunWithFailure
+            Outcome failOutcome = workflow.CompleteWorkflowRunWithFailure
             (
-                runId: workflowRunId,
+                workflowRunId: workflowRunId,
                 failureMessage: "Model unavailable or does not support required capabilities",
                 utcNow: utcNow
             );
@@ -88,9 +88,8 @@ internal sealed class WorkflowRunRequestedConsumer(
             (
                 workflow: workflow,
                 workflowRun: workflowRun,
-                category: "WorkflowFailed",
+                category: WorkflowNotificationCategory.WorkflowPaused,
                 bodyPreview: "Workflow paused: model unavailable",
-                userId: workflow.UserId,
                 cancellationToken: cancellationToken
             );
 
@@ -98,9 +97,9 @@ internal sealed class WorkflowRunRequestedConsumer(
             return;
         }
 
-        Outcome markRunningOutcome = workflow.StartRun
+        Outcome markRunningOutcome = workflow.StartWorkflowRun
         (
-            runId: workflowRunId,
+            workflowRunId: workflowRunId,
             utcNow: utcNow
         );
 
@@ -115,7 +114,7 @@ internal sealed class WorkflowRunRequestedConsumer(
         WorkflowExecutionRequest request = new
         (
             WorkflowId: workflow.Id.Value,
-            RunId: workflowRun.Id.Value,
+            WorkflowRunId: workflowRun.Id.Value,
             ModelId: workflow.ModelId,
             Instruction: workflow.Instruction,
             UseWebSearch: workflow.UseWebSearch
@@ -125,9 +124,9 @@ internal sealed class WorkflowRunRequestedConsumer(
 
         if (result.Success)
         {
-            Outcome successOutcome = workflow.CompleteRunWithSuccess
+            Outcome successOutcome = workflow.CompleteWorkflowRunWithSuccess
             (
-                runId: workflowRunId,
+                workflowRunId: workflowRunId,
                 resultMarkdown: result.ResultMarkdown!,
                 utcNow: dateTimeProvider.UtcNow
             );
@@ -138,24 +137,24 @@ internal sealed class WorkflowRunRequestedConsumer(
                 return;
             }
 
-            workflow.RecordRunSuccess(utcNow);
+            workflow.RecordWorkflowRunSuccess(utcNow);
 
             await PublishNotification
             (
                 workflow: workflow,
                 workflowRun: workflowRun,
-                category: "WorkflowSucceeded",
+                category: WorkflowNotificationCategory.WorkflowSucceeded,
                 bodyPreview: result.ResultMarkdown ?? "Workflow run completed successfully",
-                userId: workflow.UserId,
                 cancellationToken: cancellationToken
             );
+
             await dbContext.SaveChangesAsync(cancellationToken);
         }
         else
         {
-            Outcome failureOutcome = workflow.CompleteRunWithFailure
+            Outcome failureOutcome = workflow.CompleteWorkflowRunWithFailure
             (
-                runId: workflowRunId,
+                workflowRunId: workflowRunId,
                 failureMessage: result.FailureMessage ?? "Unknown error.",
                 utcNow: dateTimeProvider.UtcNow
             );
@@ -166,15 +165,16 @@ internal sealed class WorkflowRunRequestedConsumer(
                 return;
             }
 
-            bool paused = workflow.RecordRunFailure(utcNow);
+            bool paused = workflow.RecordWorkflowRunFailure(utcNow);
 
             await PublishNotification
             (
                 workflow: workflow,
                 workflowRun: workflowRun,
-                category: paused ? "WorkflowPaused" : "WorkflowFailed",
+                category: paused
+                    ? WorkflowNotificationCategory.WorkflowPaused
+                    : WorkflowNotificationCategory.WorkflowFailed,
                 bodyPreview: result.FailureMessage ?? "Workflow run failed",
-                userId: workflow.UserId,
                 cancellationToken: cancellationToken
             );
 
@@ -186,14 +186,13 @@ internal sealed class WorkflowRunRequestedConsumer(
     (
         Workflow workflow,
         WorkflowRun workflowRun,
-        string category,
+        WorkflowNotificationCategory category,
         string bodyPreview,
-        Guid userId,
         CancellationToken cancellationToken
     )
     {
         string? emailAddress = await dbContext.Users
-            .Where(u => u.UserId == userId)
+            .Where(u => u.UserId == workflow.UserId)
             .Select(u => u.EmailAddress)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -201,13 +200,15 @@ internal sealed class WorkflowRunRequestedConsumer(
         {
             EventId = Guid.NewGuid(),
             OccurredAt = dateTimeProvider.UtcNow,
-            UserId = userId,
+            UserId = workflow.UserId,
             WorkflowId = workflow.Id.Value,
-            RunId = workflowRun.Id.Value,
+            WorkflowRunId = workflowRun.Id.Value,
+            IdempotencyId = Guid.NewGuid(),
             Category = category,
             Title = workflow.Title,
             BodyPreview = bodyPreview.Length > 200 ? bodyPreview[..200] : bodyPreview,
-            RecipientEmailAddress = emailAddress ?? string.Empty
+            RecipientEmailAddress = emailAddress ?? string.Empty,
+            NextRunAt = workflow.NextRunAt
         };
 
         await messageBus.PublishAsync(notification, cancellationToken);

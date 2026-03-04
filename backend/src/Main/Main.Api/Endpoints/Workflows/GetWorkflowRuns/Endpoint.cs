@@ -44,16 +44,16 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
             mapper: r => new Response
             (
                 WorkflowRuns: r.WorkflowRuns
-                    .Select(run => new WorkflowRunListItemDto
+                    .Select(workflowRun => new WorkflowRunListItemDto
                     (
-                        WorkflowRunId: run.WorkflowRunId,
-                        Status: run.Status,
-                        ScheduledFor: run.ScheduledFor,
-                        StartedAt: run.StartedAt,
-                        CompletedAt: run.CompletedAt,
-                        FailureMessage: run.FailureMessage,
-                        SkipReason: run.SkipReason,
-                        CreatedAt: run.CreatedAt
+                        WorkflowRunId: workflowRun.WorkflowRunId,
+                        Status: workflowRun.Status,
+                        ScheduledFor: workflowRun.ScheduledFor,
+                        StartedAt: workflowRun.StartedAt,
+                        CompletedAt: workflowRun.CompletedAt,
+                        FailureMessage: workflowRun.FailureMessage,
+                        SkipReason: workflowRun.SkipReason,
+                        CreatedAt: workflowRun.CreatedAt
                     ))
                     .ToList()
             ),
