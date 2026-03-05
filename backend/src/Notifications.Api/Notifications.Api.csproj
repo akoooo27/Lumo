@@ -18,7 +18,13 @@
         <PackageReference Include="MassTransit" />
         <PackageReference Include="MassTransit.RabbitMQ" />
         <PackageReference Include="MassTransit.EntityFrameworkCore" />
+        <PackageReference Include="Dapper" />
+        <PackageReference Include="FastEndpoints" />
+        <PackageReference Include="FastEndpoints.Swagger" />
+        <PackageReference Include="Scalar.AspNetCore" />
         <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
+        <PackageReference Include="Mediator.SourceGenerator" PrivateAssets="all" />
+        <PackageReference Include="Mediator.Abstractions" />
     </ItemGroup>
 
     <ItemGroup>

@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 using Amazon.SimpleEmailV2;
 
+using FastEndpoints;
+using FastEndpoints.Swagger;
+
 using MassTransit;
 
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +16,8 @@ using Notifications.Api.Options;
 using Notifications.Api.Services;
 
 using SharedKernel.Api;
+using SharedKernel.Application.Data;
+using SharedKernel.Application.Pipelines;
 using SharedKernel.Infrastructure;
 using SharedKernel.Infrastructure.Options;
 
@@ -27,7 +32,9 @@ internal static class DependencyInjection
             .AddSharedKernelInfrastructure(configuration)
             .AddDatabase(configuration, environment)
             .AddMessaging(configuration)
-            .AddSimpleEmailService(configuration);
+            .AddSimpleEmailService(configuration)
+            .AddNotificationsMediator()
+            .AddNotificationsEndpoints();
 
     private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
@@ -149,6 +156,45 @@ internal static class DependencyInjection
         services.AddAWSService<IAmazonSimpleEmailServiceV2>();
 
         services.AddScoped<IEmailService, SesEmailService>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddNotificationsMediator(this IServiceCollection services)
+    {
+        services.AddMediator((Mediator.MediatorOptions options) =>
+        {
+            options.ServiceLifetime = ServiceLifetime.Scoped;
+            options.PipelineBehaviors = [typeof(ValidationPipeline<,>), typeof(LoggingPipeline<,>)];
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddNotificationsEndpoints(this IServiceCollection services)
+    {
+        services.AddAuthorization();
+
+        services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
+
+        services.AddFastEndpoints(options =>
+        {
+            options.Assemblies =
+            [
+                typeof(DependencyInjection).Assembly
+            ];
+        });
+
+        services.SwaggerDocument(o =>
+        {
+            o.MaxEndpointVersion = 1;
+            o.DocumentSettings = s =>
+            {
+                s.Title = "Notifications API";
+                s.Description = "Notifications service endpoints";
+                s.Version = "v1";
+            };
+        });
 
         return services;
     }

@@ -1,9 +1,14 @@
 using System.Text.Json;
 
+using FastEndpoints;
+using FastEndpoints.Swagger;
+
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 using Notifications.Api;
 using Notifications.Api.Extensions;
+
+using Scalar.AspNetCore;
 
 using SharedKernel.Api.Constants;
 using SharedKernel.Infrastructure.Observability;
@@ -43,6 +48,33 @@ HealthCheckOptions healthCheckOptions = new()
         await context.Response.WriteAsync(result);
     }
 };
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseFastEndpoints(c =>
+{
+    c.Versioning.PrependToRoute = true;
+    c.Versioning.Prefix = "v";
+    c.Versioning.DefaultVersion = 1;
+    c.Endpoints.Configurator = ep =>
+    {
+        ep.Options(b => b.RequireAuthorization());
+    };
+});
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwaggerGen();
+
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("Notifications API")
+            .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
+            .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
+}
 
 app.MapHealthChecks("/health", healthCheckOptions);
 
