@@ -66,6 +66,23 @@ public static class DependencyInjection
                     ValidAudience = jwtOptions.Audience,
                     ClockSkew = TimeSpan.Zero
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        string? accessToken = context.Request.Query["access_token"];
+
+                        if (!string.IsNullOrEmpty(accessToken)
+#pragma warning disable CA1307
+                            && context.HttpContext.Request.Path.StartsWithSegments("/v1/hubs"))
+#pragma warning restore CA1307
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         return services;

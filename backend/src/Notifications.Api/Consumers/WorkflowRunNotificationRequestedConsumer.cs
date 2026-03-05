@@ -15,6 +15,7 @@ namespace Notifications.Api.Consumers;
 
 internal sealed class WorkflowRunNotificationRequestedConsumer(
     INotificationDbContext dbContext,
+    INotificationRealtimePublisher realtimePublisher,
     IEmailService emailService,
     ILogger<WorkflowRunNotificationRequestedConsumer> logger) : IConsumer<WorkflowRunNotificationRequested>
 {
@@ -34,6 +35,7 @@ internal sealed class WorkflowRunNotificationRequestedConsumer(
             Id = Guid.NewGuid(),
             UserId = message.UserId,
             Identifier = message.IdempotencyId,
+            Category = message.Category.ToString(),
             Title = message.Title,
             BodyPreview = message.BodyPreview,
             SourceType = SourceType.WorkFlowRun,
@@ -45,6 +47,21 @@ internal sealed class WorkflowRunNotificationRequestedConsumer(
 
         await dbContext.Notifications.AddAsync(notification, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await realtimePublisher.NotificationCreatedAsync
+        (
+            userId: notification.UserId,
+            id: notification.Id,
+            category: notification.Category,
+            title: notification.Title,
+            bodyPreview: notification.BodyPreview,
+            sourceType: notification.SourceType,
+            sourceId: notification.SourceId,
+            status: notification.Status,
+            createdAt: notification.CreatedAt,
+            readAt: notification.ReadAt,
+            cancellationToken: cancellationToken
+        );
 
         if (string.IsNullOrEmpty(message.RecipientEmailAddress))
             return;

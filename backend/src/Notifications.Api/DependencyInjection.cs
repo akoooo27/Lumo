@@ -7,6 +7,7 @@ using FastEndpoints.Swagger;
 
 using MassTransit;
 
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 using Notifications.Api.Consumers;
@@ -21,6 +22,8 @@ using SharedKernel.Application.Pipelines;
 using SharedKernel.Infrastructure;
 using SharedKernel.Infrastructure.Options;
 
+using StackExchange.Redis;
+
 namespace Notifications.Api;
 
 internal static class DependencyInjection
@@ -34,6 +37,7 @@ internal static class DependencyInjection
             .AddMessaging(configuration)
             .AddSimpleEmailService(configuration)
             .AddNotificationsMediator()
+            .AddRealTimeNotifications(configuration)
             .AddNotificationsEndpoints();
 
     private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
@@ -167,6 +171,27 @@ internal static class DependencyInjection
             options.ServiceLifetime = ServiceLifetime.Scoped;
             options.PipelineBehaviors = [typeof(ValidationPipeline<,>), typeof(LoggingPipeline<,>)];
         });
+
+        return services;
+    }
+
+    private static IServiceCollection AddRealTimeNotifications(this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        ValkeyOptions valkeyOptions = new();
+        configuration.GetSection(ValkeyOptions.SectionName).Bind(valkeyOptions);
+
+        ISignalRServerBuilder signalRBuilder = services.AddSignalR();
+
+        if (valkeyOptions.Enabled)
+        {
+            signalRBuilder.AddStackExchangeRedis(valkeyOptions.ConnectionString, options =>
+            {
+                options.Configuration.ChannelPrefix = RedisChannel.Literal("notifications");
+            });
+        }
+
+        services.AddSingleton<INotificationRealtimePublisher, NotificationRealtimePublisher>();
 
         return services;
     }

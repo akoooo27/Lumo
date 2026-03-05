@@ -18,6 +18,8 @@ internal sealed class NotificationDbContext(DbContextOptions<NotificationDbConte
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationDbContext).Assembly);
+
         modelBuilder.AddInboxStateEntity();
         modelBuilder.AddOutboxStateEntity();
         modelBuilder.AddOutboxMessageEntity();

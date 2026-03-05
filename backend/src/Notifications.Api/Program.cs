@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 using Notifications.Api;
 using Notifications.Api.Extensions;
+using Notifications.Api.Hubs;
 
 using Scalar.AspNetCore;
 
@@ -62,6 +63,9 @@ app.UseFastEndpoints(c =>
         ep.Options(b => b.RequireAuthorization());
     };
 });
+
+app.MapHub<NotificationsHub>("/v1/hubs/notifications")
+    .RequireAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
