@@ -23,7 +23,7 @@ internal interface INotificationRealtimePublisher
     (
         Guid userId,
         Guid id,
-        string status,
+        NotificationStatus status,
         DateTimeOffset? readAt,
         CancellationToken cancellationToken = default
     );

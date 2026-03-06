@@ -2,6 +2,8 @@ using System.Data.Common;
 
 using Dapper;
 
+using Notifications.Api.Enums;
+
 using SharedKernel;
 using SharedKernel.Application.Authentication;
 using SharedKernel.Application.Data;
@@ -25,7 +27,7 @@ internal sealed class GetNotificationsHandler(IDbConnectionFactory dbConnectionF
                                    read_at AS ReadAt
                                FROM notifications
                                WHERE user_id = @UserId
-                                 AND status != 2
+                                 AND status = @ArchivedStatus
                                ORDER BY created_at DESC
                                """;
 
@@ -38,7 +40,11 @@ internal sealed class GetNotificationsHandler(IDbConnectionFactory dbConnectionF
         IEnumerable<NotificationReadModel> notifications = await connection.QueryAsync<NotificationReadModel>
         (
             Sql,
-            new { UserId = userId }
+            new
+            {
+                UserId = userId,
+                ArchivedStatus = NotificationStatus.Archived.ToString()
+            }
         );
 
         GetNotificationsResponse response = new(notifications.AsList());

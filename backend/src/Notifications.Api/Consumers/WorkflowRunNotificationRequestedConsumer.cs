@@ -11,6 +11,8 @@ using Notifications.Api.Data.Entities;
 using Notifications.Api.Enums;
 using Notifications.Api.Services;
 
+using Npgsql;
+
 namespace Notifications.Api.Consumers;
 
 internal sealed class WorkflowRunNotificationRequestedConsumer(
@@ -23,12 +25,6 @@ internal sealed class WorkflowRunNotificationRequestedConsumer(
     {
         CancellationToken cancellationToken = context.CancellationToken;
         WorkflowRunNotificationRequested message = context.Message;
-
-        bool exists = await dbContext.Notifications
-            .AnyAsync(n => n.Identifier == message.IdempotencyId, cancellationToken);
-
-        if (exists)
-            return;
 
         Notification notification = new()
         {
@@ -46,7 +42,15 @@ internal sealed class WorkflowRunNotificationRequestedConsumer(
         };
 
         await dbContext.Notifications.AddAsync(notification, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsUniqueViolation(exception))
+        {
+            return;
+        }
 
         await realtimePublisher.NotificationCreatedAsync
         (
@@ -83,4 +87,7 @@ internal sealed class WorkflowRunNotificationRequestedConsumer(
 
         await dbContext.SaveChangesAsync(cancellationToken);
     }
+
+    private static bool IsUniqueViolation(DbUpdateException exception) =>
+        exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 }

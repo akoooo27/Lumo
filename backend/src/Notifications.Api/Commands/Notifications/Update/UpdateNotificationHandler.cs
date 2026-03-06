@@ -34,15 +34,19 @@ internal sealed class UpdateNotificationHandler(
         if (notification is null)
             return NotificationOperationFaults.NotFound;
 
-        if (request.Status.HasValue)
+        bool statusChanged = false;
+
+        if (request.Status.HasValue && request.Status.Value != notification.Status)
         {
             notification.Status = request.Status.Value;
+            statusChanged = true;
 
             if (request.Status.Value == NotificationStatus.Read && notification.ReadAt is null)
                 notification.ReadAt = dateTimeProvider.UtcNow;
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        if (statusChanged)
+            await dbContext.SaveChangesAsync(cancellationToken);
 
         UpdateNotificationResponse response = new
         (
@@ -51,14 +55,15 @@ internal sealed class UpdateNotificationHandler(
             ReadAt: notification.ReadAt
         );
 
-        await realtimePublisher.NotificationUpdatedAsync
-        (
-            userId: userId,
-            id: response.Id,
-            status: response.Status,
-            readAt: response.ReadAt,
-            cancellationToken: cancellationToken
-        );
+        if (statusChanged)
+            await realtimePublisher.NotificationUpdatedAsync
+            (
+                userId: userId,
+                id: notification.Id,
+                status: notification.Status,
+                readAt: notification.ReadAt,
+                cancellationToken: cancellationToken
+            );
 
         return response;
     }

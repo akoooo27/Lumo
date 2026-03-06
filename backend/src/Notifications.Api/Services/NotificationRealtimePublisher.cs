@@ -59,7 +59,7 @@ internal sealed class NotificationRealtimePublisher(
     (
         Guid userId,
         Guid id,
-        string status,
+        NotificationStatus status,
         DateTimeOffset? readAt,
         CancellationToken cancellationToken = default
     )
