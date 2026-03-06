@@ -2,40 +2,31 @@ using Contracts.IntegrationEvents.Auth;
 
 using MassTransit;
 
-using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 
-using Notifications.Api.Models;
-using Notifications.Api.Options;
-using Notifications.Api.Services;
+using Notifications.Api.Data;
 
 namespace Notifications.Api.Consumers;
 
-internal sealed class UserEmailAddressChangedConsumer(
-    IEmailService emailService,
-    IOptions<EmailOptions> emailOptions,
-    ILogger<UserEmailAddressChangedConsumer> logger) : IConsumer<UserEmailAddressChanged>
+internal sealed class UserEmailAddressChangedConsumer(INotificationDbContext dbContext, ILogger<UserEmailAddressChangedConsumer> logger)
+    : IConsumer<UserEmailAddressChanged>
 {
-    private readonly EmailOptions _emailOptions = emailOptions.Value;
-
     public async Task Consume(ConsumeContext<UserEmailAddressChanged> context)
     {
         CancellationToken cancellationToken = context.CancellationToken;
         UserEmailAddressChanged message = context.Message;
 
-        EmailAddressChangedTemplateData templateData = new()
-        {
-            OldEmailAddress = message.OldEmailAddress,
-            NewEmailAddress = message.NewEmailAddress,
-            ApplicationName = _emailOptions.ApplicationName
-        };
+        int rowsAffected = await dbContext.Users
+            .Where(u => u.UserId == message.UserId)
+            .ExecuteUpdateAsync(s => s.SetProperty(u => u.EmailAddress, message.NewEmailAddress), cancellationToken);
 
-        await emailService.SendTemplatedEmailAsync
-        (
-            recipientEmailAddress: message.OldEmailAddress,
-            templateName: _emailOptions.EmailAddressChangedTemplateName,
-            templateData: templateData,
-            cancellationToken: cancellationToken
-        );
+        if (rowsAffected == 0)
+        {
+            logger.LogWarning(
+                "User with ID {UserId} not found for email address update. EventId: {EventId}, CorrelationId: {CorrelationId}, OccurredAt: {OccurredAt}",
+                message.UserId, message.EventId, message.CorrelationId, message.OccurredAt);
+            return;
+        }
 
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(

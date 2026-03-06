@@ -1,10 +1,14 @@
+using System.Globalization;
 using System.Text.Json;
 
 using Amazon.SimpleEmailV2;
 using Amazon.SimpleEmailV2.Model;
 
+using Contracts.IntegrationEvents.Workflow;
+
 using Microsoft.Extensions.Options;
 
+using Notifications.Api.Models;
 using Notifications.Api.Options;
 
 namespace Notifications.Api.Services;
@@ -56,5 +60,69 @@ internal sealed class SesEmailService(
             logger.LogInformation(
                 "Templated email sent using template {TemplateName}. MessageId: {MessageId}, HttpStatusCode: {StatusCode}",
                 templateName, response.MessageId, response.HttpStatusCode);
+    }
+
+    public Task SendWorkflowNotificationAsync(
+        WorkflowRunNotificationRequested message,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentException.ThrowIfNullOrWhiteSpace(message.RecipientEmailAddress);
+
+        string viewResultUrl = $"{_emailOptions.FrontendUrl}/workflows/{message.WorkflowId}/runs/{message.WorkflowRunId}";
+        string manageWorkflowsUrl = $"{_emailOptions.FrontendUrl}/workflows";
+
+        return message.Category switch
+        {
+            WorkflowNotificationCategory.WorkflowSucceeded => SendTemplatedEmailAsync
+            (
+                recipientEmailAddress: message.RecipientEmailAddress,
+                templateName: _emailOptions.WorkflowRunSucceededTemplateName,
+                templateData: new WorkflowRunSucceededTemplateData
+                {
+                    WorkflowTitle = message.Title,
+                    ResultPreview = message.BodyPreview,
+                    ViewResultUrl = viewResultUrl,
+                    ManageWorkflowsUrl = manageWorkflowsUrl,
+                    NextRunAt = message.NextRunAt?.ToString("f", CultureInfo.InvariantCulture) ?? "Not scheduled",
+                    ApplicationName = _emailOptions.ApplicationName
+                },
+                cancellationToken: cancellationToken
+            ),
+
+            WorkflowNotificationCategory.WorkflowFailed => SendTemplatedEmailAsync
+            (
+                recipientEmailAddress: message.RecipientEmailAddress,
+                templateName: _emailOptions.WorkflowRunFailedTemplateName,
+                templateData: new WorkflowRunFailedTemplateData
+                {
+                    WorkflowTitle = message.Title,
+                    FailureMessage = message.BodyPreview,
+                    StatusMessage = "Your workflow will continue to run on its next scheduled occurrence.",
+                    ViewResultUrl = viewResultUrl,
+                    ManageWorkflowsUrl = manageWorkflowsUrl,
+                    ApplicationName = _emailOptions.ApplicationName
+                },
+                cancellationToken: cancellationToken
+            ),
+
+            WorkflowNotificationCategory.WorkflowPaused => SendTemplatedEmailAsync
+            (
+                recipientEmailAddress: message.RecipientEmailAddress,
+                templateName: _emailOptions.WorkflowRunFailedTemplateName,
+                templateData: new WorkflowRunFailedTemplateData
+                {
+                    WorkflowTitle = message.Title,
+                    FailureMessage = message.BodyPreview,
+                    StatusMessage = "Your workflow has been automatically paused due to repeated failures. To resume it, visit your workflow settings.",
+                    ViewResultUrl = viewResultUrl,
+                    ManageWorkflowsUrl = manageWorkflowsUrl,
+                    ApplicationName = _emailOptions.ApplicationName
+                },
+                cancellationToken: cancellationToken
+            ),
+
+            _ => Task.CompletedTask
+        };
     }
 }

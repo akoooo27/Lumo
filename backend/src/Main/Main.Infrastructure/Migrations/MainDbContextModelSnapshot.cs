@@ -161,6 +161,127 @@ namespace Main.Infrastructure.Migrations
                     b.ToTable("shared_chats", (string)null);
                 });
 
+            modelBuilder.Entity("Main.Domain.Aggregates.Workflow", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ConsecutiveFailureCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("consecutive_failure_count");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DaysOfWeekMask")
+                        .HasColumnType("integer")
+                        .HasColumnName("days_of_week_mask");
+
+                    b.Property<string>("DeliveryPolicy")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("delivery_policy");
+
+                    b.Property<Guid?>("DispatchLeaseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("dispatch_lease_id");
+
+                    b.Property<DateTimeOffset?>("DispatchLeaseUntilUtc")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("dispatch_lease_until_utc");
+
+                    b.Property<string>("Instruction")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("instruction");
+
+                    b.Property<DateTimeOffset?>("LastRunAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("last_run_at");
+
+                    b.Property<string>("LocalTime")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("varchar(5)")
+                        .HasColumnName("local_time");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("model_id");
+
+                    b.Property<DateTimeOffset>("NextRunAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("next_run_at");
+
+                    b.Property<string>("NormalizedInstruction")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("normalized_instruction");
+
+                    b.Property<string>("PauseReason")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("pause_reason");
+
+                    b.Property<string>("RecurrenceKind")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("recurrence_kind");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("time_zone_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at");
+
+                    b.Property<bool>("UseWebSearch")
+                        .HasColumnType("boolean")
+                        .HasColumnName("use_web_search");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_workflows");
+
+                    b.HasIndex("UserId", "Status")
+                        .HasDatabaseName("ix_workflows_user_id_status");
+
+                    b.HasIndex("Status", "NextRunAt", "DispatchLeaseUntilUtc")
+                        .HasDatabaseName("ix_workflows_status_next_run_at_dispatch_lease_until_utc");
+
+                    b.HasIndex("UserId", "NormalizedInstruction", "RecurrenceKind", "DaysOfWeekMask", "LocalTime", "TimeZoneId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_workflows_user_id_normalized_instruction_recurrence_kind_da")
+                        .HasFilter("status = 'Active'");
+
+                    b.ToTable("workflows", (string)null);
+                });
+
             modelBuilder.Entity("Main.Domain.Entities.FavoriteModel", b =>
                 {
                     b.Property<string>("Id")
@@ -286,6 +407,86 @@ namespace Main.Infrastructure.Migrations
                         .HasDatabaseName("ix_messages_chat_id_sequence_number");
 
                     b.ToTable("messages", (string)null);
+                });
+
+            modelBuilder.Entity("Main.Domain.Entities.WorkflowRun", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FailureMessage")
+                        .HasColumnType("text")
+                        .HasColumnName("failure_message");
+
+                    b.Property<string>("InstructionSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("instruction_snapshot");
+
+                    b.Property<string>("ModelIdUsed")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("model_id_used");
+
+                    b.Property<string>("ResultMarkdown")
+                        .HasColumnType("text")
+                        .HasColumnName("result_markdown");
+
+                    b.Property<DateTimeOffset>("ScheduledFor")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("scheduled_for");
+
+                    b.Property<string>("SkipReason")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("skip_reason");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TitleSnapshot")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title_snapshot");
+
+                    b.Property<bool>("UseWebSearchUsed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("use_web_search_used");
+
+                    b.Property<string>("WorkflowId")
+                        .IsRequired()
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("workflow_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_workflow_runs");
+
+                    b.HasIndex("WorkflowId")
+                        .HasDatabaseName("ix_workflow_runs_workflow_id");
+
+                    b.HasIndex("WorkflowId", "ScheduledFor")
+                        .IsUnique()
+                        .HasDatabaseName("ix_workflow_runs_workflow_id_scheduled_for");
+
+                    b.ToTable("workflow_runs", (string)null);
                 });
 
             modelBuilder.Entity("Main.Domain.ReadModels.User", b =>
@@ -688,6 +889,16 @@ namespace Main.Infrastructure.Migrations
                         .HasConstraintName("fk_messages_chats_chat_id");
                 });
 
+            modelBuilder.Entity("Main.Domain.Entities.WorkflowRun", b =>
+                {
+                    b.HasOne("Main.Domain.Aggregates.Workflow", null)
+                        .WithMany("WorkflowRuns")
+                        .HasForeignKey("WorkflowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_workflow_runs_workflows_workflow_id");
+                });
+
             modelBuilder.Entity("MassTransit.EntityFrameworkCoreIntegration.OutboxMessage", b =>
                 {
                     b.HasOne("MassTransit.EntityFrameworkCoreIntegration.OutboxState", null)
@@ -712,6 +923,11 @@ namespace Main.Infrastructure.Migrations
                     b.Navigation("FavoriteModels");
 
                     b.Navigation("Instructions");
+                });
+
+            modelBuilder.Entity("Main.Domain.Aggregates.Workflow", b =>
+                {
+                    b.Navigation("WorkflowRuns");
                 });
 #pragma warning restore 612, 618
         }

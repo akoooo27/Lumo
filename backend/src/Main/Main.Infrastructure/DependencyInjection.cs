@@ -8,7 +8,9 @@ using Main.Application.Abstractions.Generators;
 using Main.Application.Abstractions.Instructions;
 using Main.Application.Abstractions.Memory;
 using Main.Application.Abstractions.Services;
+using Main.Application.Abstractions.SharedChats;
 using Main.Application.Abstractions.Stream;
+using Main.Application.Abstractions.Workflows;
 using Main.Infrastructure.AI;
 using Main.Infrastructure.AI.Filters;
 using Main.Infrastructure.AI.Plugins;
@@ -22,7 +24,9 @@ using Main.Infrastructure.Jobs;
 using Main.Infrastructure.Memory;
 using Main.Infrastructure.Options;
 using Main.Infrastructure.Preferences;
+using Main.Infrastructure.SharedChats;
 using Main.Infrastructure.Stream;
+using Main.Infrastructure.Workflows;
 
 using MassTransit;
 
@@ -65,6 +69,11 @@ public static class DependencyInjection
         services.AddSingleton<IIdGenerator, IdGenerator>();
 
         services.AddScoped<IUserPreferenceResolver, UserPreferenceResolver>();
+        services.AddScoped<ISharedChatReadStore, SharedChatReadStore>();
+        services.AddScoped<IFavoriteModelsReadStore, FavoriteModelsReadStore>();
+
+        services.AddSingleton<IWorkflowScheduleService, WorkflowScheduleService>();
+        services.AddScoped<IWorkflowExecutionService, WorkflowExecutionService>();
 
         return services;
     }
@@ -128,12 +137,17 @@ public static class DependencyInjection
                 .Endpoint(e => e.Name = "main-user-signed-up");
             bus.AddConsumer<UserDeletedConsumer>()
                 .Endpoint(e => e.Name = "main-user-deleted");
+            bus.AddConsumer<UserDisplayNameChangedConsumer>()
+                .Endpoint(e => e.Name = "main-user-display-name-changed");
+            bus.AddConsumer<UserEmailAddressChangedConsumer>()
+                .Endpoint(e => e.Name = "main-user-email-address-changed");
             bus.AddConsumer<ChatStartedConsumer>();
             bus.AddConsumer<AssistantMessageGeneratedConsumer>();
             bus.AddConsumer<MessageSentConsumer>();
             bus.AddConsumer<EphemeralChatStartedConsumer>();
             bus.AddConsumer<AssistantEphemeralMessageGeneratedConsumer>();
             bus.AddConsumer<EphemeralMessageSentConsumer>();
+            bus.AddConsumer<WorkflowRunRequestedConsumer>();
 
             bus.AddEntityFrameworkOutbox<MainDbContext>(outbox =>
             {

@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Static code analysis -->
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.19.0.132793" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.20.0.135146" />
     <!-- Application -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
     <PackageVersion Include="Mediator.SourceGenerator" Version="3.1.0-preview.14" />
@@ -35,7 +35,7 @@
     <!-- Otel Instrumentations -->
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.SqlClient" Version="1.15.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.14.0-beta.2" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.15.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Process" Version="1.14.0-beta.2" />
@@ -62,9 +62,9 @@
     <PackageVersion Include="UAParser" Version="3.1.47" />
 
     <!-- AWS SDK -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.18.6" />
-    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.22" />
-    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.11.5" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.18.7" />
+    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.23" />
+    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.11.6" />
 
     <!-- MassTransit -->
     <!-- Avoid updating MassTransit versions beyond 8.5.x, as newer version required license -->
@@ -73,22 +73,26 @@
     <PackageVersion Include="MassTransit.EntityFrameworkCore" Version="8.5.7" />
 
     <!-- OpenAI -->
-    <PackageVersion Include="OpenAI" Version="2.8.0" />
+    <PackageVersion Include="OpenAI" Version="2.9.1" />
 
     <PackageVersion Include="Ulid" Version="1.4.1" />
     <PackageVersion Include="TickerQ" Version="10.1.1" />
     <PackageVersion Include="TickerQ.EntityFrameworkCore" Version="10.1.1" />
 
-    <PackageVersion Include="Microsoft.SemanticKernel" Version="1.72.0" />
+    <PackageVersion Include="Microsoft.SemanticKernel" Version="1.73.0" />
+
+    <PackageVersion Include="Cronos" Version="0.11.1" />
+
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="10.0.3" />
     <!-- Web.Api -->
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
-    <PackageVersion Include="FastEndpoints" Version="7.2.0" />
-    <PackageVersion Include="FastEndpoints.Swagger" Version="7.2.0" />
-    <PackageVersion Include="FastEndpoints.Generator" Version="7.2.0" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.12.46" />
+    <PackageVersion Include="FastEndpoints" Version="8.0.1" />
+    <PackageVersion Include="FastEndpoints.Swagger" Version="8.0.1" />
+    <PackageVersion Include="FastEndpoints.Generator" Version="8.0.1" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.1" />
     <PackageVersion Include="RedisRateLimiting.AspNetCore" Version="1.2.1" />
     <!-- Tests -->
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="coverlet.collector" Version="8.0.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />

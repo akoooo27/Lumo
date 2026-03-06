@@ -2,38 +2,34 @@ using Contracts.IntegrationEvents.Auth;
 
 using MassTransit;
 
-using Microsoft.Extensions.Options;
+using Microsoft.EntityFrameworkCore;
 
-using Notifications.Api.Models;
-using Notifications.Api.Options;
-using Notifications.Api.Services;
+using Notifications.Api.Data;
+using Notifications.Api.ReadModels;
 
 namespace Notifications.Api.Consumers;
 
-internal sealed class UserDeletedConsumer(
-    IEmailService emailService,
-    IOptions<EmailOptions> emailOptions,
-    ILogger<UserDeletedConsumer> logger) : IConsumer<UserDeleted>
+internal sealed class UserDeletedConsumer(INotificationDbContext dbContext, ILogger<UserDeletedConsumer> logger)
+    : IConsumer<UserDeleted>
 {
-    private readonly EmailOptions _emailOptions = emailOptions.Value;
-
     public async Task Consume(ConsumeContext<UserDeleted> context)
     {
         CancellationToken cancellationToken = context.CancellationToken;
         UserDeleted message = context.Message;
 
-        UserDeletedTemplateData templateData = new()
-        {
-            ApplicationName = _emailOptions.ApplicationName
-        };
+        User? user = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.UserId == message.UserId, cancellationToken);
 
-        await emailService.SendTemplatedEmailAsync
-        (
-            recipientEmailAddress: message.EmailAddress,
-            templateName: _emailOptions.UserDeletedTemplateName,
-            templateData: templateData,
-            cancellationToken: cancellationToken
-        );
+        if (user is null)
+        {
+            logger.LogWarning(
+                "User with ID {UserId} not found for deletion. EventId: {EventId}, CorrelationId: {CorrelationId}, OccurredAt: {OccurredAt}",
+                message.UserId, message.EventId, message.CorrelationId, message.OccurredAt);
+            return;
+        }
+
+        dbContext.Users.Remove(user);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(

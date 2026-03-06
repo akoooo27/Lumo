@@ -81,6 +81,8 @@ services:
             - Email__UserDeletionRequestedTemplateName=${EMAIL_USER_DELETION_REQUESTED_TEMPLATE_NAME:?EMAIL_USER_DELETION_REQUESTED_TEMPLATE_NAME is required}
             - Email__UserDeletionCanceledTemplateName=${EMAIL_USER_DELETION_CANCELED_TEMPLATE_NAME:?EMAIL_USER_DELETION_CANCELED_TEMPLATE_NAME is required}
             - Email__UserDeletedTemplateName=${EMAIL_USER_DELETED_TEMPLATE_NAME:?EMAIL_USER_DELETED_TEMPLATE_NAME is required}
+            - Email__WorkflowRunSucceededTemplateName=${EMAIL_WORKFLOW_RUN_SUCCEEDED_TEMPLATE_NAME:?EMAIL_WORKFLOW_RUN_SUCCEEDED_TEMPLATE_NAME is required}
+            - Email__WorkflowRunFailedTemplateName=${EMAIL_WORKFLOW_RUN_FAILED_TEMPLATE_NAME:?EMAIL_WORKFLOW_RUN_FAILED_TEMPLATE_NAME is required}
 
             # AWS SDK Credentials
             - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID is required}

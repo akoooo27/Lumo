@@ -1,5 +1,6 @@
 using Main.Application.Abstractions.Data;
 using Main.Application.Abstractions.Generators;
+using Main.Application.Abstractions.Instructions;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
 using Main.Domain.Entities;
@@ -17,6 +18,7 @@ internal sealed class AddInstructionHandler(
     IMainDbContext dbContext,
     IUserContext userContext,
     IIdGenerator idGenerator,
+    IInstructionStore instructionStore,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<AddInstructionCommand, AddInstructionResponse>
 {
     public async ValueTask<Outcome<AddInstructionResponse>> Handle(AddInstructionCommand request, CancellationToken cancellationToken)
@@ -67,6 +69,8 @@ internal sealed class AddInstructionHandler(
         {
             return PreferenceOperationFaults.Conflict;
         }
+
+        await instructionStore.InvalidateCacheAsync(userId, cancellationToken);
 
         AddInstructionResponse response = new
         (

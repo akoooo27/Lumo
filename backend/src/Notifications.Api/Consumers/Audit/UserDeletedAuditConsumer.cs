@@ -8,21 +8,21 @@ using Notifications.Api.Models;
 using Notifications.Api.Options;
 using Notifications.Api.Services;
 
-namespace Notifications.Api.Consumers;
+namespace Notifications.Api.Consumers.Audit;
 
-internal sealed class UserDeletionCanceledConsumer(
+internal sealed class UserDeletedAuditConsumer(
     IEmailService emailService,
     IOptions<EmailOptions> emailOptions,
-    ILogger<UserDeletionCanceledConsumer> logger) : IConsumer<UserDeletionCanceled>
+    ILogger<UserDeletedAuditConsumer> logger) : IConsumer<UserDeleted>
 {
     private readonly EmailOptions _emailOptions = emailOptions.Value;
 
-    public async Task Consume(ConsumeContext<UserDeletionCanceled> context)
+    public async Task Consume(ConsumeContext<UserDeleted> context)
     {
         CancellationToken cancellationToken = context.CancellationToken;
-        UserDeletionCanceled message = context.Message;
+        UserDeleted message = context.Message;
 
-        UserDeletionCanceledTemplateData templateData = new()
+        UserDeletedTemplateData templateData = new()
         {
             ApplicationName = _emailOptions.ApplicationName
         };
@@ -30,7 +30,7 @@ internal sealed class UserDeletionCanceledConsumer(
         await emailService.SendTemplatedEmailAsync
         (
             recipientEmailAddress: message.EmailAddress,
-            templateName: _emailOptions.UserDeletionCanceledTemplateName,
+            templateName: _emailOptions.UserDeletedTemplateName,
             templateData: templateData,
             cancellationToken: cancellationToken
         );
@@ -38,6 +38,6 @@ internal sealed class UserDeletionCanceledConsumer(
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(
                 "Consumed {EventType}: {EventId}, CorrelationId: {CorrelationId}, OccurredAt: {OccurredAt}, UserId: {UserId}",
-                nameof(UserDeletionCanceled), message.EventId, message.CorrelationId, message.OccurredAt, message.UserId);
+                nameof(UserDeleted), message.EventId, message.CorrelationId, message.OccurredAt, message.UserId);
     }
 }

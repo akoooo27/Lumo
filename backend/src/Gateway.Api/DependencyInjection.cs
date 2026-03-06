@@ -25,14 +25,29 @@ internal static class DependencyInjection
 
         services.AddHttpContextAccessor();
 
+        HashSet<string> allowedCorsOrigins = new
+        (
+            (configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
+            .Where(static origin => !string.IsNullOrWhiteSpace(origin))
+            .Select(static origin => NormalizeOrigin(origin)),
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        bool allowLoopbackCorsOrigins = string.Equals
+        (
+            configuration["ASPNETCORE_ENVIRONMENT"],
+            Environments.Development,
+            StringComparison.OrdinalIgnoreCase
+        );
+
         services.AddCors(options =>
         {
             options.AddDefaultPolicy(policy =>
             {
                 policy
-                    .WithOrigins(configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
+                    .SetIsOriginAllowed(origin => IsAllowedCorsOrigin(origin, allowedCorsOrigins, allowLoopbackCorsOrigins))
                     .WithMethods("GET", "POST", "PATCH", "DELETE", "OPTIONS")
-                    .WithHeaders("Content-Type", "Authorization")
+                    .AllowAnyHeader()
                     .AllowCredentials();
             });
         });
@@ -79,4 +94,23 @@ internal static class DependencyInjection
 
         return services;
     }
+
+    private static bool IsAllowedCorsOrigin(string origin, HashSet<string> configuredOrigins, bool allowLoopbackCorsOrigins)
+    {
+        string normalizedOrigin = NormalizeOrigin(origin);
+
+        if (configuredOrigins.Contains(normalizedOrigin))
+            return true;
+
+        if (!allowLoopbackCorsOrigins)
+            return false;
+
+        if (!Uri.TryCreate(normalizedOrigin, UriKind.Absolute, out Uri? uri))
+            return false;
+
+        bool isHttpScheme = uri.Scheme is "http" or "https";
+        return isHttpScheme && uri.IsLoopback;
+    }
+
+    private static string NormalizeOrigin(string origin) => origin.Trim().TrimEnd('/');
 }

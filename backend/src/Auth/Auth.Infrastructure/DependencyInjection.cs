@@ -6,12 +6,14 @@ using Auth.Application.Abstractions.Authentication;
 using Auth.Application.Abstractions.Data;
 using Auth.Application.Abstractions.Generators;
 using Auth.Application.Abstractions.Storage;
+using Auth.Application.Abstractions.Users;
 using Auth.Infrastructure.Authentication;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Generators;
 using Auth.Infrastructure.Jobs;
 using Auth.Infrastructure.Options;
 using Auth.Infrastructure.Storage;
+using Auth.Infrastructure.Users;
 
 using MassTransit;
 
@@ -48,6 +50,7 @@ public static class DependencyInjection
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IIdGenerator, IdGenerator>();
+        services.AddScoped<ICurrentUserReadStore, CurrentUserReadStore>();
 
         return services;
     }

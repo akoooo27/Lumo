@@ -1,5 +1,6 @@
 using Auth.Application.Abstractions.Data;
 using Auth.Application.Abstractions.Storage;
+using Auth.Application.Abstractions.Users;
 using Auth.Application.Faults;
 using Auth.Domain.Aggregates;
 using Auth.Domain.ValueObjects;
@@ -20,6 +21,7 @@ internal sealed class UpdateProfileHandler(
     IRequestContext requestContext,
     IStorageService storageService,
     IMessageBus messageBus,
+    ICurrentUserReadStore currentUserReadStore,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<UpdateProfileCommand>
 {
     public async ValueTask<Outcome> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
@@ -78,6 +80,8 @@ internal sealed class UpdateProfileHandler(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await currentUserReadStore.InvalidateCacheAsync(userId.Value, cancellationToken);
 
         return Outcome.Success();
     }

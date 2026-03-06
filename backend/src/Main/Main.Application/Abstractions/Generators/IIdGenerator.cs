@@ -19,4 +19,8 @@ public interface IIdGenerator
     EphemeralChatId NewEphemeralChatId();
 
     FavoriteModelId NewFavoriteModelId();
+
+    WorkflowId NewWorkflowId();
+
+    WorkflowRunId NewWorkflowRunId();
 }

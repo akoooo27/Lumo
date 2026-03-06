@@ -9,4 +9,10 @@ public class CronJobs(ICronJobHelper cronJobHelper)
     {
         await cronJobHelper.PurgeDeletedMemoriesAsync(cancellationToken);
     }
+
+    [TickerFunction("DispatchDueWorkflowsJob", "0 * * * * *")]
+    public async Task DispatchDueWorkflowsAsync(TickerFunctionContext context, CancellationToken cancellationToken)
+    {
+        await cronJobHelper.DispatchDueWorkflowsAsync(cancellationToken);
+    }
 }

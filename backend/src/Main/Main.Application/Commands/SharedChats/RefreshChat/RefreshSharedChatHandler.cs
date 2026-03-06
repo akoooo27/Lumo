@@ -1,4 +1,5 @@
 using Main.Application.Abstractions.Data;
+using Main.Application.Abstractions.SharedChats;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
 using Main.Domain.ValueObjects;
@@ -14,6 +15,7 @@ namespace Main.Application.Commands.SharedChats.RefreshChat;
 internal sealed class RefreshSharedChatHandler(
     IMainDbContext dbContext,
     IUserContext userContext,
+    ISharedChatReadStore sharedChatReadStore,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<RefreshSharedChatCommand, RefreshSharedChatResponse>
 {
     public async ValueTask<Outcome<RefreshSharedChatResponse>> Handle(RefreshSharedChatCommand request,
@@ -54,6 +56,8 @@ internal sealed class RefreshSharedChatHandler(
         sharedChat.RefreshMessages(refreshedMessages, dateTimeProvider.UtcNow);
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await sharedChatReadStore.InvalidateCacheAsync(request.SharedChatId, cancellationToken);
 
         RefreshSharedChatResponse response = new
         (

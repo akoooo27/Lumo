@@ -19,6 +19,7 @@ COPY ["src/Shared/SharedKernel/SharedKernel.csproj", "src/Shared/SharedKernel/"]
 COPY ["src/Shared/SharedKernel.Application/SharedKernel.Application.csproj", "src/Shared/SharedKernel.Application/"]
 COPY ["src/Shared/SharedKernel.Infrastructure/SharedKernel.Infrastructure.csproj", "src/Shared/SharedKernel.Infrastructure/"]
 COPY ["src/Shared/SharedKernel.Api/SharedKernel.Api.csproj", "src/Shared/SharedKernel.Api/"]
+COPY ["src/Shared/Contracts/Contracts.csproj", "src/Shared/Contracts/"]
 COPY ["src/Notifications.Api/Notifications.Api.csproj", "src/Notifications.Api/"]
 RUN dotnet restore "src/Notifications.Api/Notifications.Api.csproj"
 COPY . .

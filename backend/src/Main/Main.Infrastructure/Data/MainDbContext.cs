@@ -25,6 +25,9 @@ internal sealed class MainDbContext(DbContextOptions<MainDbContext> options) : D
 
     public DbSet<SharedChat> SharedChats { get; set; }
 
+    public DbSet<Workflow> Workflows { get; set; }
+    public DbSet<WorkflowRun> WorkflowRuns { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

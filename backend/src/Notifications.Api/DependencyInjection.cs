@@ -2,18 +2,27 @@ using System.ComponentModel.DataAnnotations;
 
 using Amazon.SimpleEmailV2;
 
+using FastEndpoints;
+using FastEndpoints.Swagger;
+
 using MassTransit;
 
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 using Notifications.Api.Consumers;
+using Notifications.Api.Consumers.Audit;
 using Notifications.Api.Data;
 using Notifications.Api.Options;
 using Notifications.Api.Services;
 
 using SharedKernel.Api;
+using SharedKernel.Application.Data;
+using SharedKernel.Application.Pipelines;
 using SharedKernel.Infrastructure;
 using SharedKernel.Infrastructure.Options;
+
+using StackExchange.Redis;
 
 namespace Notifications.Api;
 
@@ -26,7 +35,10 @@ internal static class DependencyInjection
             .AddSharedKernelInfrastructure(configuration)
             .AddDatabase(configuration, environment)
             .AddMessaging(configuration)
-            .AddSimpleEmailService(configuration);
+            .AddSimpleEmailService(configuration)
+            .AddNotificationsMediator()
+            .AddRealTimeNotifications(configuration)
+            .AddNotificationsEndpoints();
 
     private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
@@ -77,14 +89,26 @@ internal static class DependencyInjection
         {
             bus.AddConsumer<UserSignedUpConsumer>()
                 .Endpoint(e => e.Name = "notifications-user-signed-up");
-            bus.AddConsumer<LoginRequestedConsumer>();
-            bus.AddConsumer<UserEmailAddressChangedConsumer>();
-            bus.AddConsumer<RecoveryInitiatedConsumer>();
-            bus.AddConsumer<EmailChangeRequestedConsumer>();
-            bus.AddConsumer<UserDeletionRequestedConsumer>();
-            bus.AddConsumer<UserDeletionCanceledConsumer>();
+
             bus.AddConsumer<UserDeletedConsumer>()
                 .Endpoint(e => e.Name = "notifications-user-deleted");
+            bus.AddConsumer<UserDisplayNameChangedConsumer>()
+                .Endpoint(e => e.Name = "notifications-user-display-name-changed");
+            bus.AddConsumer<UserEmailAddressChangedConsumer>()
+                .Endpoint(e => e.Name = "notifications-user-email-address-changed");
+
+            bus.AddConsumer<UserSignedUpAuditConsumer>()
+                .Endpoint(e => e.Name = "notifications-user-signed-up-audit");
+
+            bus.AddConsumer<LoginRequestedConsumerAudit>();
+            bus.AddConsumer<UserEmailAddressChangedAuditConsumer>();
+            bus.AddConsumer<RecoveryInitiatedAuditConsumer>();
+            bus.AddConsumer<EmailChangeRequestedAuditConsumer>();
+            bus.AddConsumer<UserDeletionRequestedAuditConsumer>();
+            bus.AddConsumer<UserDeletionCanceledAuditConsumer>();
+            bus.AddConsumer<UserDeletedAuditConsumer>()
+                .Endpoint(e => e.Name = "notifications-user-deleted-audit");
+            bus.AddConsumer<WorkflowRunNotificationRequestedConsumer>();
 
             bus.AddEntityFrameworkOutbox<NotificationDbContext>(outbox =>
             {
@@ -136,6 +160,66 @@ internal static class DependencyInjection
         services.AddAWSService<IAmazonSimpleEmailServiceV2>();
 
         services.AddScoped<IEmailService, SesEmailService>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddNotificationsMediator(this IServiceCollection services)
+    {
+        services.AddMediator((Mediator.MediatorOptions options) =>
+        {
+            options.ServiceLifetime = ServiceLifetime.Scoped;
+            options.PipelineBehaviors = [typeof(ValidationPipeline<,>), typeof(LoggingPipeline<,>)];
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddRealTimeNotifications(this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        ValkeyOptions valkeyOptions = new();
+        configuration.GetSection(ValkeyOptions.SectionName).Bind(valkeyOptions);
+
+        ISignalRServerBuilder signalRBuilder = services.AddSignalR();
+
+        if (valkeyOptions.Enabled)
+        {
+            signalRBuilder.AddStackExchangeRedis(valkeyOptions.ConnectionString, options =>
+            {
+                options.Configuration.ChannelPrefix = RedisChannel.Literal("notifications");
+            });
+        }
+
+        services.AddSingleton<INotificationRealtimePublisher, NotificationRealtimePublisher>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddNotificationsEndpoints(this IServiceCollection services)
+    {
+        services.AddAuthorization();
+
+        services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
+
+        services.AddFastEndpoints(options =>
+        {
+            options.Assemblies =
+            [
+                typeof(DependencyInjection).Assembly
+            ];
+        });
+
+        services.SwaggerDocument(o =>
+        {
+            o.MaxEndpointVersion = 1;
+            o.DocumentSettings = s =>
+            {
+                s.Title = "Notifications API";
+                s.Description = "Notifications service endpoints";
+                s.Version = "v1";
+            };
+        });
 
         return services;
     }
