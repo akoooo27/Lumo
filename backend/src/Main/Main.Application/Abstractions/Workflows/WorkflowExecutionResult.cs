@@ -4,5 +4,8 @@ public sealed record WorkflowExecutionResult
 (
     bool Success,
     string? ResultMarkdown,
-    string? FailureMessage
+    string? FailureMessage,
+    int InputTokens,
+    int OutputTokens,
+    int TotalTokens
 );

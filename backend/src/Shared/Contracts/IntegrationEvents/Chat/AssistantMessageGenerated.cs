@@ -11,4 +11,12 @@ public sealed record AssistantMessageGenerated
     public required string ChatId { get; init; }
 
     public required string MessageContent { get; init; }
+
+    public int? InputTokens { get; init; }
+
+    public int? OutputTokens { get; init; }
+
+    public int? TotalTokens { get; init; }
+
+    public string? ModelId { get; init; }
 }

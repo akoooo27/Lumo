@@ -104,11 +104,13 @@ internal sealed class NativeChatCompletionService(
         {
             await InitializeStreamAsync(streamId, cancellationToken);
 
+            TokenUsage tokenUsage;
+
             if (userId is not null)
             {
                 pluginUserContext.UserId = userId.Value;
 
-                await StreamWithToolsAsync
+                tokenUsage = await StreamWithToolsAsync
                 (
                     streamId: streamId,
                     modelId: modelId,
@@ -121,7 +123,7 @@ internal sealed class NativeChatCompletionService(
             }
             else
             {
-                await StreamSimpleAsync
+                tokenUsage = await StreamSimpleAsync
                 (
                     streamId: streamId,
                     modelId: modelId,
@@ -135,7 +137,9 @@ internal sealed class NativeChatCompletionService(
             (
                 streamId: streamId,
                 chatId: chatId,
+                modelId: modelId,
                 messageContent: messageContent,
+                tokenUsage: tokenUsage,
                 isAdvanced: userId is not null,
                 cancellationToken: cancellationToken
             );
@@ -161,7 +165,7 @@ internal sealed class NativeChatCompletionService(
         }
     }
 
-    private async Task StreamWithToolsAsync
+    private async Task<TokenUsage> StreamWithToolsAsync
     (
         string streamId,
         string modelId,
@@ -222,21 +226,49 @@ internal sealed class NativeChatCompletionService(
 
         OpenAIChatCompletionService chatService = GetSkChatService(openRouterId);
 
+        TokenUsage tokenUsage = TokenUsage.Empty;
+
 #pragma warning disable S3267
         await foreach (StreamingChatMessageContent chunk in chatService.GetStreamingChatMessageContentsAsync(
                            chatHistory: chatHistory, executionSettings: settings, kernel: kernel,
                            cancellationToken: cancellationToken))
 #pragma warning restore S3267
         {
+            if (chunk.Metadata?.TryGetValue("Usage", out object? usageObj) == true &&
+                usageObj is ChatTokenUsage chatTokenUsage)
+                tokenUsage = new TokenUsage
+                (
+                    InputTokens: chatTokenUsage.InputTokenCount,
+                    OutputTokens: chatTokenUsage.OutputTokenCount,
+                    TotalTokens: chatTokenUsage.TotalTokenCount
+                );
+
             if (string.IsNullOrWhiteSpace(chunk.Content))
                 continue;
 
             messageContent.Append(chunk.Content);
             await streamPublisher.PublishChunkAsync(streamId, chunk.Content, cancellationToken);
         }
+
+        if (tokenUsage == TokenUsage.Empty && messageContent.Length > 0)
+        {
+            int estimatedOutput = messageContent.Length / 4;
+            tokenUsage = new TokenUsage
+            (
+                InputTokens: 0,
+                OutputTokens: estimatedOutput,
+                TotalTokens: estimatedOutput
+            );
+
+            logger.LogWarning(
+                "Token usage not available from Semantic Kernel streaming for model {ModelId}. Using character-based estimate.",
+                modelId);
+        }
+
+        return tokenUsage;
     }
 
-    private async Task StreamSimpleAsync
+    private async Task<TokenUsage> StreamSimpleAsync
     (
         string streamId,
         string modelId,
@@ -251,9 +283,19 @@ internal sealed class NativeChatCompletionService(
             .Select(ChatMessageExtensions.ConvertToChatMessage)
             .ToList();
 
+        TokenUsage tokenUsage = TokenUsage.Empty;
+
         await foreach (StreamingChatCompletionUpdate update in chatClient.CompleteChatStreamingAsync(chatMessages,
                            cancellationToken: cancellationToken))
         {
+            if (update.Usage is { } u)
+                tokenUsage = new TokenUsage
+                (
+                    InputTokens: u.InputTokenCount,
+                    OutputTokens: u.OutputTokenCount,
+                    TotalTokens: u.TotalTokenCount
+                );
+
 #pragma warning disable S3267
             foreach (ChatMessageContentPart? part in update.ContentUpdate)
 #pragma warning restore S3267
@@ -268,6 +310,8 @@ internal sealed class NativeChatCompletionService(
                 await streamPublisher.PublishChunkAsync(streamId, chunk, cancellationToken);
             }
         }
+
+        return tokenUsage;
     }
 
     private async Task<ChatHistory> BuildChatHistoryAsync
@@ -344,7 +388,9 @@ internal sealed class NativeChatCompletionService(
     (
         string streamId,
         string chatId,
+        string modelId,
         StringBuilder messageContent,
+        TokenUsage tokenUsage,
         bool isAdvanced,
         CancellationToken cancellationToken
     )
@@ -366,7 +412,11 @@ internal sealed class NativeChatCompletionService(
                     OccurredAt = dateTimeProvider.UtcNow,
                     CorrelationId = Guid.NewGuid(),
                     ChatId = chatId,
-                    MessageContent = content
+                    MessageContent = content,
+                    InputTokens = tokenUsage.InputTokens > 0 ? tokenUsage.InputTokens : null,
+                    OutputTokens = tokenUsage.OutputTokens > 0 ? tokenUsage.OutputTokens : null,
+                    TotalTokens = tokenUsage.TotalTokens > 0 ? tokenUsage.TotalTokens : null,
+                    ModelId = modelId
                 }, cancellationToken
             );
         }
@@ -380,7 +430,11 @@ internal sealed class NativeChatCompletionService(
                     OccurredAt = dateTimeProvider.UtcNow,
                     CorrelationId = Guid.NewGuid(),
                     EphemeralChatId = chatId,
-                    MessageContent = content
+                    MessageContent = content,
+                    InputTokens = tokenUsage.InputTokens > 0 ? tokenUsage.InputTokens : null,
+                    OutputTokens = tokenUsage.OutputTokens > 0 ? tokenUsage.OutputTokens : null,
+                    TotalTokens = tokenUsage.TotalTokens > 0 ? tokenUsage.TotalTokens : null,
+                    ModelId = modelId
                 }, cancellationToken
             );
         }
