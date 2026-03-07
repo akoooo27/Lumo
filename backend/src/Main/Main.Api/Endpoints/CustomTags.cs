@@ -10,4 +10,5 @@ internal static class CustomTags
     public const string SharedChats = "SharedChats";
     public const string EphemeralChats = "EphemeralChats";
     public const string Workflows = "Workflows";
+    public const string Folders = "Folders";
 }

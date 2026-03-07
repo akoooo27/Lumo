@@ -7,5 +7,7 @@ public sealed record UpdateChatCommand
     string ChatId,
     string? NewTitle,
     bool? IsArchived,
-    bool? IsPinned
+    bool? IsPinned,
+    string? FolderId,
+    bool HasFolderId
 ) : ICommand<UpdateChatResponse>;

@@ -47,7 +47,7 @@ internal sealed class FolderConfiguration : IEntityTypeConfiguration<Folder>
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
 
         b.Property(f => f.UpdatedAt)
-            .IsRequired(false)
+            .IsRequired()
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
 
         b.HasIndex(f => new { f.UserId, f.NormalizedName }).IsUnique();

@@ -20,7 +20,7 @@ public sealed class Folder : AggregateRoot<FolderId>
 
     public DateTimeOffset CreatedAt { get; private set; }
 
-    public DateTimeOffset? UpdatedAt { get; private set; }
+    public DateTimeOffset UpdatedAt { get; private set; }
 
     private Folder() { } // For EF Core
 
@@ -113,6 +113,10 @@ public sealed class Folder : AggregateRoot<FolderId>
         return Outcome.Success();
     }
 
-    internal static string NormalizeName(string name) =>
-        name.Trim().ToUpperInvariant();
+    public static string NormalizeName(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        return name.Trim().ToUpperInvariant();
+    }
 }
