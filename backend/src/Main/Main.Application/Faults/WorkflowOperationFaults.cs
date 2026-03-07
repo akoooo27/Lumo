@@ -51,4 +51,22 @@ public static class WorkflowOperationFaults
         title: "Workflow.InvalidDayOfWeek",
         detail: "One or more days of the week are invalid. Valid values are Sunday (0) through Saturday (6)."
     );
+
+    public static readonly Fault NotFound = Fault.NotFound
+    (
+        title: "Workflow.WorkflowNotFound",
+        detail: "The specified workflow was not found."
+    );
+
+    public static readonly Fault NotActive = Fault.Conflict
+    (
+        title: "Workflow.NotActive",
+        detail: "The workflow is not active and cannot be triggered."
+    );
+
+    public static readonly Fault ActiveRunInProgress = Fault.Conflict
+    (
+        title: "Workflow.ActiveRunInProgress",
+        detail: "A workflow run is already queued or running. Wait for it to complete before triggering again."
+    );
 }
