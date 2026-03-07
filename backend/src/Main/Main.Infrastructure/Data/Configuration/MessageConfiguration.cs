@@ -41,7 +41,15 @@ internal sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
             .IsRequired()
             .HasColumnType("text");
 
-        b.Property(m => m.TokenCount)
+        b.Property(m => m.InputTokenCount)
+            .IsRequired(false)
+            .HasColumnType("bigint");
+
+        b.Property(m => m.OutputTokenCount)
+            .IsRequired(false)
+            .HasColumnType("bigint");
+
+        b.Property(m => m.TotalTokenCount)
             .IsRequired(false)
             .HasColumnType("bigint");
 

@@ -6,7 +6,9 @@ internal sealed record MessageDto
     string ChatId,
     string MessageRole,
     string MessageContent,
-    long? TokenCount,
+    long? InputTokenCount,
+    long? OutputTokenCount,
+    long? TotalTokenCount,
     int SequenceNumber,
     DateTimeOffset CreatedAt,
     DateTimeOffset EditedAt

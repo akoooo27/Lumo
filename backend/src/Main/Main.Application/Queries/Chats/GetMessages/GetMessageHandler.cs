@@ -29,13 +29,15 @@ internal sealed class GetMessageHandler(IDbConnectionFactory dbConnectionFactory
                                             chat_id as ChatId,
                                             message_role as MessageRole,
                                             message_content as MessageContent,
-                                            token_count as TokenCount,
+                                            input_token_count as InputTokenCount,
+                                            output_token_count as OutputTokenCount,
+                                            total_token_count as TotalTokenCount,
                                             sequence_number as SequenceNumber,
                                             created_at as CreatedAt,
                                             edited_at as EditedAt
                                           FROM messages
                                           WHERE chat_id = @ChatId
-                                          ORDER BY sequence_number desc 
+                                          ORDER BY sequence_number desc
                                           LIMIT @Limit
                                           """;
 
@@ -45,7 +47,9 @@ internal sealed class GetMessageHandler(IDbConnectionFactory dbConnectionFactory
                                                       chat_id as ChatId,
                                                       message_role as MessageRole,
                                                       message_content as MessageContent,
-                                                      token_count as TokenCount,
+                                                      input_token_count as InputTokenCount,
+                                                      output_token_count as OutputTokenCount,
+                                                      total_token_count as TotalTokenCount,
                                                       sequence_number as SequenceNumber,
                                                       created_at as CreatedAt,
                                                       edited_at as EditedAt

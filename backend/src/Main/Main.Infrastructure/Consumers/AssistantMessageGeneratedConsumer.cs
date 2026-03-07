@@ -73,6 +73,26 @@ internal sealed class AssistantMessageGeneratedConsumer(
             return;
         }
 
+        if (message.TotalTokens is > 0)
+        {
+            Outcome setTokensOutcome = chat.SetMessageTokenUsage
+            (
+                messageId: messageId,
+                inputTokenCount: message.InputTokens ?? 0,
+                outputTokenCount: message.OutputTokens ?? 0,
+                totalTokenCount: message.TotalTokens.Value
+            );
+
+            if (setTokensOutcome.IsFailure)
+            {
+                logger.LogError(
+                    "Failed to set token usage in {EventType}: {EventId}, CorrelationId: {CorrelationId}, ChatId: {ChatId}, Fault: {Fault}",
+                    nameof(AssistantMessageGenerated), message.EventId, message.CorrelationId, message.ChatId,
+                    setTokensOutcome.Fault);
+                return;
+            }
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         if (logger.IsEnabled(LogLevel.Information))

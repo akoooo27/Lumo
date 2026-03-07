@@ -56,7 +56,9 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                         ChatId: m.ChatId,
                         MessageContent: m.MessageContent,
                         MessageRole: m.MessageRole,
-                        TokenCount: m.TokenCount,
+                        InputTokenCount: m.InputTokenCount,
+                        OutputTokenCount: m.OutputTokenCount,
+                        TotalTokenCount: m.TotalTokenCount,
                         SequenceNumber: m.SequenceNumber,
                         CreatedAt: m.CreatedAt,
                         EditedAt: m.EditedAt

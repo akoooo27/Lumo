@@ -16,7 +16,11 @@ public sealed class Message : Entity<MessageId>
 
     public string MessageContent { get; private set; } = string.Empty;
 
-    public long? TokenCount { get; private set; }
+    public long? InputTokenCount { get; private set; }
+
+    public long? OutputTokenCount { get; private set; }
+
+    public long? TotalTokenCount { get; private set; }
 
     public int SequenceNumber { get; private set; }
 
@@ -41,7 +45,9 @@ public sealed class Message : Entity<MessageId>
         ChatId = chatId;
         MessageRole = messageRole;
         MessageContent = messageContent;
-        TokenCount = null;
+        InputTokenCount = null;
+        OutputTokenCount = null;
+        TotalTokenCount = null;
         SequenceNumber = sequenceNumber;
         CreatedAt = utcNow;
         EditedAt = utcNow;
@@ -92,6 +98,23 @@ public sealed class Message : Entity<MessageId>
 
         MessageContent = newContent;
         EditedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
+    internal Outcome SetTokenUsage
+    (
+        long inputTokenCount,
+        long outputTokenCount,
+        long totalTokenCount
+    )
+    {
+        if (inputTokenCount < 0 || outputTokenCount < 0 || totalTokenCount < 0)
+            return MessageFaults.NegativeTokenCount;
+
+        InputTokenCount = inputTokenCount;
+        OutputTokenCount = outputTokenCount;
+        TotalTokenCount = totalTokenCount;
 
         return Outcome.Success();
     }

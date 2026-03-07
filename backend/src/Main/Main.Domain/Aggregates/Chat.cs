@@ -196,6 +196,32 @@ public sealed class Chat : AggregateRoot<ChatId>
     public Outcome<Message> AddAssistantMessage(MessageId messageId, string messageContent, DateTimeOffset utcNow) =>
         AddMessage(messageId, messageContent, MessageRole.Assistant, utcNow);
 
+    public Outcome SetMessageTokenUsage
+    (
+        MessageId messageId,
+        long inputTokenCount,
+        long outputTokenCount,
+        long totalTokenCount
+    )
+    {
+        Message? message = _messages.FirstOrDefault(m => m.Id == messageId);
+
+        if (message is null)
+            return MessageFaults.MessageNotFound;
+
+        Outcome setTokenOutcome = message.SetTokenUsage
+        (
+            inputTokenCount: inputTokenCount,
+            outputTokenCount: outputTokenCount,
+            totalTokenCount: totalTokenCount
+        );
+
+        if (setTokenOutcome.IsFailure)
+            return setTokenOutcome.Fault;
+
+        return Outcome.Success();
+    }
+
     public Outcome EditMessageAndRemoveSubsequent
     (
         MessageId messageId,

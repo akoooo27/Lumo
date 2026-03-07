@@ -10,7 +10,11 @@ public sealed record MessageReadModel
 
     public required string MessageContent { get; init; }
 
-    public long? TokenCount { get; init; }
+    public long? InputTokenCount { get; init; }
+
+    public long? OutputTokenCount { get; init; }
+
+    public long? TotalTokenCount { get; init; }
 
     public int SequenceNumber { get; init; }
 
