@@ -22,5 +22,7 @@ public interface IMainDbContext
     DbSet<Workflow> Workflows { get; }
     DbSet<WorkflowRun> WorkflowRuns { get; }
 
+    DbSet<Folder> Folders { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

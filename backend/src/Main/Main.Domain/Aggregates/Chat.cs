@@ -24,6 +24,8 @@ public sealed class Chat : AggregateRoot<ChatId>
 
     public bool IsPinned { get; private set; }
 
+    public FolderId? FolderId { get; private set; }
+
     public int NextSequenceNumber { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
@@ -50,6 +52,7 @@ public sealed class Chat : AggregateRoot<ChatId>
         ModelId = modelId;
         IsArchived = false;
         IsPinned = false;
+        FolderId = null;
         NextSequenceNumber = 0;
         CreatedAt = utcNow;
         UpdatedAt = utcNow;
@@ -150,6 +153,31 @@ public sealed class Chat : AggregateRoot<ChatId>
             return ChatFaults.NotArchived;
 
         IsArchived = false;
+        UpdatedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
+    public Outcome MoveToFolder(FolderId folderId, DateTimeOffset utcNow)
+    {
+        if (folderId.IsEmpty)
+            return ChatFaults.FolderIdRequired;
+
+        if (FolderId == folderId)
+            return ChatFaults.AlreadyInFolder;
+
+        FolderId = folderId;
+        UpdatedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
+    public Outcome RemoveFromFolder(DateTimeOffset utcNow)
+    {
+        if (FolderId is null)
+            return ChatFaults.NotInFolder;
+
+        FolderId = null;
         UpdatedAt = utcNow;
 
         return Outcome.Success();
