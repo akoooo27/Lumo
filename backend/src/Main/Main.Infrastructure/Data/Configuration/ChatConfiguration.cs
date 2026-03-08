@@ -5,6 +5,8 @@ using Main.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+using NpgsqlTypes;
+
 using SharedKernel.Infrastructure.Data;
 
 namespace Main.Infrastructure.Data.Configuration;
@@ -68,6 +70,13 @@ internal sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
             .HasForeignKey(m => m.ChatId)
             .HasPrincipalKey(c => c.Id)
             .OnDelete(DeleteBehavior.Cascade);
+
+        b.Property<NpgsqlTsVector>("TitleSearchVector")
+            .HasColumnType("tsvector")
+            .HasComputedColumnSql("to_tsvector('english', title)", stored: true);
+
+        b.HasIndex("TitleSearchVector")
+            .HasMethod("GIN");
 
         b.HasIndex(c => new { c.UserId, c.IsArchived, c.UpdatedAt });
         b.HasIndex(c => new { c.UserId, c.FolderId, c.UpdatedAt });
