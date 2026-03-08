@@ -11,4 +11,7 @@ internal sealed record Request
 
     [FromQuery]
     public int Limit { get; init; } = ChatConstants.DefaultPageSize;
+
+    [FromQuery]
+    public string? FolderId { get; init; }
 }

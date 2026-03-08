@@ -19,12 +19,14 @@ internal sealed class GetChatsHandler(IDbConnectionFactory dbConnectionFactory, 
                                            model_id as ModelName,
                                            is_archived as IsArchived,
                                            is_pinned as IsPinned,
+                                           folder_id as FolderId,
                                            created_at as CreatedAt,
                                            updated_at as UpdatedAt,
                                            next_sequence_number as MessagesCount
                                        FROM chats
                                        WHERE user_id = @UserId
                                          AND (@Cursor IS NULL OR COALESCE(updated_at, created_at) < @Cursor)
+                                         AND (@HasFolderFilter = FALSE OR (@FolderIsNull = TRUE AND folder_id IS NULL) OR folder_id = @FolderId)
                                        ORDER BY COALESCE(updated_at, created_at) DESC
                                        LIMIT @FetchLimit
                                        """;
@@ -41,7 +43,10 @@ internal sealed class GetChatsHandler(IDbConnectionFactory dbConnectionFactory, 
             {
                 UserId = userContext.UserId,
                 Cursor = request.Cursor,
-                FetchLimit = fetchLimit
+                FetchLimit = fetchLimit,
+                HasFolderFilter = request.HasFolderId,
+                FolderIsNull = request.HasFolderId && string.IsNullOrEmpty(request.FolderId),
+                FolderId = request.FolderId
             });
 
         List<ChatReadModel> chatList = chats.AsList();

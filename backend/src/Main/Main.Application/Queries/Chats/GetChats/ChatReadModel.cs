@@ -12,6 +12,8 @@ public sealed record class ChatReadModel
 
     public bool IsPinned { get; init; }
 
+    public string? FolderId { get; init; }
+
     public DateTimeOffset CreatedAt { get; init; }
 
     public DateTimeOffset? UpdatedAt { get; init; }
