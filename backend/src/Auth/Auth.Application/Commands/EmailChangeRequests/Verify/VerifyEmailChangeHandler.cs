@@ -119,7 +119,15 @@ internal sealed class VerifyEmailChangeHandler(
         };
 
         await messageBus.PublishAsync(emailAddressChanged, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            return UserOperationFaults.EmailAlreadyInUse;
+        }
 
         VerifyEmailChangeResponse response = new(newEmailAddress);
 

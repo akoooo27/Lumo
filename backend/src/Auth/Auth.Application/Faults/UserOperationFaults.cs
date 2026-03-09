@@ -21,4 +21,10 @@ internal static class UserOperationFaults
         title: "User.AvatarNotFound",
         detail: "The avatar file with the provided key was not found in storage."
     );
+
+    internal static readonly Fault AvatarForbidden = Fault.Forbidden
+    (
+        "User.AvatarForbidden",
+        "The avatar key does not belong to the current user."
+    );
 }

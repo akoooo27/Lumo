@@ -113,10 +113,8 @@ public sealed class Folder : AggregateRoot<FolderId>
         return Outcome.Success();
     }
 
-    public static string NormalizeName(string name)
+    private static string NormalizeName(string name)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-
         return name.Trim().ToUpperInvariant();
     }
 }

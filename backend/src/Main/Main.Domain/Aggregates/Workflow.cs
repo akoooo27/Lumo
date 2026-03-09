@@ -245,13 +245,18 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         return Outcome.Success();
     }
 
-    public void Archive(DateTimeOffset utcNow)
+    public Outcome Archive(DateTimeOffset utcNow)
     {
+        if (Status == WorkflowStatus.Archived)
+            return WorkflowFaults.AlreadyArchived;
+
         Status = WorkflowStatus.Archived;
         PauseReason = WorkflowPauseReason.None;
         DispatchLeaseId = null;
         DispatchLeaseUntilUtc = null;
         UpdatedAt = utcNow;
+
+        return Outcome.Success();
     }
 
     public bool TryClaimDispatchLease
@@ -261,6 +266,12 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         DateTimeOffset utcNow
     )
     {
+        if (leaseId == Guid.Empty)
+            return false;
+
+        if (leaseUntilUtc <= utcNow)
+            return false;
+
         if (Status != WorkflowStatus.Active)
             return false;
 

@@ -6,4 +6,6 @@ public interface IStorageService
         TimeSpan expiration, CancellationToken cancellationToken = default);
 
     Task<bool> FileExistsAsync(string fileKey, CancellationToken cancellationToken = default);
+
+    Task<bool> IsOwnedByAsync(string fileKey, Guid userId, CancellationToken cancellationToken = default);
 }

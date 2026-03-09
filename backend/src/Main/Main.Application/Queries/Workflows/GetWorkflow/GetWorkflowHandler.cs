@@ -2,7 +2,6 @@ using System.Data.Common;
 
 using Dapper;
 
-using Main.Application.Faults;
 using Main.Domain.Enums;
 using Main.Domain.Faults;
 using Main.Domain.ValueObjects;
@@ -38,14 +37,19 @@ internal sealed class GetWorkflowHandler(IDbConnectionFactory dbConnectionFactor
             updated_at AS UpdatedAt
         FROM workflows
         WHERE id = @WorkflowId
+          AND user_id = @UserId
         """;
 
     public async ValueTask<Outcome<GetWorkflowResponse>> Handle(GetWorkflowQuery request, CancellationToken cancellationToken)
     {
+        Guid userId = userContext.UserId;
+
         Outcome<WorkflowId> workflowIdOutcome = WorkflowId.From(request.WorkflowId);
 
         if (workflowIdOutcome.IsFailure)
             return workflowIdOutcome.Fault;
+
+        WorkflowId workflowId = workflowIdOutcome.Value;
 
         await using DbConnection connection = await dbConnectionFactory.CreateConnectionAsync(cancellationToken);
 
@@ -54,15 +58,13 @@ internal sealed class GetWorkflowHandler(IDbConnectionFactory dbConnectionFactor
             Sql,
             new
             {
-                WorkflowId = workflowIdOutcome.Value.Value
+                WorkflowId = workflowId.Value,
+                UserId = userId
             }
         );
 
         if (workflow is null)
             return WorkflowFaults.NotFound;
-
-        if (workflow.UserId != userContext.UserId)
-            return WorkflowOperationFaults.NotOwner;
 
         GetWorkflowResponse response = new()
         {
