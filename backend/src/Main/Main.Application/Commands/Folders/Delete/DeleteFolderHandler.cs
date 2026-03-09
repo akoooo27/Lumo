@@ -13,8 +13,7 @@ namespace Main.Application.Commands.Folders.Delete;
 
 internal sealed class DeleteFolderHandler(
     IMainDbContext dbContext,
-    IUserContext userContext,
-    IDateTimeProvider dateTimeProvider) : ICommandHandler<DeleteFolderCommand>
+    IUserContext userContext) : ICommandHandler<DeleteFolderCommand>
 {
     public async ValueTask<Outcome> Handle(DeleteFolderCommand request, CancellationToken cancellationToken)
     {
@@ -32,17 +31,6 @@ internal sealed class DeleteFolderHandler(
 
         if (folder is null)
             return FolderOperationFaults.NotFound;
-
-        List<Chat> chats = await dbContext.Chats
-            .Where(c => c.UserId == userId && c.FolderId == folderId)
-            .ToListAsync(cancellationToken);
-
-        DateTimeOffset utcNow = dateTimeProvider.UtcNow;
-
-        foreach (Chat chat in chats)
-        {
-            chat.RemoveFromFolder(utcNow);
-        }
 
         dbContext.Folders.Remove(folder);
         await dbContext.SaveChangesAsync(cancellationToken);

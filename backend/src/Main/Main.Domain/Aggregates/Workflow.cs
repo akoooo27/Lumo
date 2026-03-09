@@ -50,6 +50,8 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
 
     public DateTimeOffset? DispatchLeaseUntilUtc { get; private set; }
 
+    public int Version { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -94,6 +96,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         TimeZoneId = timeZoneId;
         NextRunAt = nextRunAt;
         ConsecutiveFailureCount = 0;
+        Version = 1;
         CreatedAt = utcNow;
         UpdatedAt = utcNow;
     }
@@ -208,6 +211,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         LocalTime = localTime;
         TimeZoneId = timeZoneId;
         NextRunAt = nextRunAt;
+        Version++;
         UpdatedAt = utcNow;
 
         return Outcome.Success();
@@ -223,6 +227,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
 
         Status = WorkflowStatus.Paused;
         PauseReason = WorkflowPauseReason.UserAction;
+        Version++;
         UpdatedAt = utcNow;
 
         return Outcome.Success();
@@ -240,6 +245,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         PauseReason = WorkflowPauseReason.None;
         ConsecutiveFailureCount = 0;
         NextRunAt = nextRunAt;
+        Version++;
         UpdatedAt = utcNow;
 
         return Outcome.Success();
@@ -254,6 +260,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
         PauseReason = WorkflowPauseReason.None;
         DispatchLeaseId = null;
         DispatchLeaseUntilUtc = null;
+        Version++;
         UpdatedAt = utcNow;
 
         return Outcome.Success();
@@ -283,6 +290,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
 
         DispatchLeaseId = leaseId;
         DispatchLeaseUntilUtc = leaseUntilUtc;
+        Version++;
 
         return true;
     }
@@ -296,6 +304,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
     public void AdvanceNextRunAt(DateTimeOffset nextRunAt, DateTimeOffset utcNow)
     {
         NextRunAt = nextRunAt;
+        Version++;
         UpdatedAt = utcNow;
     }
 
@@ -303,6 +312,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
     {
         LastRunAt = utcNow;
         ConsecutiveFailureCount = 0;
+        Version++;
         UpdatedAt = utcNow;
     }
 
@@ -310,6 +320,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
     {
         LastRunAt = utcNow;
         ConsecutiveFailureCount++;
+        Version++;
         UpdatedAt = utcNow;
 
         if (ConsecutiveFailureCount >= WorkflowConstants.MaxConsecutiveFailures)
@@ -326,6 +337,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
     {
         Status = WorkflowStatus.Paused;
         PauseReason = WorkflowPauseReason.ModelUnavailable;
+        Version++;
         UpdatedAt = utcNow;
     }
 

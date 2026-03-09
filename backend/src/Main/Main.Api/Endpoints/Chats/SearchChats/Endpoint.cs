@@ -31,6 +31,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                     "Returns matching chats with highlighted snippets.")
                 .Produces<Response>(200, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(400, HttpContentTypeConstants.Json)
+                .ProducesProblemDetails(401, HttpContentTypeConstants.Json)
                 .WithTags(CustomTags.Chats);
         });
     }

@@ -53,7 +53,10 @@ internal sealed class SendEphemeralMessageHandler(
         if (!lockAcquired)
             return EphemeralChatOperationFaults.GenerationInProgress;
 
-        int nextSequenceNumber = ephemeralChat.Messages.Max(m => m.SequenceNumber) + 1;
+        int nextSequenceNumber = ephemeralChat.Messages
+            .Select(m => m.SequenceNumber)
+            .DefaultIfEmpty(-1)
+            .Max() + 1;
 
         EphemeralMessage ephemeralMessage = new()
         {

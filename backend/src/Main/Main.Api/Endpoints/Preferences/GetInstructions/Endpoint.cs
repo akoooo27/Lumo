@@ -28,6 +28,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
             d.WithSummary("Get Instructions")
                 .WithDescription("Retrieves all custom instructions for the authenticated user.")
                 .Produces<Response>(200, HttpContentTypeConstants.Json)
+                .ProducesProblemDetails(401, HttpContentTypeConstants.Json)
                 .WithTags(CustomTags.Preferences);
         });
     }

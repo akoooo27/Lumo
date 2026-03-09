@@ -57,14 +57,14 @@
     <PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
 
     <!-- Dapper -->
-    <PackageVersion Include="Dapper" Version="2.1.66" />
+    <PackageVersion Include="Dapper" Version="2.1.72" />
 
     <PackageVersion Include="UAParser" Version="3.1.47" />
 
     <!-- AWS SDK -->
     <PackageVersion Include="AWSSDK.S3" Version="4.0.18.7" />
     <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.23" />
-    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.11.6" />
+    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.12" />
 
     <!-- MassTransit -->
     <!-- Avoid updating MassTransit versions beyond 8.5.x, as newer version required license -->
@@ -89,7 +89,7 @@
     <PackageVersion Include="FastEndpoints" Version="8.0.1" />
     <PackageVersion Include="FastEndpoints.Swagger" Version="8.0.1" />
     <PackageVersion Include="FastEndpoints.Generator" Version="8.0.1" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.1" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.2" />
     <PackageVersion Include="RedisRateLimiting.AspNetCore" Version="1.2.1" />
     <!-- Tests -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />

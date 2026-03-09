@@ -65,6 +65,12 @@ internal sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
             .IsRequired(false)
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
 
+        b.HasOne<Folder>()
+            .WithMany()
+            .HasForeignKey(c => c.FolderId)
+            .HasPrincipalKey(f => f.Id)
+            .OnDelete(DeleteBehavior.SetNull);
+
         b.HasMany(c => c.Messages)
             .WithOne()
             .HasForeignKey(m => m.ChatId)

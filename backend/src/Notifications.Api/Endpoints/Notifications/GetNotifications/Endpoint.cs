@@ -28,6 +28,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
             d.WithSummary("Get Notifications")
                 .WithDescription("Retrieves all active notifications for the current user.")
                 .Produces<Response>(200, HttpContentTypeConstants.Json)
+                .ProducesProblemDetails(401, HttpContentTypeConstants.Json)
                 .WithTags(CustomTags.Notifications);
         });
     }

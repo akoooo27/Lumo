@@ -73,7 +73,9 @@ public sealed class Chat : AggregateRoot<ChatId>
         if (string.IsNullOrWhiteSpace(title))
             return ChatFaults.TitleRequired;
 
-        if (title.Length > ChatConstants.MaxTitleLength)
+        string trimmedTitle = title.Trim();
+
+        if (trimmedTitle.Length > ChatConstants.MaxTitleLength)
             return ChatFaults.TitleTooLong;
 
         if (string.IsNullOrWhiteSpace(modelId))
@@ -83,7 +85,7 @@ public sealed class Chat : AggregateRoot<ChatId>
         (
             id: id,
             userId: userId,
-            title: title,
+            title: trimmedTitle,
             modelId: modelId,
             utcNow: utcNow
         );
@@ -99,10 +101,12 @@ public sealed class Chat : AggregateRoot<ChatId>
         if (string.IsNullOrWhiteSpace(newTitle))
             return ChatFaults.TitleRequired;
 
-        if (newTitle.Length > ChatConstants.MaxTitleLength)
+        string trimmedTitle = newTitle.Trim();
+
+        if (trimmedTitle.Length > ChatConstants.MaxTitleLength)
             return ChatFaults.TitleTooLong;
 
-        Title = newTitle;
+        Title = trimmedTitle;
         UpdatedAt = utcNow;
 
         return Outcome.Success();
