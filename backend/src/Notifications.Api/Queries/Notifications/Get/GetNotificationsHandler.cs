@@ -27,7 +27,7 @@ internal sealed class GetNotificationsHandler(IDbConnectionFactory dbConnectionF
                                    read_at AS ReadAt
                                FROM notifications
                                WHERE user_id = @UserId
-                                 AND status = @ArchivedStatus
+                                 AND status != @ArchivedStatus
                                ORDER BY created_at DESC
                                """;
 

@@ -151,18 +151,6 @@ internal sealed class CronJobHelper(
                 workflow.AdvanceNextRunAt(nextRunAt, utcNow);
                 workflow.ClearDispatchLease();
 
-                try
-                {
-                    await dbContext.SaveChangesAsync(cancellationToken);
-                }
-                catch (DbUpdateConcurrencyException exception)
-                {
-                    logger.LogWarning(exception, "Concurrency conflict for workflow {WorkflowId}, another instance claimed it",
-                        workflow.Id.Value);
-                    DetachWorkflowEntries(workflow);
-                    continue;
-                }
-
                 WorkflowRunRequested workflowRunRequested = new()
                 {
                     EventId = Guid.NewGuid(),
@@ -176,6 +164,18 @@ internal sealed class CronJobHelper(
                 };
 
                 await messageBus.PublishAsync(workflowRunRequested, cancellationToken);
+
+                try
+                {
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateConcurrencyException exception)
+                {
+                    logger.LogWarning(exception, "Concurrency conflict for workflow {WorkflowId}, another instance claimed it",
+                        workflow.Id.Value);
+                    DetachWorkflowEntries(workflow);
+                    continue;
+                }
             }
         }
     }
