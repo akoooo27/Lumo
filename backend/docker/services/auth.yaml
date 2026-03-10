@@ -77,6 +77,10 @@ services:
             - S3__BucketName=${S3_BUCKET_NAME:?S3_BUCKET_NAME is required}
             - S3__Region=${AWS_REGION:?AWS_REGION is required}
 
+            # ZeroBounceOptions
+            - ZeroBounce__ApiKey=${ZEROBOUNCE_API_KEY:?ZEROBOUNCE_API_KEY is required}
+            - ZeroBounce__BaseUrl=${ZEROBOUNCE_BASE_URL:-https://api.zerobounce.net/}
+
         networks:
             - lumo-network
         depends_on:

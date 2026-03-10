@@ -1,6 +1,7 @@
 using Auth.Application.Abstractions.Authentication;
 using Auth.Application.Abstractions.Data;
 using Auth.Application.Abstractions.Generators;
+using Auth.Application.Abstractions.ZeroBounce;
 using Auth.Application.Faults;
 using Auth.Domain.Aggregates;
 using Auth.Domain.Constants;
@@ -19,6 +20,7 @@ namespace Auth.Application.Commands.Users.SignUp;
 internal sealed class SignUpHandler(
     IAuthDbContext dbContext,
     IRequestContext requestContext,
+    IEmailValidationService emailValidationService,
     ISecureTokenGenerator secureTokenGenerator,
     IIdGenerator idGenerator,
     IMessageBus messageBus,
@@ -39,6 +41,18 @@ internal sealed class SignUpHandler(
 
         if (emailExists)
             return UserOperationFaults.EmailAlreadyInUse;
+
+        try
+        {
+            bool isSpam = await emailValidationService.IsSpamEmailAsync(emailAddress.Value, cancellationToken);
+
+            if (isSpam)
+                return UserOperationFaults.SpamEmailAddress;
+        }
+        catch (HttpRequestException)
+        {
+            return UserOperationFaults.EmailValidationUnavailable;
+        }
 
         Outcome<User> userOutcome = User.Create
         (
