@@ -260,6 +260,54 @@ internal sealed class MemoryStore(
             .ExecuteDeleteAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<string>> BulkSaveAsync(Guid userId, IReadOnlyList<ImportEntry> entries, CancellationToken cancellationToken)
+    {
+        if (entries.Count == 0)
+            return [];
+
+        List<string> entryContents = [.. entries.Select(ie => ie.Content)];
+
+        OpenAIEmbeddingCollection embeddingCollection =
+            await embeddingClient.GenerateEmbeddingsAsync(entryContents, cancellationToken: cancellationToken);
+
+        float[][] embeddingArrays = embeddingCollection
+            .OrderBy(e => e.Index)
+            .Select(e => e.ToFloats().ToArray())
+            .ToArray();
+
+        DateTimeOffset now = dateTimeProvider.UtcNow;
+        List<string> ids = [];
+
+        for (int i = 0; i < entries.Count; i++)
+        {
+            string id = $"mem_{Ulid.NewUlid()}";
+
+            MemoryRecord memoryRecord = new()
+            {
+                Id = id,
+                UserId = userId,
+                Content = entries[i].Content,
+                Category = entries[i].Category,
+                Embedding = new(embeddingArrays[i]),
+                CreatedAt = now,
+                LastAccessedAt = now,
+                AccessCount = 0,
+                Importance = entries[i].Importance,
+                IsActive = true,
+            };
+
+            await dbContext.Memories.AddAsync(memoryRecord, cancellationToken);
+            ids.Add(id);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        if (logger.IsEnabled(LogLevel.Information))
+            logger.LogInformation("Bulk imported {Count} memories for user {UserId}", ids.Count, userId);
+
+        return ids;
+    }
+
     private static MemoryEntry ToEntry(MemoryRecord memoryRecord) =>
         new
         (

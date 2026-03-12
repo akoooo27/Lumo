@@ -9,4 +9,10 @@ internal static class MemoryOperationFaults
         title: "Memory.NotFound",
         detail: "The specified memory was not found."
     );
+
+    internal static readonly Fault NoMemoriesToImport = Fault.Failure
+    (
+        title: "MemoryImport.NoMemoriesToImport",
+        detail: "No valid memories were found in the provided text."
+    );
 }

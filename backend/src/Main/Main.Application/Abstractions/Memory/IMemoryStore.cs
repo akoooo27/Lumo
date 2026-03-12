@@ -26,4 +26,7 @@ public interface IMemoryStore
     Task SoftDeleteAsync(Guid userId, string memoryId, CancellationToken cancellationToken);
 
     Task DeleteAllAsync(Guid userId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<string>> BulkSaveAsync(Guid userId, IReadOnlyList<ImportEntry> entries,
+        CancellationToken cancellationToken);
 }
