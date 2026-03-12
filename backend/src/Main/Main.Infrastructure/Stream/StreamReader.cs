@@ -169,6 +169,14 @@ internal sealed class StreamReader(IConnectionMultiplexer connectionMultiplexer)
             {
                 Sources = entry["sources"]
             },
+            "thinking" => new StreamMessage
+            (
+                StreamMessageType.Thinking,
+                (string?)entry["phase"] ?? string.Empty,
+                ts,
+                ModelName: null,
+                Provider: null
+            ),
             _ => null
         };
     }

@@ -38,6 +38,19 @@ internal sealed class ToolCallStreamFilter(
                     "Tool call intercepted: {FunctionName} → streaming as {DisplayName} to stream {StreamId}",
                     functionName, displayName, pluginStreamContext.StreamId);
 
+            await streamPublisher.PublishThinkingAsync
+            (
+                streamId: pluginStreamContext.StreamId,
+                phase: displayName switch
+                {
+                    "web_search" => "Searching the web...",
+                    "save_memory" => "Saving to memory...",
+                    "find_memories" => "Recalling memories...",
+                    _ => "Processing..."
+                },
+                cancellationToken: context.CancellationToken
+            );
+
             await streamPublisher.PublishToolCallAsync
             (
                 streamId: pluginStreamContext.StreamId,

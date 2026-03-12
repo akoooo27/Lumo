@@ -18,5 +18,8 @@ public interface IStreamPublisher
 
     Task PublishToolCallAsync(string streamId, string toolName, string? query, CancellationToken cancellationToken);
 
-    Task PublishToolCallResultAsync(string streamId, string toolName, string sourcesJson, CancellationToken cancellationToken);
+    Task PublishToolCallResultAsync(string streamId, string toolName, string sourcesJson,
+        CancellationToken cancellationToken);
+
+    Task PublishThinkingAsync(string streamId, string phase, CancellationToken cancellationToken);
 }

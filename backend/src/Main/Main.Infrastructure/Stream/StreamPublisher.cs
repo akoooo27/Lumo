@@ -161,4 +161,32 @@ internal sealed class StreamPublisher(
             throw;
         }
     }
+
+    public async Task PublishThinkingAsync(string streamId, string phase, CancellationToken cancellationToken)
+    {
+        string streamKey = $"{StreamConstants.StreamKeyPrefix}{streamId}";
+        string notifyChannel = $"{StreamConstants.NotifyChannelPrefix}{streamId}";
+
+        IDatabase db = connectionMultiplexer.GetDatabase();
+        ISubscriber pub = connectionMultiplexer.GetSubscriber();
+
+        try
+        {
+            List<NameValueEntry> entries =
+            [
+                new NameValueEntry("type", "thinking"),
+                new NameValueEntry("phase", phase),
+                new NameValueEntry("timestamp",
+                    dateTimeProvider.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))
+            ];
+
+            await db.StreamAddAsync(streamKey, [.. entries]);
+            await pub.PublishAsync(RedisChannel.Literal(notifyChannel), "thinking");
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to publish thinking for stream {StreamId}", streamId);
+            throw;
+        }
+    }
 }
