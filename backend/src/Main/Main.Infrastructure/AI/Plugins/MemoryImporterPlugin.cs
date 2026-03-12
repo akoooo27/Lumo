@@ -75,6 +75,9 @@ internal sealed class MemoryImporterPlugin(IMemoryStore memoryStore)
         string memoriesJson
     )
     {
+        if (ImportEntries is not null)
+            return "Error: submit_import has already been called. Only one submission is allowed per import.";
+
         TotalFound = totalFound;
 
         try

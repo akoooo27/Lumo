@@ -265,7 +265,17 @@ internal sealed class MemoryStore(
         if (entries.Count == 0)
             return [];
 
-        List<string> entryContents = [.. entries.Select(ie => ie.Content)];
+        List<ImportEntry> validEntries = entries
+            .Where(e => !string.IsNullOrWhiteSpace(e.Content) && Enum.IsDefined(e.Category))
+            .ToList();
+
+        if (validEntries.Count == 0)
+            return [];
+
+        List<string> entryContents = [.. validEntries.Select(ie =>
+            ie.Content.Length > MemoryConstants.MaxContentLength
+                ? ie.Content[..MemoryConstants.MaxContentLength]
+                : ie.Content)];
 
         OpenAIEmbeddingCollection embeddingCollection =
             await embeddingClient.GenerateEmbeddingsAsync(entryContents, cancellationToken: cancellationToken);
@@ -278,7 +288,7 @@ internal sealed class MemoryStore(
         DateTimeOffset now = dateTimeProvider.UtcNow;
         List<string> ids = [];
 
-        for (int i = 0; i < entries.Count; i++)
+        for (int i = 0; i < validEntries.Count; i++)
         {
             string id = $"mem_{Ulid.NewUlid()}";
 
@@ -286,13 +296,13 @@ internal sealed class MemoryStore(
             {
                 Id = id,
                 UserId = userId,
-                Content = entries[i].Content,
-                Category = entries[i].Category,
+                Content = entryContents[i],
+                Category = validEntries[i].Category,
                 Embedding = new(embeddingArrays[i]),
                 CreatedAt = now,
                 LastAccessedAt = now,
                 AccessCount = 0,
-                Importance = entries[i].Importance,
+                Importance = Math.Clamp(validEntries[i].Importance, MemoryConstants.MinImportance, MemoryConstants.MaxImportance),
                 IsActive = true,
             };
 

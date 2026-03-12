@@ -22,6 +22,8 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
         Post("/api/memories/import");
         Version(1);
 
+        Options(o => o.RequireRateLimiting("ai-generation"));
+
         Description(d =>
         {
             d.WithSummary("Import Memories")

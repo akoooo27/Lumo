@@ -122,7 +122,21 @@ internal sealed class MemoryImportService(
         }
 
         if (plugin.ImportEntries is null)
+        {
+            logger.LogWarning("Memory import LLM did not call submit_import for user {UserId}. The model may not support function calling.", userId);
             return null;
+        }
+
+        if (plugin.ImportEntries.Count == 0)
+        {
+            return new MemoryImportResult
+            (
+                Imported: 0,
+                SkippedAsDuplicates: 0,
+                SkippedDueToCapacity: 0,
+                Total: plugin.TotalFound
+            );
+        }
 
         int totalFound = plugin.TotalFound;
         int duplicatesSkipped = Math.Max(0, totalFound - plugin.ImportEntries.Count);

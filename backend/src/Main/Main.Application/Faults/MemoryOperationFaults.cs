@@ -15,4 +15,11 @@ internal static class MemoryOperationFaults
         title: "MemoryImport.NoMemoriesToImport",
         detail: "No valid memories were found in the provided text."
     );
+
+    internal static readonly Fault ImportParseFailed = Fault.Failure
+    (
+        title: "MemoryImport.ParseFailed",
+        detail: "Failed to parse the provided text. Please check the format and try again."
+    );
+
 }

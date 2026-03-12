@@ -24,7 +24,7 @@ internal sealed class ImportMemoriesHandler(
         );
 
         if (memoryImportResult is null)
-            return MemoryOperationFaults.NoMemoriesToImport;
+            return MemoryOperationFaults.ImportParseFailed;
 
         ImportMemoriesResponse response = new
         (
