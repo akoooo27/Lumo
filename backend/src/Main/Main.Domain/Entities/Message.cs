@@ -24,6 +24,8 @@ public sealed class Message : Entity<MessageId>
 
     public int SequenceNumber { get; private set; }
 
+    public string? SourcesJson { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset EditedAt { get; private set; }
@@ -115,6 +117,19 @@ public sealed class Message : Entity<MessageId>
         InputTokenCount = inputTokenCount;
         OutputTokenCount = outputTokenCount;
         TotalTokenCount = totalTokenCount;
+
+        return Outcome.Success();
+    }
+
+    internal Outcome SetSourcesJson(string sourcesJson)
+    {
+        if (string.IsNullOrWhiteSpace(sourcesJson))
+            return MessageFaults.SourcesRequired;
+
+        if (MessageRole != MessageRole.Assistant)
+            return MessageFaults.MessageSourceNotAllowed;
+
+        SourcesJson = sourcesJson;
 
         return Outcome.Success();
     }

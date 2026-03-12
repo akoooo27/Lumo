@@ -93,6 +93,24 @@ internal sealed class AssistantMessageGeneratedConsumer(
             }
         }
 
+        if (!string.IsNullOrWhiteSpace(message.SourcesJson))
+        {
+            Outcome setSourcesOutcome = chat.SetMessageSources
+            (
+                messageId: messageId,
+                sourcesJson: message.SourcesJson
+            );
+
+            if (setSourcesOutcome.IsFailure)
+            {
+                logger.LogError(
+                    "Failed to set message sources in {EventType}: {EventId}, CorrelationId: {CorrelationId}, ChatId: {ChatId}, Fault: {Fault}",
+                    nameof(AssistantMessageGenerated), message.EventId, message.CorrelationId, message.ChatId,
+                    setSourcesOutcome.Fault);
+                return;
+            }
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         if (logger.IsEnabled(LogLevel.Information))

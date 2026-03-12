@@ -19,4 +19,6 @@ public sealed record AssistantMessageGenerated
     public int? TotalTokens { get; init; }
 
     public string? ModelId { get; init; }
+
+    public string? SourcesJson { get; init; }
 }

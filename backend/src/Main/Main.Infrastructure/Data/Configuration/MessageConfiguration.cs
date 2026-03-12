@@ -59,6 +59,10 @@ internal sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
             .IsRequired()
             .HasColumnType("integer");
 
+        b.Property(m => m.SourcesJson)
+            .IsRequired(false)
+            .HasColumnType("jsonb");
+
         b.Property(m => m.CreatedAt)
             .IsRequired()
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);

@@ -425,7 +425,8 @@ internal sealed class NativeChatCompletionService(
                     InputTokens = tokenUsage.InputTokens > 0 ? tokenUsage.InputTokens : null,
                     OutputTokens = tokenUsage.OutputTokens > 0 ? tokenUsage.OutputTokens : null,
                     TotalTokens = tokenUsage.TotalTokens > 0 ? tokenUsage.TotalTokens : null,
-                    ModelId = modelId
+                    ModelId = modelId,
+                    SourcesJson = pluginStreamContext.SourcesJson
                 }, cancellationToken
             );
         }

@@ -62,6 +62,7 @@ internal sealed class ToolCallStreamFilter(
                 );
 
                 pluginStreamContext.LastSearchSources = null;
+                pluginStreamContext.SourcesJson = sourcesJson;
             }
 
             return;

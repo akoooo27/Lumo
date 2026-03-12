@@ -287,4 +287,26 @@ public sealed class Chat : AggregateRoot<ChatId>
 
         return Outcome.Success();
     }
+
+    public Outcome SetMessageSources
+    (
+        MessageId messageId,
+        string sourcesJson
+    )
+    {
+        if (IsArchived)
+            return ChatFaults.CannotModifyArchivedChat;
+
+        Message? message = _messages.FirstOrDefault(m => m.Id == messageId);
+
+        if (message is null)
+            return MessageFaults.MessageNotFound;
+
+        Outcome setOutcome = message.SetSourcesJson(sourcesJson);
+
+        if (setOutcome.IsFailure)
+            return setOutcome.Fault;
+
+        return Outcome.Success();
+    }
 }

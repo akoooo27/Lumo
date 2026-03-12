@@ -51,4 +51,16 @@ public static class MessageFaults
         title: "Message.MessageEditNotAllowed",
         detail: "Editing this message is not allowed."
     );
+
+    public static readonly Fault SourcesRequired = Fault.Validation
+    (
+        title: "Message.SourcesRequired",
+        detail: "At least one source must be provided when setting sources for a message."
+    );
+
+    public static readonly Fault MessageSourceNotAllowed = Fault.Validation
+    (
+        title: "Message.MessageSourceNotAllowed",
+        detail: "Setting a source is only allowed for assistant messages."
+    );
 }
