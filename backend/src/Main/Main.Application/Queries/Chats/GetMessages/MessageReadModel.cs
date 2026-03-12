@@ -18,6 +18,8 @@ public sealed record MessageReadModel
 
     public int SequenceNumber { get; init; }
 
+    public string? SourcesJson { get; init; }
+
     public DateTimeOffset CreatedAt { get; init; }
 
     public DateTimeOffset EditedAt { get; init; }

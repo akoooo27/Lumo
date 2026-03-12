@@ -50,18 +50,19 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
             outcome: await _sender.Send(query, ct),
             mapper: response => new Response(
                 Messages: response.Messages
-                    .Select(m => new MessageDto
+                    .Select(mrm => new MessageDto
                     (
-                        Id: m.Id,
-                        ChatId: m.ChatId,
-                        MessageContent: m.MessageContent,
-                        MessageRole: m.MessageRole,
-                        InputTokenCount: m.InputTokenCount,
-                        OutputTokenCount: m.OutputTokenCount,
-                        TotalTokenCount: m.TotalTokenCount,
-                        SequenceNumber: m.SequenceNumber,
-                        CreatedAt: m.CreatedAt,
-                        EditedAt: m.EditedAt
+                        Id: mrm.Id,
+                        ChatId: mrm.ChatId,
+                        MessageContent: mrm.MessageContent,
+                        MessageRole: mrm.MessageRole,
+                        InputTokenCount: mrm.InputTokenCount,
+                        OutputTokenCount: mrm.OutputTokenCount,
+                        TotalTokenCount: mrm.TotalTokenCount,
+                        SequenceNumber: mrm.SequenceNumber,
+                        SourcesJson: mrm.SourcesJson,
+                        CreatedAt: mrm.CreatedAt,
+                        EditedAt: mrm.EditedAt
                     ))
                     .ToList(),
                 Pagination: new PaginationDto

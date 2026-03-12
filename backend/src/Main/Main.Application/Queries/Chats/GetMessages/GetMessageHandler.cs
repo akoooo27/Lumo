@@ -33,6 +33,7 @@ internal sealed class GetMessageHandler(IDbConnectionFactory dbConnectionFactory
                                             output_token_count as OutputTokenCount,
                                             total_token_count as TotalTokenCount,
                                             sequence_number as SequenceNumber,
+                                            sources_json as SourcesJson,
                                             created_at as CreatedAt,
                                             edited_at as EditedAt
                                           FROM messages
@@ -51,6 +52,7 @@ internal sealed class GetMessageHandler(IDbConnectionFactory dbConnectionFactory
                                                       output_token_count as OutputTokenCount,
                                                       total_token_count as TotalTokenCount,
                                                       sequence_number as SequenceNumber,
+                                                      sources_json as SourcesJson,
                                                       created_at as CreatedAt,
                                                       edited_at as EditedAt
                                                     FROM messages

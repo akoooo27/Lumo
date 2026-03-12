@@ -10,6 +10,7 @@ internal sealed record MessageDto
     long? OutputTokenCount,
     long? TotalTokenCount,
     int SequenceNumber,
+    string? SourcesJson,
     DateTimeOffset CreatedAt,
     DateTimeOffset EditedAt
 );
