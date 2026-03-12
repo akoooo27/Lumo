@@ -395,7 +395,16 @@ internal sealed class NativeChatCompletionService(
         CancellationToken cancellationToken
     )
     {
-        await streamPublisher.PublishStatusAsync(streamId, StreamStatus.Done, cancellationToken);
+        ModelInfo? modelInfo = modelRegistry.GetModelInfo(modelId);
+
+        await streamPublisher.PublishStatusAsync
+        (
+            streamId: streamId,
+            status: StreamStatus.Done,
+            cancellationToken: cancellationToken,
+            modelName: modelInfo?.DisplayName,
+            provider: modelInfo?.Provider
+        );
 
         if (messageContent.Length == 0)
             return;

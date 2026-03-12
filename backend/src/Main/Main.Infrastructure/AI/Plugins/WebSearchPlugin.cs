@@ -48,7 +48,8 @@ internal sealed class WebSearchPlugin
                 .Select(r => new ToolCallSource
                 (
                     Title: r.Title,
-                    Url: r.Url
+                    Url: r.Url,
+                    Score: r.Score
                 ))
                 .ToList();
 

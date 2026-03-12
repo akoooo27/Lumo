@@ -135,31 +135,39 @@ internal sealed class StreamReader(IConnectionMultiplexer connectionMultiplexer)
             (
                 StreamMessageType.Chunk,
                 (string?)entry["content"] ?? string.Empty,
-                ts
+                ts,
+                ModelName: null,
+                Provider: null
             ),
             "status" => new StreamMessage
             (
                 StreamMessageType.Status,
                 (string?)entry["status"] ?? string.Empty,
-                ts
+                ts,
+                ModelName: entry["model_name"],
+                Provider: entry["provider"]
             ),
             "tool_call" => new StreamMessage
             (
                 StreamMessageType.ToolCall,
                 (string?)entry["tool_name"] ?? string.Empty,
-                ts
+                ts,
+                ModelName: null,
+                Provider: null
             )
             {
-                Query = (string?)entry["query"]
+                Query = entry["query"]
             },
             "tool_result" => new StreamMessage
             (
                 StreamMessageType.ToolCallResult,
                 (string?)entry["tool_name"] ?? string.Empty,
-                ts
+                ts,
+                ModelName: null,
+                Provider: null
             )
             {
-                Sources = (string?)entry["sources"]
+                Sources = entry["sources"]
             },
             _ => null
         };

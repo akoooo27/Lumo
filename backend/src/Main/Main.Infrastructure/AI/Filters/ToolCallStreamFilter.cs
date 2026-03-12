@@ -51,7 +51,7 @@ internal sealed class ToolCallStreamFilter(
             if (pluginStreamContext.LastSearchSources is { Count: > 0 } sources)
             {
                 string sourcesJson = JsonSerializer.Serialize(
-                    sources.Select(s => new { title = s.Title, url = s.Url }));
+                    sources.Select(s => new { title = s.Title, url = s.Url, score = s.Score }));
 
                 await streamPublisher.PublishToolCallResultAsync
                 (

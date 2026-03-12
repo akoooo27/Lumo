@@ -2,8 +2,15 @@ namespace Main.Application.Abstractions.Stream;
 
 public interface IStreamPublisher
 {
-    Task PublishStatusAsync(string streamId, StreamStatus status, CancellationToken cancellationToken,
-        string? fault = null);
+    Task PublishStatusAsync
+    (
+        string streamId,
+        StreamStatus status,
+        CancellationToken cancellationToken,
+        string? fault = null,
+        string? modelName = null,
+        string? provider = null
+    );
 
     Task SetStreamExpirationAsync(string streamId, TimeSpan expiration, CancellationToken cancellationToken);
 
