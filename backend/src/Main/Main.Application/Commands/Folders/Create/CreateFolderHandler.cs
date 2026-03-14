@@ -37,8 +37,8 @@ internal sealed class CreateFolderHandler(
 
         if (folderCount > FolderConstants.MaxFoldersPerUser)
             return FolderOperationFaults.MaxFoldersReached;
-
-        int nextSortOrder = (stats?.MaxSortOrder ?? -1) + 1;
+        if (folderCount >= FolderConstants.MaxFoldersPerUser)
+            return FolderOperationFaults.MaxFoldersReached;
 
         FolderId folderId = idGenerator.NewFolderId();
 
