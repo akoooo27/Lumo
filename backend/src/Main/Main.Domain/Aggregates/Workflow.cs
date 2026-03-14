@@ -299,6 +299,7 @@ public sealed class Workflow : AggregateRoot<WorkflowId>
     {
         DispatchLeaseId = null;
         DispatchLeaseUntilUtc = null;
+        Version++;
     }
 
     public void AdvanceNextRunAt(DateTimeOffset nextRunAt, DateTimeOffset utcNow)
