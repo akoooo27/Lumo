@@ -471,11 +471,13 @@ public sealed class WorkflowTests
     {
         Workflow workflow = CreateValidWorkflow(nextRunAt: UtcNow.AddMinutes(-5));
         workflow.TryClaimDispatchLease(Guid.NewGuid(), UtcNow.AddMinutes(5), UtcNow);
+        int versionBeforeClear = workflow.Version;
 
         workflow.ClearDispatchLease();
 
         workflow.DispatchLeaseId.Should().BeNull();
         workflow.DispatchLeaseUntilUtc.Should().BeNull();
+        workflow.Version.Should().Be(versionBeforeClear + 1);
     }
 
     [Fact]
