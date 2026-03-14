@@ -12,7 +12,7 @@ internal sealed class UpdateChatValidator : AbstractValidator<UpdateChatCommand>
             .NotEmpty().WithMessage("Chat ID is required");
 
         RuleFor(ucc => ucc)
-            .Must(ucc => ucc.NewTitle is not null || ucc.IsArchived is not null || ucc.IsPinned is not null)
+            .Must(ucc => ucc.NewTitle is not null || ucc.IsArchived is not null || ucc.IsPinned is not null || ucc.HasFolderId)
             .WithMessage("At least one field must be provided to update chat");
 
         RuleFor(ucc => ucc)

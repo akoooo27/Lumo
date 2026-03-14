@@ -25,7 +25,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
         Description(d =>
         {
             d.WithSummary("Update Chat")
-                .WithDescription("Partially updates a chat. Supports renaming and archiving/unarchiving.")
+                .WithDescription("Partially updates a chat. Supports renaming, archiving/unarchiving, pinning/unpinning, and folder assignment.")
                 .Produces<Response>(200, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(400, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(404, HttpContentTypeConstants.Json)
@@ -35,12 +35,16 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
 
     public override async Task HandleAsync(Request endpointRequest, CancellationToken ct)
     {
+        bool hasFolderId = endpointRequest.FolderId is not null;
+
         UpdateChatCommand command = new
         (
             ChatId: endpointRequest.ChatId,
             NewTitle: endpointRequest.NewTitle,
             IsArchived: endpointRequest.IsArchived,
-            IsPinned: endpointRequest.IsPinned
+            IsPinned: endpointRequest.IsPinned,
+            FolderId: endpointRequest.FolderId,
+            HasFolderId: hasFolderId
         );
 
         await SendOutcomeAsync
@@ -51,6 +55,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
             (
                 ChatId: ucr.ChatId,
                 Title: ucr.Title,
+                FolderId: ucr.FolderId,
                 IsArchived: ucr.IsArchived,
                 IsPinned: ucr.IsPinned,
                 UpdatedAt: ucr.UpdatedAt

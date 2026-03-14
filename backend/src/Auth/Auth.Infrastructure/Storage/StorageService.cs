@@ -58,4 +58,13 @@ internal sealed class StorageService(IAmazonS3 s3Client, IOptions<S3Options> s3O
             return false;
         }
     }
+
+    public Task<bool> IsOwnedByAsync(string fileKey, Guid userId, CancellationToken cancellationToken = default)
+    {
+        string expectedPrefix = $"{AvatarConstants.AvatarFolder}/{userId:N}/";
+
+        return Task.FromResult(
+            !string.IsNullOrWhiteSpace(fileKey) &&
+            fileKey.StartsWith(expectedPrefix, StringComparison.Ordinal));
+    }
 }

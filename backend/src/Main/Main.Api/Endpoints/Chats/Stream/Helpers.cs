@@ -13,7 +13,8 @@ internal static class Helpers
             StreamMessageType.Chunk => FormatTextChunk(message.Content),
             StreamMessageType.ToolCall => FormatToolCallMessage(message.Content, message.Query),
             StreamMessageType.ToolCallResult => FormatToolCallResultMessage(message.Content, message.Sources),
-            StreamMessageType.Status when message.Content == "done" => FinishMessage,
+            StreamMessageType.Thinking => FormatThinkingMessage(message.Content),
+            StreamMessageType.Status when message.Content == "done" => FormatFinishMessage(message.ModelName, message.Provider),
             StreamMessageType.Status when message.Content == "failed" => FormatErrorMessage("AI Generation Failed"),
             _ => string.Empty
         };
@@ -43,7 +44,24 @@ internal static class Helpers
         return $"2:[{json}]\n";
     }
 
-    private const string FinishMessage = "d:{\"finishReason\":\"stop\"}\n";
+    private static string FormatFinishMessage(string? modelName, string? provider)
+    {
+        var payload = new Dictionary<string, string> { ["finishReason"] = "stop" };
+
+        if (modelName is not null)
+            payload["model"] = modelName;
+
+        if (provider is not null)
+            payload["provider"] = provider;
+
+        return $"d:{JsonSerializer.Serialize(payload)}\n";
+    }
+
+    private static string FormatThinkingMessage(string phase)
+    {
+        string json = JsonSerializer.Serialize(new { type = "thinking", phase });
+        return $"2:[{json}]\n";
+    }
 
     private static string FormatErrorMessage(string error)
     {

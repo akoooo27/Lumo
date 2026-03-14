@@ -5,6 +5,7 @@ internal sealed record ChatDto
     string Id,
     string Title,
     string? ModelName,
+    string? FolderId,
     bool IsArchived,
     bool IsPinned,
     DateTimeOffset CreatedAt,

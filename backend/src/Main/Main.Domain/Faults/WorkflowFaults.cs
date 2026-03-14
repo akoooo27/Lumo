@@ -64,6 +64,12 @@ public static class WorkflowFaults
         detail: "Cannot modify an archived workflow."
     );
 
+    public static readonly Fault AlreadyArchived = Fault.Conflict
+    (
+        title: "Workflow.AlreadyArchived",
+        detail: "The workflow is already archived."
+    );
+
     public static readonly Fault AlreadyPaused = Fault.Conflict
     (
         title: "Workflow.AlreadyPaused",

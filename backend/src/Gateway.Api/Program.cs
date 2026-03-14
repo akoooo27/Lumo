@@ -4,6 +4,7 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 
 using Gateway.Api;
+using Gateway.Api.Middleware;
 using Gateway.Api.Options;
 
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -21,6 +22,7 @@ builder.Host.ConfigureSerilog();
 
 var app = builder.Build();
 
+app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseCors();
 app.UseRateLimiter();
 

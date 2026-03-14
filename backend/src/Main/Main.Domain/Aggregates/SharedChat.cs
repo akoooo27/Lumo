@@ -94,13 +94,16 @@ public sealed class SharedChat : AggregateRoot<SharedChatId>
 
     public void AddMessages(IReadOnlyList<SharedChatMessage> messages, DateTimeOffset utcNow)
     {
+        ArgumentNullException.ThrowIfNull(messages);
+
         _sharedChatMessages.AddRange(messages);
         UpdatedAt = utcNow;
     }
 
-
     public void RefreshMessages(IReadOnlyList<SharedChatMessage> messages, DateTimeOffset utcNow)
     {
+        ArgumentNullException.ThrowIfNull(messages);
+
         _sharedChatMessages.Clear();
         _sharedChatMessages.AddRange(messages);
 

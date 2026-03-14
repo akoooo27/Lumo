@@ -30,6 +30,7 @@ internal sealed class Endpoint : EndpointWithoutRequest<Response>
                     "Retrieves all available AI models that can be used for chat. " +
                     "Returns model metadata including capabilities and provider information.")
                 .Produces<Response>(200, HttpContentTypeConstants.Json)
+                .ProducesProblemDetails(401, HttpContentTypeConstants.Json)
                 .WithTags(CustomTags.Models);
         });
     }

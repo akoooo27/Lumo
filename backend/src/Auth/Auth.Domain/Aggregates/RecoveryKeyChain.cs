@@ -50,12 +50,10 @@ public sealed class RecoveryKeyChain : AggregateRoot<RecoveryKeyChainId>
         DateTimeOffset utcNow
     )
     {
-        ArgumentNullException.ThrowIfNull(recoverKeyInputs);
-
         if (userId.IsEmpty)
             return RecoveryKeyChainFaults.UserIdRequiredForCreation;
 
-        if (recoverKeyInputs.Count != RecoveryKeyConstants.MaxKeysPerChain)
+        if (recoverKeyInputs is null || recoverKeyInputs.Count != RecoveryKeyConstants.MaxKeysPerChain)
             return RecoveryKeyChainFaults.InvalidRecoveryKeyCount;
 
         List<RecoveryKey> recoveryKeys = new(capacity: RecoveryKeyConstants.MaxKeysPerChain);
@@ -92,9 +90,7 @@ public sealed class RecoveryKeyChain : AggregateRoot<RecoveryKeyChainId>
         DateTimeOffset utcNow
     )
     {
-        ArgumentNullException.ThrowIfNull(newRecoveryKeyPairs);
-
-        if (newRecoveryKeyPairs.Count != RecoveryKeyConstants.MaxKeysPerChain)
+        if (newRecoveryKeyPairs is null || newRecoveryKeyPairs.Count != RecoveryKeyConstants.MaxKeysPerChain)
             return RecoveryKeyChainFaults.InvalidRecoveryKeyCount;
 
         List<RecoveryKey> newRecoveryKeys = new(capacity: RecoveryKeyConstants.MaxKeysPerChain);

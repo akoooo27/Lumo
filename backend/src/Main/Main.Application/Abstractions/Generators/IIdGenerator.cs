@@ -23,4 +23,6 @@ public interface IIdGenerator
     WorkflowId NewWorkflowId();
 
     WorkflowRunId NewWorkflowRunId();
+
+    FolderId NewFolderId();
 }

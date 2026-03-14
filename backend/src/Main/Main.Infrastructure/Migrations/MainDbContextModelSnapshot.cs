@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 using Pgvector;
 
 #nullable disable
@@ -18,7 +19,7 @@ namespace Main.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
@@ -33,6 +34,10 @@ namespace Main.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamptz")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("FolderId")
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("folder_id");
 
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean")
@@ -57,6 +62,12 @@ namespace Main.Infrastructure.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("title");
 
+                    b.Property<NpgsqlTsVector>("TitleSearchVector")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasColumnName("title_search_vector")
+                        .HasComputedColumnSql("to_tsvector('english', title)", true);
+
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamptz")
                         .HasColumnName("updated_at");
@@ -68,10 +79,68 @@ namespace Main.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_chats");
 
+                    b.HasIndex("FolderId")
+                        .HasDatabaseName("ix_chats_folder_id");
+
+                    b.HasIndex("TitleSearchVector")
+                        .HasDatabaseName("ix_chats_title_search_vector");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("TitleSearchVector"), "GIN");
+
+                    b.HasIndex("UserId", "FolderId", "UpdatedAt")
+                        .HasDatabaseName("ix_chats_user_id_folder_id_updated_at");
+
                     b.HasIndex("UserId", "IsArchived", "UpdatedAt")
                         .HasDatabaseName("ix_chats_user_id_is_archived_updated_at");
 
                     b.ToTable("chats", (string)null);
+                });
+
+            modelBuilder.Entity("Main.Domain.Aggregates.Folder", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("normalized_name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamptz")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_folders");
+
+                    b.HasIndex("UserId", "NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_folders_user_id_normalized_name");
+
+                    b.HasIndex("UserId", "SortOrder")
+                        .HasDatabaseName("ix_folders_user_id_sort_order");
+
+                    b.ToTable("folders", (string)null);
                 });
 
             modelBuilder.Entity("Main.Domain.Aggregates.Preference", b =>
@@ -265,6 +334,11 @@ namespace Main.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
+
                     b.HasKey("Id")
                         .HasName("pk_workflows");
 
@@ -377,6 +451,10 @@ namespace Main.Infrastructure.Migrations
                         .HasColumnType("timestamptz")
                         .HasColumnName("edited_at");
 
+                    b.Property<long?>("InputTokenCount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("input_token_count");
+
                     b.Property<string>("MessageContent")
                         .IsRequired()
                         .HasColumnType("text")
@@ -388,19 +466,38 @@ namespace Main.Infrastructure.Migrations
                         .HasColumnType("character varying(512)")
                         .HasColumnName("message_role");
 
+                    b.Property<long?>("OutputTokenCount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("output_token_count");
+
+                    b.Property<NpgsqlTsVector>("SearchVector")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasColumnName("search_vector")
+                        .HasComputedColumnSql("to_tsvector('english', message_content)", true);
+
                     b.Property<int>("SequenceNumber")
                         .HasColumnType("integer")
                         .HasColumnName("sequence_number");
 
-                    b.Property<long?>("TokenCount")
+                    b.Property<string>("SourcesJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("sources_json");
+
+                    b.Property<long?>("TotalTokenCount")
                         .HasColumnType("bigint")
-                        .HasColumnName("token_count");
+                        .HasColumnName("total_token_count");
 
                     b.HasKey("Id")
                         .HasName("pk_messages");
 
                     b.HasIndex("ChatId")
                         .HasDatabaseName("ix_messages_chat_id");
+
+                    b.HasIndex("SearchVector")
+                        .HasDatabaseName("ix_messages_search_vector");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
 
                     b.HasIndex("ChatId", "SequenceNumber")
                         .IsUnique()
@@ -813,6 +910,15 @@ namespace Main.Infrastructure.Migrations
                         .HasDatabaseName("ix_outbox_state_created");
 
                     b.ToTable("outbox_state", (string)null);
+                });
+
+            modelBuilder.Entity("Main.Domain.Aggregates.Chat", b =>
+                {
+                    b.HasOne("Main.Domain.Aggregates.Folder", null)
+                        .WithMany()
+                        .HasForeignKey("FolderId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_chats_folders_folder_id");
                 });
 
             modelBuilder.Entity("Main.Domain.Aggregates.SharedChat", b =>

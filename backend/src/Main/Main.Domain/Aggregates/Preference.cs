@@ -70,7 +70,8 @@ public sealed class Preference : AggregateRoot<PreferenceId>
         DateTimeOffset utcNow
     )
     {
-        ArgumentNullException.ThrowIfNull(content);
+        if (string.IsNullOrWhiteSpace(content))
+            return InstructionFaults.ContentEmpty;
 
         if (_instructions.Count >= PreferenceConstants.MaxInstructionCount)
             return PreferenceFaults.MaxInstructionsReached;
@@ -106,7 +107,8 @@ public sealed class Preference : AggregateRoot<PreferenceId>
         DateTimeOffset utcNow
     )
     {
-        ArgumentNullException.ThrowIfNull(newContent);
+        if (string.IsNullOrWhiteSpace(newContent))
+            return InstructionFaults.ContentEmpty;
 
         Instruction? instruction = _instructions
             .FirstOrDefault(i => i.Id == instructionId);

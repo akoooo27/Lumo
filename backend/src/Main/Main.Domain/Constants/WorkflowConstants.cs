@@ -19,4 +19,6 @@ public static class WorkflowConstants
     public const int MaxLocalTimeLength = 5; // "HH:mm"
 
     public const int MaxConsecutiveFailures = 3;
+
+    public const int StaleRunThresholdMinutes = 10;
 }

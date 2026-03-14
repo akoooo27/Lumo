@@ -1,6 +1,7 @@
 using Auth.Application.Abstractions.Authentication;
 using Auth.Application.Abstractions.Data;
 using Auth.Application.Abstractions.Generators;
+using Auth.Application.Abstractions.ZeroBounce;
 using Auth.Application.Faults;
 using Auth.Domain.Aggregates;
 using Auth.Domain.Constants;
@@ -19,6 +20,7 @@ namespace Auth.Application.Commands.Users.SignUp;
 internal sealed class SignUpHandler(
     IAuthDbContext dbContext,
     IRequestContext requestContext,
+    IEmailValidationService emailValidationService,
     ISecureTokenGenerator secureTokenGenerator,
     IIdGenerator idGenerator,
     IMessageBus messageBus,
@@ -39,6 +41,22 @@ internal sealed class SignUpHandler(
 
         if (emailExists)
             return UserOperationFaults.EmailAlreadyInUse;
+
+        // Keep the dependency wired for now; spam validation is temporarily disabled.
+        _ = emailValidationService;
+#pragma warning disable S125
+        // try
+        // {
+        //     bool isSpam = await emailValidationService.IsSpamEmailAsync(emailAddress.Value, cancellationToken);
+        //
+        //     if (isSpam)
+        //         return UserOperationFaults.SpamEmailAddress;
+        // }
+        // catch (HttpRequestException)
+        // {
+        //     return UserOperationFaults.EmailValidationUnavailable;
+        // }
+#pragma warning restore S125
 
         Outcome<User> userOutcome = User.Create
         (

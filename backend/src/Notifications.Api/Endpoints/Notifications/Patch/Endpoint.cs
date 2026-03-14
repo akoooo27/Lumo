@@ -27,6 +27,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
             d.WithSummary("Patch Notification")
                 .WithDescription("Partially updates a notification. Supports marking as read.")
                 .Produces<Response>(200, HttpContentTypeConstants.Json)
+                .ProducesProblemDetails(401, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(404, HttpContentTypeConstants.Json)
                 .WithTags(CustomTags.Notifications);
         });

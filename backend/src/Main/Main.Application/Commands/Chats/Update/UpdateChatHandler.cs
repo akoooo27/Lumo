@@ -70,6 +70,37 @@ internal sealed class UpdateChatHandler(
                 return unpinOutcome.Fault;
         }
 
+        if (request.HasFolderId)
+        {
+            if (string.IsNullOrEmpty(request.FolderId))
+            {
+                Outcome removeOutcome = chat.RemoveFromFolder(dateTimeProvider.UtcNow);
+
+                if (removeOutcome.IsFailure)
+                    return removeOutcome.Fault;
+            }
+            else
+            {
+                Outcome<FolderId> folderIdOutcome = FolderId.From(request.FolderId);
+
+                if (folderIdOutcome.IsFailure)
+                    return folderIdOutcome.Fault;
+
+                FolderId folderId = folderIdOutcome.Value;
+
+                bool folderExists = await dbContext.Folders
+                    .AnyAsync(f => f.Id == folderId && f.UserId == userId, cancellationToken);
+
+                if (!folderExists)
+                    return FolderOperationFaults.FolderNotOwned;
+
+                Outcome setOutcome = chat.MoveToFolder(folderId, dateTimeProvider.UtcNow);
+
+                if (setOutcome.IsFailure)
+                    return setOutcome.Fault;
+            }
+        }
+
         if (request.NewTitle is not null)
         {
             Outcome titleOutcome = chat.RenameTitle(request.NewTitle, dateTimeProvider.UtcNow);
@@ -84,6 +115,7 @@ internal sealed class UpdateChatHandler(
         (
             ChatId: chat.Id.Value,
             Title: chat.Title,
+            FolderId: chat.FolderId?.Value,
             IsArchived: chat.IsArchived,
             UpdatedAt: chat.UpdatedAt ?? dateTimeProvider.UtcNow,
             IsPinned: chat.IsPinned

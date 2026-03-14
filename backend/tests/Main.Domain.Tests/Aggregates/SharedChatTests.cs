@@ -186,6 +186,16 @@ public sealed class SharedChatTests
         sharedChat.SharedChatMessages.Should().HaveCount(2);
     }
 
+    [Fact]
+    public void AddMessages_WithNull_ShouldThrowArgumentNullException()
+    {
+        SharedChat sharedChat = CreateValidSharedChat();
+
+        Action act = () => sharedChat.AddMessages(null!, UtcNow);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("messages");
+    }
+
     #endregion
 
     #region RefreshMessages Tests
@@ -265,6 +275,16 @@ public sealed class SharedChatTests
         sharedChat.SnapshotAt.Should().NotBe(originalSnapshotAt);
     }
 
+    [Fact]
+    public void RefreshMessages_WithNull_ShouldThrowArgumentNullException()
+    {
+        SharedChat sharedChat = CreateValidSharedChat();
+
+        Action act = () => sharedChat.RefreshMessages(null!, UtcNow);
+
+        act.Should().Throw<ArgumentNullException>().WithParameterName("messages");
+    }
+
     #endregion
 
     #region Identity Tests
@@ -294,4 +314,13 @@ public sealed class SharedChatTests
     }
 
     #endregion
+
+    private static SharedChat CreateValidSharedChat() =>
+        SharedChat.Create(
+            ValidSharedChatId,
+            ValidSourceChatId,
+            ValidOwnerId,
+            ValidTitle,
+            ValidModelId,
+            UtcNow).Value;
 }

@@ -41,7 +41,9 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
         GetChatsQuery query = new
         (
             Cursor: request.Cursor,
-            Limit: Math.Min(request.Limit, ChatConstants.MaxPageSize)
+            Limit: Math.Min(request.Limit, ChatConstants.MaxPageSize),
+            FolderId: request.FolderId,
+            HasFolderId: request.FolderId is not null
         );
 
         await SendOutcomeAsync
@@ -55,6 +57,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                         Id: c.Id,
                         Title: c.Title,
                         ModelName: c.ModelName,
+                        FolderId: c.FolderId,
                         IsArchived: c.IsArchived,
                         IsPinned: c.IsPinned,
                         CreatedAt: c.CreatedAt,

@@ -1,9 +1,12 @@
 namespace Main.Application.Abstractions.Stream;
 
-public sealed record StreamMessage(
+public sealed record StreamMessage
+(
     StreamMessageType Type,
     string Content,
-    DateTimeOffset Timestamp
+    DateTimeOffset Timestamp,
+    string? ModelName,
+    string? Provider
 )
 {
     public string? Query { get; init; }

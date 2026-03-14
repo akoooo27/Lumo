@@ -38,6 +38,19 @@ internal sealed class ToolCallStreamFilter(
                     "Tool call intercepted: {FunctionName} → streaming as {DisplayName} to stream {StreamId}",
                     functionName, displayName, pluginStreamContext.StreamId);
 
+            await streamPublisher.PublishThinkingAsync
+            (
+                streamId: pluginStreamContext.StreamId,
+                phase: displayName switch
+                {
+                    "web_search" => "Searching the web...",
+                    "save_memory" => "Saving to memory...",
+                    "find_memories" => "Recalling memories...",
+                    _ => "Processing..."
+                },
+                cancellationToken: context.CancellationToken
+            );
+
             await streamPublisher.PublishToolCallAsync
             (
                 streamId: pluginStreamContext.StreamId,
@@ -50,8 +63,17 @@ internal sealed class ToolCallStreamFilter(
 
             if (pluginStreamContext.LastSearchSources is { Count: > 0 } sources)
             {
-                string sourcesJson = JsonSerializer.Serialize(
-                    sources.Select(s => new { title = s.Title, url = s.Url }));
+                string sourcesJson = JsonSerializer.Serialize
+                (
+                    sources.Select(s => new
+                    {
+                        title = s.Title,
+                        url = s.Url,
+                        score = s.Score,
+                        confidence = s.Confidence,
+                        publishedDate = s.PublishedDate
+                    })
+                );
 
                 await streamPublisher.PublishToolCallResultAsync
                 (
@@ -62,6 +84,7 @@ internal sealed class ToolCallStreamFilter(
                 );
 
                 pluginStreamContext.LastSearchSources = null;
+                pluginStreamContext.SourcesJson = sourcesJson;
             }
 
             return;

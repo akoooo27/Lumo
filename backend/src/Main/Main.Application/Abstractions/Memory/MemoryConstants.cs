@@ -21,4 +21,6 @@ public static class MemoryConstants
     // Pagination
     public const int DefaultPageSize = 20;
     public const int MaxPageSize = 50;
+
+    public const int MaxImportContentLength = 10000;
 }
