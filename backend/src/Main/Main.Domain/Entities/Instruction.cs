@@ -23,7 +23,7 @@ public sealed class Instruction : Entity<InstructionId>
     private Instruction() { } // For EF Core
 
     [SetsRequiredMembers]
-    public Instruction
+    private Instruction
     (
         InstructionId id,
         PreferenceId preferenceId,

@@ -104,6 +104,10 @@ internal sealed class WorkflowConfiguration : IEntityTypeConfiguration<Workflow>
             .IsRequired(false)
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
 
+        b.Property(w => w.Version)
+            .IsRequired()
+            .IsConcurrencyToken();
+
         b.Property(w => w.CreatedAt)
             .IsRequired()
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);

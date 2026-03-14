@@ -64,6 +64,16 @@ internal sealed class UpdateProfileHandler(
 
         if (request.NewAvatarKey is not null)
         {
+            bool isOwned = await storageService.IsOwnedByAsync
+            (
+                request.NewAvatarKey,
+                userId.Value,
+                cancellationToken
+            );
+
+            if (!isOwned)
+                return UserOperationFaults.AvatarForbidden;
+
             bool fileExists = await storageService.FileExistsAsync(request.NewAvatarKey, cancellationToken);
 
             if (!fileExists)

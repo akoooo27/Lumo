@@ -5,6 +5,8 @@ using Main.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+using NpgsqlTypes;
+
 using SharedKernel.Infrastructure.Data;
 
 namespace Main.Infrastructure.Data.Configuration;
@@ -42,6 +44,15 @@ internal sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
             .IsRequired()
             .HasColumnType("boolean");
 
+        b.Property(c => c.FolderId)
+            .IsRequired(false)
+            .HasConversion
+            (
+                id => id.HasValue ? id.Value.Value : null,
+                s => s != null ? FolderId.UnsafeFrom(s) : null
+            )
+            .HasColumnType($"{DataConfigurationConstants.DefaultStringColumnType}({FolderId.Length})");
+
         b.Property(c => c.IsPinned)
             .IsRequired()
             .HasColumnType("boolean");
@@ -54,12 +65,26 @@ internal sealed class ChatConfiguration : IEntityTypeConfiguration<Chat>
             .IsRequired(false)
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
 
+        b.HasOne<Folder>()
+            .WithMany()
+            .HasForeignKey(c => c.FolderId)
+            .HasPrincipalKey(f => f.Id)
+            .OnDelete(DeleteBehavior.SetNull);
+
         b.HasMany(c => c.Messages)
             .WithOne()
             .HasForeignKey(m => m.ChatId)
             .HasPrincipalKey(c => c.Id)
             .OnDelete(DeleteBehavior.Cascade);
 
+        b.Property<NpgsqlTsVector>("TitleSearchVector")
+            .HasColumnType("tsvector")
+            .HasComputedColumnSql("to_tsvector('english', title)", stored: true);
+
+        b.HasIndex("TitleSearchVector")
+            .HasMethod("GIN");
+
         b.HasIndex(c => new { c.UserId, c.IsArchived, c.UpdatedAt });
+        b.HasIndex(c => new { c.UserId, c.FolderId, c.UpdatedAt });
     }
 }

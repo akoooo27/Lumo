@@ -144,6 +144,21 @@ public sealed class RecoveryKeyChainTests
     }
 
     [Fact]
+    public void Create_WithNullKeys_ShouldReturnFailure()
+    {
+        Outcome<RecoveryKeyChain> outcome = RecoveryKeyChain.Create
+        (
+            id: CreateValidRecoveryKeyChainId(),
+            userId: ValidUserId,
+            recoverKeyInputs: null!,
+            utcNow: UtcNow
+        );
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(RecoveryKeyChainFaults.InvalidRecoveryKeyCount);
+    }
+
+    [Fact]
     public void Rotate_WithValidData_ShouldReplaceKeys()
     {
         RecoveryKeyChain chain = RecoveryKeyChain.Create
@@ -239,6 +254,23 @@ public sealed class RecoveryKeyChainTests
         List<(string identifier, string verifierHash)> newPairs = [];
 
         Outcome outcome = chain.Rotate(newPairs, UtcNow.AddDays(1));
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(RecoveryKeyChainFaults.InvalidRecoveryKeyCount);
+    }
+
+    [Fact]
+    public void Rotate_WithNullKeys_ShouldReturnFailure()
+    {
+        RecoveryKeyChain chain = RecoveryKeyChain.Create
+        (
+            id: CreateValidRecoveryKeyChainId(),
+            userId: ValidUserId,
+            recoverKeyInputs: CreateValidRecoveryKeyInputs(),
+            utcNow: UtcNow
+        ).Value;
+
+        Outcome outcome = chain.Rotate(null!, UtcNow.AddDays(1));
 
         outcome.IsFailure.Should().BeTrue();
         outcome.Fault.Should().Be(RecoveryKeyChainFaults.InvalidRecoveryKeyCount);

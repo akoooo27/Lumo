@@ -4,6 +4,8 @@ using Main.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+using NpgsqlTypes;
+
 using SharedKernel.Infrastructure.Data;
 
 namespace Main.Infrastructure.Data.Configuration;
@@ -41,13 +43,25 @@ internal sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
             .IsRequired()
             .HasColumnType("text");
 
-        b.Property(m => m.TokenCount)
+        b.Property(m => m.InputTokenCount)
+            .IsRequired(false)
+            .HasColumnType("bigint");
+
+        b.Property(m => m.OutputTokenCount)
+            .IsRequired(false)
+            .HasColumnType("bigint");
+
+        b.Property(m => m.TotalTokenCount)
             .IsRequired(false)
             .HasColumnType("bigint");
 
         b.Property(m => m.SequenceNumber)
             .IsRequired()
             .HasColumnType("integer");
+
+        b.Property(m => m.SourcesJson)
+            .IsRequired(false)
+            .HasColumnType("jsonb");
 
         b.Property(m => m.CreatedAt)
             .IsRequired()
@@ -56,6 +70,13 @@ internal sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
         b.Property(m => m.EditedAt)
             .IsRequired()
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);
+
+        b.Property<NpgsqlTsVector>("SearchVector")
+            .HasColumnType("tsvector")
+            .HasComputedColumnSql("to_tsvector('english', message_content)", stored: true);
+
+        b.HasIndex("SearchVector")
+            .HasMethod("GIN");
 
         b.HasIndex(m => m.ChatId);
 

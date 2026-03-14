@@ -357,13 +357,26 @@ public sealed class WorkflowTests
         workflow.TryClaimDispatchLease(leaseId, UtcNow.AddMinutes(5), UtcNow);
         DateTimeOffset archiveTime = UtcNow.AddHours(1);
 
-        workflow.Archive(archiveTime);
+        Outcome outcome = workflow.Archive(archiveTime);
 
+        outcome.IsSuccess.Should().BeTrue();
         workflow.Status.Should().Be(WorkflowStatus.Archived);
         workflow.PauseReason.Should().Be(WorkflowPauseReason.None);
         workflow.DispatchLeaseId.Should().BeNull();
         workflow.DispatchLeaseUntilUtc.Should().BeNull();
         workflow.UpdatedAt.Should().Be(archiveTime);
+    }
+
+    [Fact]
+    public void Archive_WhenAlreadyArchived_ShouldReturnFailure()
+    {
+        Workflow workflow = CreateValidWorkflow();
+        workflow.Archive(UtcNow);
+
+        Outcome outcome = workflow.Archive(UtcNow.AddHours(1));
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(WorkflowFaults.AlreadyArchived);
     }
 
     [Fact]
@@ -429,6 +442,28 @@ public sealed class WorkflowTests
         bool claimed = workflow.TryClaimDispatchLease(Guid.NewGuid(), UtcNow.AddMinutes(10), UtcNow.AddMinutes(1));
 
         claimed.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TryClaimDispatchLease_WithEmptyLeaseId_ShouldReturnFalse()
+    {
+        Workflow workflow = CreateValidWorkflow(nextRunAt: UtcNow.AddMinutes(-5));
+
+        bool claimed = workflow.TryClaimDispatchLease(Guid.Empty, UtcNow.AddMinutes(10), UtcNow);
+
+        claimed.Should().BeFalse();
+        workflow.DispatchLeaseId.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryClaimDispatchLease_WithLeaseAlreadyExpired_ShouldReturnFalse()
+    {
+        Workflow workflow = CreateValidWorkflow(nextRunAt: UtcNow.AddMinutes(-5));
+
+        bool claimed = workflow.TryClaimDispatchLease(Guid.NewGuid(), UtcNow.AddMinutes(-1), UtcNow);
+
+        claimed.Should().BeFalse();
+        workflow.DispatchLeaseId.Should().BeNull();
     }
 
     [Fact]

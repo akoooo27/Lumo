@@ -24,6 +24,8 @@ public sealed class Chat : AggregateRoot<ChatId>
 
     public bool IsPinned { get; private set; }
 
+    public FolderId? FolderId { get; private set; }
+
     public int NextSequenceNumber { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
@@ -50,6 +52,7 @@ public sealed class Chat : AggregateRoot<ChatId>
         ModelId = modelId;
         IsArchived = false;
         IsPinned = false;
+        FolderId = null;
         NextSequenceNumber = 0;
         CreatedAt = utcNow;
         UpdatedAt = utcNow;
@@ -70,7 +73,9 @@ public sealed class Chat : AggregateRoot<ChatId>
         if (string.IsNullOrWhiteSpace(title))
             return ChatFaults.TitleRequired;
 
-        if (title.Length > ChatConstants.MaxTitleLength)
+        string trimmedTitle = title.Trim();
+
+        if (trimmedTitle.Length > ChatConstants.MaxTitleLength)
             return ChatFaults.TitleTooLong;
 
         if (string.IsNullOrWhiteSpace(modelId))
@@ -80,7 +85,7 @@ public sealed class Chat : AggregateRoot<ChatId>
         (
             id: id,
             userId: userId,
-            title: title,
+            title: trimmedTitle,
             modelId: modelId,
             utcNow: utcNow
         );
@@ -96,10 +101,12 @@ public sealed class Chat : AggregateRoot<ChatId>
         if (string.IsNullOrWhiteSpace(newTitle))
             return ChatFaults.TitleRequired;
 
-        if (newTitle.Length > ChatConstants.MaxTitleLength)
+        string trimmedTitle = newTitle.Trim();
+
+        if (trimmedTitle.Length > ChatConstants.MaxTitleLength)
             return ChatFaults.TitleTooLong;
 
-        Title = newTitle;
+        Title = trimmedTitle;
         UpdatedAt = utcNow;
 
         return Outcome.Success();
@@ -155,6 +162,31 @@ public sealed class Chat : AggregateRoot<ChatId>
         return Outcome.Success();
     }
 
+    public Outcome MoveToFolder(FolderId folderId, DateTimeOffset utcNow)
+    {
+        if (folderId.IsEmpty)
+            return ChatFaults.FolderIdRequired;
+
+        if (FolderId == folderId)
+            return ChatFaults.AlreadyInFolder;
+
+        FolderId = folderId;
+        UpdatedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
+    public Outcome RemoveFromFolder(DateTimeOffset utcNow)
+    {
+        if (FolderId is null)
+            return ChatFaults.NotInFolder;
+
+        FolderId = null;
+        UpdatedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
     private Outcome<Message> AddMessage
     (
         MessageId messageId,
@@ -196,6 +228,32 @@ public sealed class Chat : AggregateRoot<ChatId>
     public Outcome<Message> AddAssistantMessage(MessageId messageId, string messageContent, DateTimeOffset utcNow) =>
         AddMessage(messageId, messageContent, MessageRole.Assistant, utcNow);
 
+    public Outcome SetMessageTokenUsage
+    (
+        MessageId messageId,
+        long inputTokenCount,
+        long outputTokenCount,
+        long totalTokenCount
+    )
+    {
+        Message? message = _messages.FirstOrDefault(m => m.Id == messageId);
+
+        if (message is null)
+            return MessageFaults.MessageNotFound;
+
+        Outcome setTokenOutcome = message.SetTokenUsage
+        (
+            inputTokenCount: inputTokenCount,
+            outputTokenCount: outputTokenCount,
+            totalTokenCount: totalTokenCount
+        );
+
+        if (setTokenOutcome.IsFailure)
+            return setTokenOutcome.Fault;
+
+        return Outcome.Success();
+    }
+
     public Outcome EditMessageAndRemoveSubsequent
     (
         MessageId messageId,
@@ -226,6 +284,28 @@ public sealed class Chat : AggregateRoot<ChatId>
         NextSequenceNumber = targetSequenceNumber + 1;
 
         UpdatedAt = utcNow;
+
+        return Outcome.Success();
+    }
+
+    public Outcome SetMessageSources
+    (
+        MessageId messageId,
+        string sourcesJson
+    )
+    {
+        if (IsArchived)
+            return ChatFaults.CannotModifyArchivedChat;
+
+        Message? message = _messages.FirstOrDefault(m => m.Id == messageId);
+
+        if (message is null)
+            return MessageFaults.MessageNotFound;
+
+        Outcome setOutcome = message.SetSourcesJson(sourcesJson);
+
+        if (setOutcome.IsFailure)
+            return setOutcome.Fault;
 
         return Outcome.Success();
     }

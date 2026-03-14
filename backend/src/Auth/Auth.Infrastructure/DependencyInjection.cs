@@ -7,6 +7,7 @@ using Auth.Application.Abstractions.Data;
 using Auth.Application.Abstractions.Generators;
 using Auth.Application.Abstractions.Storage;
 using Auth.Application.Abstractions.Users;
+using Auth.Application.Abstractions.ZeroBounce;
 using Auth.Infrastructure.Authentication;
 using Auth.Infrastructure.Data;
 using Auth.Infrastructure.Generators;
@@ -14,6 +15,7 @@ using Auth.Infrastructure.Jobs;
 using Auth.Infrastructure.Options;
 using Auth.Infrastructure.Storage;
 using Auth.Infrastructure.Users;
+using Auth.Infrastructure.ZeroBounce;
 
 using MassTransit;
 
@@ -40,6 +42,7 @@ public static class DependencyInjection
         services
             .AddSharedKernelInfrastructure(configuration)
             .AddServices()
+            .AddZeroBounce(configuration)
             .AddDatabase(configuration, environment)
             .AddAuthenticationInternal()
             .AddAuthorization()
@@ -51,6 +54,24 @@ public static class DependencyInjection
     {
         services.AddSingleton<IIdGenerator, IdGenerator>();
         services.AddScoped<ICurrentUserReadStore, CurrentUserReadStore>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddZeroBounce(this IServiceCollection services, IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        services.AddOptions<ZeroBounceOptions>()
+            .Bind(configuration.GetSection(ZeroBounceOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddHttpClient<IEmailValidationService, ZeroBounceService>((_, client) =>
+        {
+            ZeroBounceOptions options = configuration.GetSection(ZeroBounceOptions.SectionName).Get<ZeroBounceOptions>()!;
+            client.BaseAddress = new Uri(options.BaseUrl);
+        });
 
         return services;
     }

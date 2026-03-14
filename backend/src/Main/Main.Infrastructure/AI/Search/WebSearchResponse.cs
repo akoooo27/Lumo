@@ -7,5 +7,6 @@ internal sealed record WebSearchResult
     string Title,
     string Url,
     string Content,
-    double Score
+    double Score,
+    string? PublishedDate
 );

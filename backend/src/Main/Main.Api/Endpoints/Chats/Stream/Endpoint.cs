@@ -37,6 +37,7 @@ internal sealed class Endpoint : Endpoint<Request>
                     "Compatible with Vercel AI SDK Data Stream Protocol.")
                 .Produces(200, contentType: "text/event-stream")
                 .ProducesProblemDetails(400, HttpContentTypeConstants.Json)
+                .ProducesProblemDetails(401, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(404, HttpContentTypeConstants.Json)
                 .WithTags(CustomTags.Chats);
         });

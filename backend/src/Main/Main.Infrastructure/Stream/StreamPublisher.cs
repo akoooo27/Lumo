@@ -15,7 +15,15 @@ internal sealed class StreamPublisher(
     ILogger<StreamPublisher> logger,
     IDateTimeProvider dateTimeProvider) : IStreamPublisher
 {
-    public async Task PublishStatusAsync(string streamId, StreamStatus status, CancellationToken cancellationToken, string? fault = null)
+    public async Task PublishStatusAsync
+    (
+        string streamId,
+        StreamStatus status,
+        CancellationToken cancellationToken,
+        string? fault = null,
+        string? modelName = null,
+        string? provider = null
+    )
     {
         string streamKey = $"{StreamConstants.StreamKeyPrefix}{streamId}";
         string notifyChannel = $"{StreamConstants.NotifyChannelPrefix}{streamId}";
@@ -38,6 +46,12 @@ internal sealed class StreamPublisher(
 
             if (!string.IsNullOrWhiteSpace(fault))
                 entries.Add(new NameValueEntry("fault", fault));
+
+            if (!string.IsNullOrWhiteSpace(modelName))
+                entries.Add(new NameValueEntry("model_name", modelName));
+
+            if (!string.IsNullOrWhiteSpace(provider))
+                entries.Add(new NameValueEntry("provider", provider));
 
             await db.StreamAddAsync(streamKey, [.. entries]);
             await pub.PublishAsync(RedisChannel.Literal(notifyChannel), "status");
@@ -144,6 +158,34 @@ internal sealed class StreamPublisher(
         catch (Exception exception)
         {
             logger.LogError(exception, "Failed to publish tool call result for stream {StreamId}", streamId);
+            throw;
+        }
+    }
+
+    public async Task PublishThinkingAsync(string streamId, string phase, CancellationToken cancellationToken)
+    {
+        string streamKey = $"{StreamConstants.StreamKeyPrefix}{streamId}";
+        string notifyChannel = $"{StreamConstants.NotifyChannelPrefix}{streamId}";
+
+        IDatabase db = connectionMultiplexer.GetDatabase();
+        ISubscriber pub = connectionMultiplexer.GetSubscriber();
+
+        try
+        {
+            List<NameValueEntry> entries =
+            [
+                new NameValueEntry("type", "thinking"),
+                new NameValueEntry("phase", phase),
+                new NameValueEntry("timestamp",
+                    dateTimeProvider.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))
+            ];
+
+            await db.StreamAddAsync(streamKey, [.. entries]);
+            await pub.PublishAsync(RedisChannel.Literal(notifyChannel), "thinking");
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to publish thinking for stream {StreamId}", streamId);
             throw;
         }
     }

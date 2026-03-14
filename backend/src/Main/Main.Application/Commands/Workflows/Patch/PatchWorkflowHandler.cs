@@ -105,7 +105,10 @@ internal sealed class PatchWorkflowHandler(
         }
         else if (request.Status is WorkflowStatus.Archived)
         {
-            workflow.Archive(utcNow);
+            Outcome archiveOutcome = workflow.Archive(utcNow);
+
+            if (archiveOutcome.IsFailure)
+                return archiveOutcome.Fault;
         }
 
         try

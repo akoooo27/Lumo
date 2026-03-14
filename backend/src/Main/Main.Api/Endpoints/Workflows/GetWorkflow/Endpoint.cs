@@ -28,7 +28,6 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                 .WithDescription("Retrieves the details of a specific workflow.")
                 .Produces<Response>(200, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(400, HttpContentTypeConstants.Json)
-                .ProducesProblemDetails(403, HttpContentTypeConstants.Json)
                 .ProducesProblemDetails(404, HttpContentTypeConstants.Json)
                 .WithTags(CustomTags.Workflows);
         });

@@ -57,4 +57,22 @@ public static class ChatFaults
         title: "Chat.NotPinned",
         detail: "The chat is not pinned."
     );
+
+    public static readonly Fault AlreadyInFolder = Fault.Conflict
+    (
+        title: "Chat.AlreadyInFolder",
+        detail: "The chat is already in the specified folder."
+    );
+
+    public static readonly Fault NotInFolder = Fault.Conflict
+    (
+        title: "Chat.NotInFolder",
+        detail: "The chat is not in any folder."
+    );
+
+    public static readonly Fault FolderIdRequired = Fault.Validation
+    (
+        title: "Chat.FolderIdRequired",
+        detail: "A folder ID is required."
+    );
 }

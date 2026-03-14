@@ -244,6 +244,7 @@ public static class DependencyInjection
 
         services.AddScoped<IInstructionStore, InstructionStore>();
         services.AddScoped<IMemoryStore, MemoryStore>();
+        services.AddScoped<IMemoryImportService, MemoryImportService>();
 
         services.AddScoped<PluginUserContext>();
         services.AddScoped<PluginStreamContext>();

@@ -51,7 +51,8 @@ internal sealed class TavilySearchService(
                 Title: r.Title ?? string.Empty,
                 Url: r.Url,
                 Content: r.Content ?? string.Empty,
-                Score: r.Score
+                Score: r.Score,
+                PublishedDate: r.PublishedDate
             ))
             .ToList();
 

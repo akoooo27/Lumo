@@ -64,7 +64,10 @@ internal sealed class WorkflowExecutionService(
             (
                 Success: true,
                 ResultMarkdown: markdown,
-                FailureMessage: null
+                FailureMessage: null,
+                InputTokens: result.Usage.InputTokenCount,
+                OutputTokens: result.Usage.OutputTokenCount,
+                TotalTokens: result.Usage.TotalTokenCount
             );
         }
         catch (OperationCanceledException exception) when (!cancellationToken.IsCancellationRequested)
@@ -77,7 +80,10 @@ internal sealed class WorkflowExecutionService(
             (
                 Success: false,
                 ResultMarkdown: null,
-                FailureMessage: "Workflow execution timed out after 60 seconds."
+                FailureMessage: "Workflow execution timed out after 60 seconds.",
+                InputTokens: 0,
+                OutputTokens: 0,
+                TotalTokens: 0
             );
         }
         catch (OperationCanceledException)
@@ -96,7 +102,10 @@ internal sealed class WorkflowExecutionService(
             (
                 Success: false,
                 ResultMarkdown: null,
-                FailureMessage: exception.Message
+                FailureMessage: exception.Message,
+                InputTokens: 0,
+                OutputTokens: 0,
+                TotalTokens: 0
             );
         }
     }

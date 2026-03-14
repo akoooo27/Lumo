@@ -10,6 +10,7 @@ using Main.Domain.ValueObjects;
 using Main.Infrastructure.Data;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 
 using SharedKernel;
@@ -108,6 +109,17 @@ internal sealed class CronJobHelper(
 
                 workflow.AdvanceNextRunAt(nextRunAt, utcNow);
                 workflow.ClearDispatchLease();
+
+                try
+                {
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateConcurrencyException exception)
+                {
+                    logger.LogWarning(exception, "Concurrency conflict for workflow {WorkflowId}, another instance claimed it",
+                        workflow.Id.Value);
+                    DetachWorkflowEntries(workflow);
+                }
             }
             else
             {
@@ -127,6 +139,18 @@ internal sealed class CronJobHelper(
 
                 WorkflowRun workflowRun = queueOutcome.Value;
 
+                DateTimeOffset nextRunAt = workflowScheduleService.GetNextOccurrence
+                (
+                    kind: workflow.RecurrenceKind,
+                    daysOfWeek: GetDaysFromMask(workflow.RecurrenceKind, workflow.DaysOfWeekMask),
+                    localTime: workflow.LocalTime,
+                    timeZoneId: workflow.TimeZoneId,
+                    fromUtc: utcNow
+                );
+
+                workflow.AdvanceNextRunAt(nextRunAt, utcNow);
+                workflow.ClearDispatchLease();
+
                 WorkflowRunRequested workflowRunRequested = new()
                 {
                     EventId = Guid.NewGuid(),
@@ -141,21 +165,30 @@ internal sealed class CronJobHelper(
 
                 await messageBus.PublishAsync(workflowRunRequested, cancellationToken);
 
-                DateTimeOffset nextRunAt = workflowScheduleService.GetNextOccurrence
-                (
-                    kind: workflow.RecurrenceKind,
-                    daysOfWeek: GetDaysFromMask(workflow.RecurrenceKind, workflow.DaysOfWeekMask),
-                    localTime: workflow.LocalTime,
-                    timeZoneId: workflow.TimeZoneId,
-                    fromUtc: utcNow
-                );
-
-                workflow.AdvanceNextRunAt(nextRunAt, utcNow);
-                workflow.ClearDispatchLease();
+                try
+                {
+                    await dbContext.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateConcurrencyException exception)
+                {
+                    logger.LogWarning(exception, "Concurrency conflict for workflow {WorkflowId}, another instance claimed it",
+                        workflow.Id.Value);
+                    DetachWorkflowEntries(workflow);
+                    continue;
+                }
             }
         }
+    }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+    private void DetachWorkflowEntries(Workflow workflow)
+    {
+        foreach (EntityEntry entry in dbContext.ChangeTracker.Entries()
+                     .Where(e => e.Entity == workflow ||
+                                 (e.Entity is WorkflowRun run && run.WorkflowId == workflow.Id))
+                     .ToList())
+        {
+            entry.State = EntityState.Detached;
+        }
     }
 
     private static List<DayOfWeek>? GetDaysFromMask(WorkflowRecurrenceKind kind, int daysOfWeekMask)

@@ -2,8 +2,15 @@ namespace Main.Application.Abstractions.Stream;
 
 public interface IStreamPublisher
 {
-    Task PublishStatusAsync(string streamId, StreamStatus status, CancellationToken cancellationToken,
-        string? fault = null);
+    Task PublishStatusAsync
+    (
+        string streamId,
+        StreamStatus status,
+        CancellationToken cancellationToken,
+        string? fault = null,
+        string? modelName = null,
+        string? provider = null
+    );
 
     Task SetStreamExpirationAsync(string streamId, TimeSpan expiration, CancellationToken cancellationToken);
 
@@ -11,5 +18,8 @@ public interface IStreamPublisher
 
     Task PublishToolCallAsync(string streamId, string toolName, string? query, CancellationToken cancellationToken);
 
-    Task PublishToolCallResultAsync(string streamId, string toolName, string sourcesJson, CancellationToken cancellationToken);
+    Task PublishToolCallResultAsync(string streamId, string toolName, string sourcesJson,
+        CancellationToken cancellationToken);
+
+    Task PublishThinkingAsync(string streamId, string phase, CancellationToken cancellationToken);
 }

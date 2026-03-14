@@ -6,8 +6,11 @@ internal sealed record MessageDto
     string ChatId,
     string MessageRole,
     string MessageContent,
-    long? TokenCount,
+    long? InputTokenCount,
+    long? OutputTokenCount,
+    long? TotalTokenCount,
     int SequenceNumber,
+    string? SourcesJson,
     DateTimeOffset CreatedAt,
     DateTimeOffset EditedAt
 );

@@ -1,7 +1,6 @@
 using Main.Application.Abstractions.Data;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
-using Main.Domain.ReadModels;
 using Main.Domain.ValueObjects;
 
 using Microsoft.EntityFrameworkCore;
@@ -19,10 +18,10 @@ internal sealed class DeleteChatHandler(IMainDbContext dbContext, IUserContext u
     {
         Guid userId = userContext.UserId;
 
-        User? user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+        bool userExists = await dbContext.Users
+            .AnyAsync(u => u.UserId == userId, cancellationToken);
 
-        if (user is null)
+        if (!userExists)
             return UserOperationFaults.NotFound;
 
         Outcome<ChatId> chatIdOutcome = ChatId.From(request.ChatId);
@@ -31,12 +30,6 @@ internal sealed class DeleteChatHandler(IMainDbContext dbContext, IUserContext u
             return chatIdOutcome.Fault;
 
         ChatId chatId = chatIdOutcome.Value;
-
-        bool userExists = await dbContext.Users
-            .AnyAsync(u => u.UserId == userId, cancellationToken);
-
-        if (!userExists)
-            return UserOperationFaults.NotFound;
 
         Chat? chat = await dbContext.Chats
             .FirstOrDefaultAsync(c => c.Id == chatId && c.UserId == userId, cancellationToken);
