@@ -21,4 +21,7 @@ internal sealed record TavilyApiResponseItem
 
     [JsonPropertyName("score")]
     public double Score { get; init; }
+
+    [JsonPropertyName("published_date")]
+    public string? PublishedDate { get; init; }
 }

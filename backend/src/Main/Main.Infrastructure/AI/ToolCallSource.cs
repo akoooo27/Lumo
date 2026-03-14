@@ -4,5 +4,14 @@ internal sealed record ToolCallSource
 (
     string Title,
     string Url,
-    double Score
-);
+    double Score,
+    string? PublishedDate
+)
+{
+    public string Confidence => Score switch
+    {
+        >= 0.8 => "high",
+        >= 0.5 => "moderate",
+        _ => "low"
+    };
+}

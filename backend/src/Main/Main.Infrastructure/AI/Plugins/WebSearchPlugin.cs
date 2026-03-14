@@ -49,7 +49,8 @@ internal sealed class WebSearchPlugin
                 (
                     Title: r.Title,
                     Url: r.Url,
-                    Score: r.Score
+                    Score: r.Score,
+                    PublishedDate: r.PublishedDate
                 ))
                 .ToList();
 
