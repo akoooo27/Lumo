@@ -42,17 +42,21 @@ internal sealed class SignUpHandler(
         if (emailExists)
             return UserOperationFaults.EmailAlreadyInUse;
 
-        try
-        {
-            bool isSpam = await emailValidationService.IsSpamEmailAsync(emailAddress.Value, cancellationToken);
-
-            if (isSpam)
-                return UserOperationFaults.SpamEmailAddress;
-        }
-        catch (HttpRequestException)
-        {
-            return UserOperationFaults.EmailValidationUnavailable;
-        }
+        // Keep the dependency wired for now; spam validation is temporarily disabled.
+        _ = emailValidationService;
+#pragma warning disable S125
+        // try
+        // {
+        //     bool isSpam = await emailValidationService.IsSpamEmailAsync(emailAddress.Value, cancellationToken);
+        //
+        //     if (isSpam)
+        //         return UserOperationFaults.SpamEmailAddress;
+        // }
+        // catch (HttpRequestException)
+        // {
+        //     return UserOperationFaults.EmailValidationUnavailable;
+        // }
+#pragma warning restore S125
 
         Outcome<User> userOutcome = User.Create
         (
