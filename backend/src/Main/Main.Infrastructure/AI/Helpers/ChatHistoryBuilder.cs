@@ -1,0 +1,66 @@
+using Main.Application.Abstractions.AI;
+using Main.Application.Abstractions.Instructions;
+using Main.Application.Abstractions.Memory;
+using Main.Domain.Enums;
+using Main.Infrastructure.AI.Helpers.Interfaces;
+
+using Microsoft.SemanticKernel.ChatCompletion;
+
+using SharedKernel;
+
+namespace Main.Infrastructure.AI.Helpers;
+
+internal sealed class ChatHistoryBuilder(
+    IInstructionStore instructionStore,
+    IMemoryStore memoryStore,
+    IDateTimeProvider dateTimeProvider) : IChatHistoryBuilder
+{
+    public async Task<ChatHistory> BuildAsync
+    (
+        IReadOnlyList<ChatCompletionMessage> messages,
+        Guid userId,
+        ModelInfo? modelInfo,
+        bool memoryToolsEnabled,
+        bool webSearchToolEnabled,
+        CancellationToken cancellationToken
+    )
+    {
+        string latestUserMessage = messages
+            .Where(m => m.Role == MessageRole.User)
+            .Select(m => m.Content)
+            .LastOrDefault() ?? string.Empty;
+
+        IReadOnlyList<MemoryEntry> memories = await memoryStore.GetRelevantAsync(
+            userId, latestUserMessage, MemoryConstants.MaxMemoriesInContext, cancellationToken);
+
+        IReadOnlyList<InstructionEntry> instructions = await instructionStore
+            .GetForUserAsync(userId, cancellationToken);
+
+        string systemPrompt = SystemPromptBuilder.Build
+        (
+            instructions: instructions,
+            memories: memories,
+            modelInfo: modelInfo,
+            memoryToolsEnabled: memoryToolsEnabled,
+            webSearchToolEnabled: webSearchToolEnabled,
+            dateTimeProvider: dateTimeProvider
+        );
+
+        ChatHistory chatHistory = new ChatHistory(systemPrompt);
+
+        foreach (ChatCompletionMessage message in messages)
+        {
+            switch (message.Role)
+            {
+                case MessageRole.User:
+                    chatHistory.AddUserMessage(message.Content);
+                    break;
+                case MessageRole.Assistant:
+                    chatHistory.AddAssistantMessage(message.Content);
+                    break;
+            }
+        }
+
+        return chatHistory;
+    }
+}

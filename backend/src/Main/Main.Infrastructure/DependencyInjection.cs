@@ -13,6 +13,8 @@ using Main.Application.Abstractions.Stream;
 using Main.Application.Abstractions.Workflows;
 using Main.Infrastructure.AI;
 using Main.Infrastructure.AI.Filters;
+using Main.Infrastructure.AI.Helpers;
+using Main.Infrastructure.AI.Helpers.Interfaces;
 using Main.Infrastructure.AI.Plugins;
 using Main.Infrastructure.AI.Search;
 using Main.Infrastructure.Consumers;
@@ -268,6 +270,8 @@ public static class DependencyInjection
         });
 
         services.AddScoped<ITitleGenerator, TitleGenerator>();
+        services.AddScoped<IChatHistoryBuilder, ChatHistoryBuilder>();
+        services.AddScoped<IStreamFinalizer, StreamFinalizer>();
         services.AddScoped<INativeChatCompletionService, NativeChatCompletionService>();
 
         services.AddSingleton<IStreamReader, StreamReader>();
