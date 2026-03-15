@@ -1,6 +1,9 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Main.Application.Abstractions.AI;
+using Main.Application.Abstractions.Memory;
 using Main.Application.Abstractions.Services;
 using Main.Application.Abstractions.Stream;
 using Main.Infrastructure.AI.Helpers;
@@ -34,6 +37,12 @@ internal sealed class NativeChatCompletionService(
 ) : INativeChatCompletionService
 {
     private static readonly TimeSpan StreamExpiration = TimeSpan.FromHours(1);
+
+    private static readonly JsonSerializerOptions MemoriesJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+    };
 
     public Task StreamCompletionAsync(string chatId, string streamId, string modelId, string correlationId, IReadOnlyList<ChatCompletionMessage> messages,
         CancellationToken cancellationToken)
@@ -172,7 +181,7 @@ internal sealed class NativeChatCompletionService(
         bool memoryToolsEnabled = supportsFunctionCalling && memoryEnabled;
         bool webSearchToolEnabled = supportsFunctionCalling && webSearchEnabled;
 
-        ChatHistory chatHistory = await chatHistoryBuilder.BuildAsync
+        ChatHistoryResult chatHistoryResult = await chatHistoryBuilder.BuildAsync
         (
             messages: messages,
             userId: userId,
@@ -181,6 +190,25 @@ internal sealed class NativeChatCompletionService(
             webSearchToolEnabled: webSearchToolEnabled,
             cancellationToken: cancellationToken
         );
+
+        ChatHistory chatHistory = chatHistoryResult.ChatHistory;
+        IReadOnlyList<MemoryEntry> memories = chatHistoryResult.MemoryEntries;
+
+        if (memories.Count > 0)
+        {
+            string memoriesJson = JsonSerializer.Serialize
+            (
+                memories.Select(me => new { me.Content, me.MemoryCategory }),
+                MemoriesJsonOptions
+            );
+
+            await streamPublisher.PublishMemoriesAsync
+            (
+                streamId: streamId,
+                memoriesJson: memoriesJson,
+                cancellationToken: cancellationToken
+            );
+        }
 
         string openRouterId = modelRegistry.GetOpenRouterModelId(modelId);
 

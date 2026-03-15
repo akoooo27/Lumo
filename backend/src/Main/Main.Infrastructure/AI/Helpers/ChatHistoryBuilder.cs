@@ -15,7 +15,7 @@ internal sealed class ChatHistoryBuilder(
     IMemoryStore memoryStore,
     IDateTimeProvider dateTimeProvider) : IChatHistoryBuilder
 {
-    public async Task<ChatHistory> BuildAsync
+    public async Task<ChatHistoryResult> BuildAsync
     (
         IReadOnlyList<ChatCompletionMessage> messages,
         Guid userId,
@@ -46,7 +46,7 @@ internal sealed class ChatHistoryBuilder(
             dateTimeProvider: dateTimeProvider
         );
 
-        ChatHistory chatHistory = new ChatHistory(systemPrompt);
+        ChatHistory chatHistory = new(systemPrompt);
 
         foreach (ChatCompletionMessage message in messages)
         {
@@ -61,6 +61,12 @@ internal sealed class ChatHistoryBuilder(
             }
         }
 
-        return chatHistory;
+        ChatHistoryResult chatHistoryResult = new
+        (
+            ChatHistory: chatHistory,
+            MemoryEntries: memories
+        );
+
+        return chatHistoryResult;
     }
 }

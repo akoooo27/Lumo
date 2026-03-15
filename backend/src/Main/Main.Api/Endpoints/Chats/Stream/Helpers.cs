@@ -13,6 +13,7 @@ internal static class Helpers
             StreamMessageType.Chunk => FormatTextChunk(message.Content),
             StreamMessageType.ToolCall => FormatToolCallMessage(message.Content, message.Query),
             StreamMessageType.ToolCallResult => FormatToolCallResultMessage(message.Content, message.Sources),
+            StreamMessageType.Memories => FormatMemoriesMessage(message.Memories),
             StreamMessageType.Thinking => FormatThinkingMessage(message.Content),
             StreamMessageType.Status when message.Content == "done" => FormatFinishMessage(message.ModelName, message.Provider),
             StreamMessageType.Status when message.Content == "failed" => FormatErrorMessage("AI Generation Failed"),
@@ -60,6 +61,15 @@ internal static class Helpers
     private static string FormatThinkingMessage(string phase)
     {
         string json = JsonSerializer.Serialize(new { type = "thinking", phase });
+        return $"2:[{json}]\n";
+    }
+
+    private static string FormatMemoriesMessage(string? memoriesJson)
+    {
+        if (memoriesJson is null)
+            return string.Empty;
+
+        string json = $"{{\"type\":\"memories\",\"memories\":{memoriesJson}}}";
         return $"2:[{json}]\n";
     }
 

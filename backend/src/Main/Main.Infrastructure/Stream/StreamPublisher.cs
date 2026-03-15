@@ -35,11 +35,11 @@ internal sealed class StreamPublisher(
         {
             List<NameValueEntry> entries =
             [
-                new NameValueEntry("type", "status"),
+                new("type", "status"),
 #pragma warning disable CA1308
-                new NameValueEntry("status", status.ToString().ToLowerInvariant()),
+                new("status", status.ToString().ToLowerInvariant()),
 #pragma warning restore CA1308
-                new NameValueEntry("timestamp",
+                new("timestamp",
                     dateTimeProvider.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))
 
             ];
@@ -84,9 +84,9 @@ internal sealed class StreamPublisher(
         {
             List<NameValueEntry> entries =
             [
-                new NameValueEntry("type", "chunk"),
-                new NameValueEntry("content", messageContent),
-                new NameValueEntry("timestamp",
+                new("type", "chunk"),
+                new("content", messageContent),
+                new("timestamp",
                     dateTimeProvider.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))
             ];
 
@@ -113,9 +113,9 @@ internal sealed class StreamPublisher(
         {
             List<NameValueEntry> entries =
             [
-                new NameValueEntry("type", "tool_call"),
-                new NameValueEntry("tool_name", toolName),
-                new NameValueEntry("timestamp",
+                new("type", "tool_call"),
+                new("tool_name", toolName),
+                new("timestamp",
                     dateTimeProvider.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))
             ];
 
@@ -145,10 +145,10 @@ internal sealed class StreamPublisher(
         {
             List<NameValueEntry> entries =
             [
-                new NameValueEntry("type", "tool_result"),
-                new NameValueEntry("tool_name", toolName),
-                new NameValueEntry("sources", sourcesJson),
-                new NameValueEntry("timestamp",
+                new("type", "tool_result"),
+                new("tool_name", toolName),
+                new("sources", sourcesJson),
+                new("timestamp",
                     dateTimeProvider.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))
             ];
 
@@ -174,9 +174,9 @@ internal sealed class StreamPublisher(
         {
             List<NameValueEntry> entries =
             [
-                new NameValueEntry("type", "thinking"),
-                new NameValueEntry("phase", phase),
-                new NameValueEntry("timestamp",
+                new("type", "thinking"),
+                new("phase", phase),
+                new("timestamp",
                     dateTimeProvider.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))
             ];
 
@@ -186,6 +186,34 @@ internal sealed class StreamPublisher(
         catch (Exception exception)
         {
             logger.LogError(exception, "Failed to publish thinking for stream {StreamId}", streamId);
+            throw;
+        }
+    }
+
+    public async Task PublishMemoriesAsync(string streamId, string memoriesJson, CancellationToken cancellationToken)
+    {
+        string streamKey = $"{StreamConstants.StreamKeyPrefix}{streamId}";
+        string notifyChannel = $"{StreamConstants.NotifyChannelPrefix}{streamId}";
+
+        IDatabase db = connectionMultiplexer.GetDatabase();
+        ISubscriber pub = connectionMultiplexer.GetSubscriber();
+
+        try
+        {
+            List<NameValueEntry> entries =
+            [
+                new("type", "memories"),
+                new("memories", memoriesJson),
+                new("timestamp",
+                    dateTimeProvider.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture))
+            ];
+
+            await db.StreamAddAsync(streamKey, [.. entries]);
+            await pub.PublishAsync(RedisChannel.Literal(notifyChannel), "memories");
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Failed to publish memories for stream {StreamId}", streamId);
             throw;
         }
     }
