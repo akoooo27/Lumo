@@ -309,4 +309,26 @@ public sealed class Chat : AggregateRoot<ChatId>
 
         return Outcome.Success();
     }
+
+    public Outcome SetMessageAttachment
+    (
+        MessageId messageId,
+        Attachment attachment
+    )
+    {
+        if (IsArchived)
+            return ChatFaults.CannotModifyArchivedChat;
+
+        Message? message = _messages.FirstOrDefault(m => m.Id == messageId);
+
+        if (message is null)
+            return MessageFaults.MessageNotFound;
+
+        Outcome addOutcome = message.SetAttachment(attachment);
+
+        if (addOutcome.IsFailure)
+            return addOutcome.Fault;
+
+        return Outcome.Success();
+    }
 }

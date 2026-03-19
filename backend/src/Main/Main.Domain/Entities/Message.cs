@@ -26,6 +26,8 @@ public sealed class Message : Entity<MessageId>
 
     public string? SourcesJson { get; private set; }
 
+    public Attachment? Attachment { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
 
     public DateTimeOffset EditedAt { get; private set; }
@@ -130,6 +132,16 @@ public sealed class Message : Entity<MessageId>
             return MessageFaults.MessageSourceNotAllowed;
 
         SourcesJson = sourcesJson;
+
+        return Outcome.Success();
+    }
+
+    internal Outcome SetAttachment(Attachment attachment)
+    {
+        if (MessageRole != MessageRole.User)
+            return MessageFaults.AttachmentNotAllowed;
+
+        Attachment = attachment;
 
         return Outcome.Success();
     }
