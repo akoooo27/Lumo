@@ -1,6 +1,8 @@
 using System.ClientModel;
 using System.ComponentModel.DataAnnotations;
 
+using Amazon.S3;
+
 using Main.Application.Abstractions.AI;
 using Main.Application.Abstractions.Data;
 using Main.Application.Abstractions.Ephemeral;
@@ -11,6 +13,7 @@ using Main.Application.Abstractions.Services;
 using Main.Application.Abstractions.SharedChats;
 using Main.Application.Abstractions.Stream;
 using Main.Application.Abstractions.Workflows;
+using Main.Application.Storage;
 using Main.Infrastructure.AI;
 using Main.Infrastructure.AI.Filters;
 using Main.Infrastructure.AI.Helpers;
@@ -27,6 +30,7 @@ using Main.Infrastructure.Memory;
 using Main.Infrastructure.Options;
 using Main.Infrastructure.Preferences;
 using Main.Infrastructure.SharedChats;
+using Main.Infrastructure.Storage;
 using Main.Infrastructure.Stream;
 using Main.Infrastructure.Workflows;
 
@@ -62,6 +66,7 @@ public static class DependencyInjection
             .AddSharedKernelInfrastructure(configuration)
             .AddDatabase(configuration, environment)
             .AddAuthorization()
+            .AddStorage(configuration)
             .AddMessaging(configuration)
             .AddAi(configuration)
             .AddBackgroundJobs();
@@ -117,6 +122,20 @@ public static class DependencyInjection
                 name: "main-postgresql",
                 tags: ["ready", "live"]
             );
+
+        return services;
+    }
+
+    private static IServiceCollection AddStorage(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<S3Options>()
+            .Bind(configuration.GetSection(S3Options.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddAWSService<IAmazonS3>();
+
+        services.AddSingleton<IStorageService, StorageService>();
 
         return services;
     }
