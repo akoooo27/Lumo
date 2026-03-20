@@ -201,7 +201,16 @@ services:
             - RabbitMq__Port=${RABBITMQ_PORT:?RABBITMQ_PORT is required}
             - RabbitMq__VirtualHost=${RABBITMQ_VIRTUAL_HOST:?RABBITMQ_VIRTUAL_HOST is required}
             - RabbitMq__Username=${RABBITMQ_USERNAME:?RABBITMQ_USERNAME is required}
-            - RabbitMq__Password=${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}     
+            - RabbitMq__Password=${RABBITMQ_PASSWORD:?RABBITMQ_PASSWORD is required}
+
+            # AWS SDK Credentials
+            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID is required}
+            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}
+            - AWS_REGION=${AWS_REGION:?AWS_REGION is required}
+
+            # S3Options
+            - S3__BucketName=${S3_BUCKET_NAME:?S3_BUCKET_NAME is required}
+            - S3__Region=${AWS_REGION:?AWS_REGION is required}
         networks:
             - lumo-network
         depends_on:
