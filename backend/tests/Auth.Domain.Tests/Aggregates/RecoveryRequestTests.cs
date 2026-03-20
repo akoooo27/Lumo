@@ -472,4 +472,52 @@ public sealed class RecoveryRequestTests
         // This is consistent with LoginRequest, Session, and EmailChangeRequest
         isExpired.Should().BeTrue();
     }
+
+    [Fact]
+    public void VerifyNewEmail_AtExactExpirationTime_ShouldReturnFailure()
+    {
+        RecoveryRequest request = RecoveryRequest.Create
+        (
+            id: CreateValidRecoveryRequestId(),
+            userId: ValidUserId,
+            tokenKey: ValidTokenKey,
+            newEmailAddress: ValidNewEmail,
+            otpTokenHash: ValidOtpTokenHash,
+            magicLinkTokenHash: ValidMagicLinkTokenHash,
+            fingerprint: CreateValidFingerprint(),
+            utcNow: UtcNow
+        ).Value;
+
+        DateTimeOffset exactExpirationTime = UtcNow.AddMinutes(RecoveryRequestConstants.ExpirationMinutes);
+
+        Outcome outcome = request.VerifyNewEmail(exactExpirationTime);
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(RecoveryRequestFaults.Expired);
+    }
+
+    [Fact]
+    public void Complete_AtExactExpirationTime_ShouldReturnFailure()
+    {
+        RecoveryRequest request = RecoveryRequest.Create
+        (
+            id: CreateValidRecoveryRequestId(),
+            userId: ValidUserId,
+            tokenKey: ValidTokenKey,
+            newEmailAddress: ValidNewEmail,
+            otpTokenHash: ValidOtpTokenHash,
+            magicLinkTokenHash: ValidMagicLinkTokenHash,
+            fingerprint: CreateValidFingerprint(),
+            utcNow: UtcNow
+        ).Value;
+
+        request.VerifyNewEmail(UtcNow);
+
+        DateTimeOffset exactExpirationTime = UtcNow.AddMinutes(RecoveryRequestConstants.ExpirationMinutes);
+
+        Outcome outcome = request.Complete(exactExpirationTime);
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(RecoveryRequestFaults.Expired);
+    }
 }
