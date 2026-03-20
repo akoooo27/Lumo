@@ -7,13 +7,16 @@ using Auth.Application.Queries.Users.GetCurrentUser;
 using Dapper;
 
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 
 using SharedKernel.Application.Data;
 
 namespace Auth.Infrastructure.Users;
 
-internal sealed class CurrentUserReadStore(IDbConnectionFactory dbConnectionFactory, IDistributedCache cache)
-     : ICurrentUserReadStore
+internal sealed class CurrentUserReadStore(
+    IDbConnectionFactory dbConnectionFactory,
+    IDistributedCache cache,
+    ILogger<CurrentUserReadStore> logger) : ICurrentUserReadStore
 {
     private static readonly DistributedCacheEntryOptions CacheOptions = new()
     {
@@ -40,9 +43,15 @@ internal sealed class CurrentUserReadStore(IDbConnectionFactory dbConnectionFact
 
         if (cached is not null)
         {
-            UserReadModel userReadModel = JsonSerializer.Deserialize<UserReadModel>(cached)!;
-
-            return userReadModel;
+            try
+            {
+                return JsonSerializer.Deserialize<UserReadModel>(cached);
+            }
+            catch (JsonException ex)
+            {
+                logger.LogWarning(ex, "Failed to deserialize cached user {UserId}, falling back to database", userId);
+                await cache.RemoveAsync(cacheKey, cancellationToken);
+            }
         }
 
         await using DbConnection connection = await dbConnectionFactory.CreateConnectionAsync(cancellationToken);
