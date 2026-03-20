@@ -1,7 +1,7 @@
 using Main.Application.Abstractions.AI;
 using Main.Application.Abstractions.Instructions;
 using Main.Application.Abstractions.Memory;
-using Main.Application.Storage;
+using Main.Application.Abstractions.Storage;
 using Main.Domain.Enums;
 using Main.Infrastructure.AI.Helpers.Interfaces;
 

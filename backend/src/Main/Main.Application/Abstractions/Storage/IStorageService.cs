@@ -1,6 +1,6 @@
 using SharedKernel.Application.Storage;
 
-namespace Main.Application.Storage;
+namespace Main.Application.Abstractions.Storage;
 
 public interface IStorageService
 {

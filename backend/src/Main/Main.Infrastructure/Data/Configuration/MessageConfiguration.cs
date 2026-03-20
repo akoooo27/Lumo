@@ -63,6 +63,20 @@ internal sealed class MessageConfiguration : IEntityTypeConfiguration<Message>
             .IsRequired(false)
             .HasColumnType("jsonb");
 
+        b.OwnsOne(m => m.Attachment, attachment =>
+        {
+            attachment.Property(a => a.FileKey)
+                .HasColumnType(
+                    $"{DataConfigurationConstants.DefaultStringColumnType}({DataConfigurationConstants.DefaultStringMaxLength})");
+
+            attachment.Property(a => a.ContentType)
+                .HasColumnType(
+                    $"{DataConfigurationConstants.DefaultStringColumnType}({DataConfigurationConstants.DefaultStringMaxLength})");
+
+            attachment.Property(a => a.FileSizeInBytes)
+                .HasColumnType("bigint");
+        });
+
         b.Property(m => m.CreatedAt)
             .IsRequired()
             .HasColumnType(DataConfigurationConstants.DefaultTimeColumnType);

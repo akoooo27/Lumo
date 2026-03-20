@@ -22,4 +22,10 @@ internal static class ChatOperationFaults
         detail:
         "Cannot send a new message while AI is generating a response. Please wait for the current response to complete."
     );
+
+    internal static readonly Fault AttachmentsNotSupported = Fault.Validation
+    (
+        title: "Chat.AttachmentsNotSupported",
+        detail: "The specified model does not support attachments."
+    );
 }

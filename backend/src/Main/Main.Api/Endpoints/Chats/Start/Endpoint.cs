@@ -1,5 +1,6 @@
 using FastEndpoints;
 
+using Main.Application.Abstractions.Storage;
 using Main.Application.Commands.Chats.Start;
 
 using Mediator;
@@ -39,7 +40,15 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
         (
             Message: endpointRequest.Message,
             ModelId: endpointRequest.ModelId,
-            WebSearchEnabled: endpointRequest.WebSearchEnabled
+            WebSearchEnabled: endpointRequest.WebSearchEnabled,
+            AttachmentDto: endpointRequest.Attachment is not null
+                ? new AttachmentDto
+                (
+                    FileKey: endpointRequest.Attachment.FileKey,
+                    ContentType: endpointRequest.Attachment.ContentType,
+                    FileSizeInBytes: endpointRequest.Attachment.FileSizeInBytes
+                )
+                : null
         );
 
         await SendOutcomeAsync

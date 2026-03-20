@@ -2,6 +2,7 @@ using Contracts.IntegrationEvents.Chat;
 
 using Main.Application.Abstractions.Data;
 using Main.Application.Abstractions.Generators;
+using Main.Application.Abstractions.Storage;
 using Main.Application.Abstractions.Stream;
 using Main.Application.Faults;
 using Main.Domain.Aggregates;
@@ -23,6 +24,7 @@ internal sealed class SendMessageHandler(
     IRequestContext requestContext,
     IChatLockService chatLockService,
     IIdGenerator idGenerator,
+    IStorageService storageService,
     IMessageBus messageBus,
     IDateTimeProvider dateTimeProvider) : ICommandHandler<SendMessageCommand, SendMessageResponse>
 {
@@ -80,6 +82,63 @@ internal sealed class SendMessageHandler(
         }
 
         Message message = messageOutcome.Value;
+
+        if (request.AttachmentDto is not null)
+        {
+            bool fileExists = await storageService.FileExistsAsync
+            (
+                fileKey: request.AttachmentDto.FileKey,
+                cancellationToken: cancellationToken
+            );
+
+            if (!fileExists)
+            {
+                await chatLockService.ReleaseLockAsync
+                (
+                    chatId: chat.Id.Value,
+                    ownerId: requestContext.CorrelationId,
+                    cancellationToken
+                );
+                return AttachmentOperationFault.NotFound;
+            }
+
+            Outcome<Attachment> attachmentOutcome = Attachment.Create
+            (
+                fileKey: request.AttachmentDto.FileKey,
+                contentType: request.AttachmentDto.ContentType,
+                fileSizeInBytes: request.AttachmentDto.FileSizeInBytes
+            );
+
+            if (attachmentOutcome.IsFailure)
+            {
+                await chatLockService.ReleaseLockAsync
+                (
+                    chatId: chat.Id.Value,
+                    ownerId: requestContext.CorrelationId,
+                    cancellationToken
+                );
+                return attachmentOutcome.Fault;
+            }
+
+            Attachment attachment = attachmentOutcome.Value;
+
+            Outcome setOutcome = chat.SetMessageAttachment
+            (
+                messageId: message.Id,
+                attachment: attachment
+            );
+
+            if (setOutcome.IsFailure)
+            {
+                await chatLockService.ReleaseLockAsync
+                (
+                    chatId: chat.Id.Value,
+                    ownerId: requestContext.CorrelationId,
+                    cancellationToken
+                );
+                return setOutcome.Fault;
+            }
+        }
 
         try
         {

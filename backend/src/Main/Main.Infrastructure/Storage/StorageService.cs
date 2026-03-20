@@ -3,7 +3,7 @@ using System.Globalization;
 using Amazon.S3;
 using Amazon.S3.Model;
 
-using Main.Application.Storage;
+using Main.Application.Abstractions.Storage;
 
 using Microsoft.Extensions.Options;
 
