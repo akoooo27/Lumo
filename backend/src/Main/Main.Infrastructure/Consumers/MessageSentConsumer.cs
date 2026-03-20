@@ -56,7 +56,8 @@ internal sealed class MessageSentConsumer(
             .Select(m => new ChatCompletionMessage
             (
                 Role: m.MessageRole,
-                Content: m.MessageContent
+                Content: m.MessageContent,
+                AttachmentFileKey: m.Attachment != null ? m.Attachment.FileKey : null
             ))
             .ToListAsync(cancellationToken);
 

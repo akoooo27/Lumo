@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Auth.Infrastructure.Options;
+namespace SharedKernel.Infrastructure.Options;
 
-internal sealed class S3Options
+public sealed class S3Options
 {
     public const string SectionName = "S3";
 

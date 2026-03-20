@@ -1,15 +1,13 @@
 using System.Text;
-
-using Contracts.IntegrationEvents.Chat;
-using Contracts.IntegrationEvents.EphemeralChat;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Main.Application.Abstractions.AI;
-using Main.Application.Abstractions.Instructions;
 using Main.Application.Abstractions.Memory;
 using Main.Application.Abstractions.Services;
 using Main.Application.Abstractions.Stream;
-using Main.Domain.Enums;
 using Main.Infrastructure.AI.Helpers;
+using Main.Infrastructure.AI.Helpers.Interfaces;
 using Main.Infrastructure.AI.Plugins;
 
 using Microsoft.Extensions.Logging;
@@ -20,9 +18,6 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 using OpenAI;
 using OpenAI.Chat;
 
-using SharedKernel;
-using SharedKernel.Application.Messaging;
-
 using StackExchange.Redis;
 
 namespace Main.Infrastructure.AI;
@@ -31,19 +26,23 @@ internal sealed class NativeChatCompletionService(
     OpenAIClient openAiClient,
     IModelRegistry modelRegistry,
     IStreamPublisher streamPublisher,
-    IMessageBus messageBus,
     IChatLockService chatLockService,
     IUserPreferenceResolver userPreferenceResolver,
-    IInstructionStore instructionStore,
-    IMemoryStore memoryStore,
+    IChatHistoryBuilder chatHistoryBuilder,
+    IStreamFinalizer streamFinalizer,
     Kernel kernel,
     PluginUserContext pluginUserContext,
     PluginStreamContext pluginStreamContext,
-    IDateTimeProvider dateTimeProvider,
     ILogger<NativeChatCompletionService> logger
 ) : INativeChatCompletionService
 {
     private static readonly TimeSpan StreamExpiration = TimeSpan.FromHours(1);
+
+    private static readonly JsonSerializerOptions MemoriesJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+    };
 
     public Task StreamCompletionAsync(string chatId, string streamId, string modelId, string correlationId, IReadOnlyList<ChatCompletionMessage> messages,
         CancellationToken cancellationToken)
@@ -133,7 +132,7 @@ internal sealed class NativeChatCompletionService(
                 );
             }
 
-            await FinalizeStreamAsync
+            await streamFinalizer.FinalizeAsync
             (
                 streamId: streamId,
                 chatId: chatId,
@@ -182,7 +181,7 @@ internal sealed class NativeChatCompletionService(
         bool memoryToolsEnabled = supportsFunctionCalling && memoryEnabled;
         bool webSearchToolEnabled = supportsFunctionCalling && webSearchEnabled;
 
-        ChatHistory chatHistory = await BuildChatHistoryAsync
+        ChatHistoryResult chatHistoryResult = await chatHistoryBuilder.BuildAsync
         (
             messages: messages,
             userId: userId,
@@ -191,6 +190,25 @@ internal sealed class NativeChatCompletionService(
             webSearchToolEnabled: webSearchToolEnabled,
             cancellationToken: cancellationToken
         );
+
+        ChatHistory chatHistory = chatHistoryResult.ChatHistory;
+        IReadOnlyList<MemoryEntry> memories = chatHistoryResult.MemoryEntries;
+
+        if (memories.Count > 0)
+        {
+            string memoriesJson = JsonSerializer.Serialize
+            (
+                memories.Select(me => new { me.Content, me.MemoryCategory }),
+                MemoriesJsonOptions
+            );
+
+            await streamPublisher.PublishMemoriesAsync
+            (
+                streamId: streamId,
+                memoriesJson: memoriesJson,
+                cancellationToken: cancellationToken
+            );
+        }
 
         string openRouterId = modelRegistry.GetOpenRouterModelId(modelId);
 
@@ -314,55 +332,6 @@ internal sealed class NativeChatCompletionService(
         return tokenUsage;
     }
 
-    private async Task<ChatHistory> BuildChatHistoryAsync
-    (
-        IReadOnlyList<ChatCompletionMessage> messages,
-        Guid userId,
-        ModelInfo? modelInfo,
-        bool memoryToolsEnabled,
-        bool webSearchToolEnabled,
-        CancellationToken cancellationToken
-    )
-    {
-        string latestUserMessage = messages
-            .Where(m => m.Role == MessageRole.User)
-            .Select(m => m.Content)
-            .LastOrDefault() ?? string.Empty;
-
-        IReadOnlyList<MemoryEntry> memories = await memoryStore.GetRelevantAsync(
-            userId, latestUserMessage, MemoryConstants.MaxMemoriesInContext, cancellationToken);
-
-        IReadOnlyList<InstructionEntry> instructions = await instructionStore
-            .GetForUserAsync(userId, cancellationToken);
-
-        string systemPrompt = SystemPromptBuilder.Build
-        (
-            instructions: instructions,
-            memories: memories,
-            modelInfo: modelInfo,
-            memoryToolsEnabled: memoryToolsEnabled,
-            webSearchToolEnabled: webSearchToolEnabled,
-            dateTimeProvider: dateTimeProvider
-        );
-
-        ChatHistory chatHistory = new ChatHistory(systemPrompt);
-
-        foreach (ChatCompletionMessage message in messages)
-        {
-            switch (message.Role)
-            {
-                case MessageRole.User:
-                    chatHistory.AddUserMessage(message.Content);
-                    break;
-                case MessageRole.Assistant:
-                    chatHistory.AddAssistantMessage(message.Content);
-                    break;
-            }
-        }
-
-        return chatHistory;
-    }
-
     private OpenAIChatCompletionService GetSkChatService(string openRouterId)
     {
         return new OpenAIChatCompletionService
@@ -382,72 +351,6 @@ internal sealed class NativeChatCompletionService(
     {
         await streamPublisher.PublishStatusAsync(streamId, StreamStatus.Pending, cancellationToken);
         await streamPublisher.SetStreamExpirationAsync(streamId, StreamExpiration, cancellationToken);
-    }
-
-    private async Task FinalizeStreamAsync
-    (
-        string streamId,
-        string chatId,
-        string modelId,
-        StringBuilder messageContent,
-        TokenUsage tokenUsage,
-        bool isAdvanced,
-        CancellationToken cancellationToken
-    )
-    {
-        ModelInfo? modelInfo = modelRegistry.GetModelInfo(modelId);
-
-        await streamPublisher.PublishStatusAsync
-        (
-            streamId: streamId,
-            status: StreamStatus.Done,
-            cancellationToken: cancellationToken,
-            modelName: modelInfo?.DisplayName,
-            provider: modelInfo?.Provider
-        );
-
-        if (messageContent.Length == 0)
-            return;
-
-        string content = messageContent.ToString();
-
-        if (isAdvanced)
-        {
-            await messageBus.PublishAsync
-            (
-                new AssistantMessageGenerated
-                {
-                    EventId = Guid.NewGuid(),
-                    OccurredAt = dateTimeProvider.UtcNow,
-                    CorrelationId = Guid.NewGuid(),
-                    ChatId = chatId,
-                    MessageContent = content,
-                    InputTokens = tokenUsage.InputTokens > 0 ? tokenUsage.InputTokens : null,
-                    OutputTokens = tokenUsage.OutputTokens > 0 ? tokenUsage.OutputTokens : null,
-                    TotalTokens = tokenUsage.TotalTokens > 0 ? tokenUsage.TotalTokens : null,
-                    ModelId = modelId,
-                    SourcesJson = pluginStreamContext.SourcesJson
-                }, cancellationToken
-            );
-        }
-        else
-        {
-            await messageBus.PublishAsync
-            (
-                new AssistantEphemeralMessageGenerated
-                {
-                    EventId = Guid.NewGuid(),
-                    OccurredAt = dateTimeProvider.UtcNow,
-                    CorrelationId = Guid.NewGuid(),
-                    EphemeralChatId = chatId,
-                    MessageContent = content,
-                    InputTokens = tokenUsage.InputTokens > 0 ? tokenUsage.InputTokens : null,
-                    OutputTokens = tokenUsage.OutputTokens > 0 ? tokenUsage.OutputTokens : null,
-                    TotalTokens = tokenUsage.TotalTokens > 0 ? tokenUsage.TotalTokens : null,
-                    ModelId = modelId
-                }, cancellationToken
-            );
-        }
     }
 
     private async Task HandleStreamingErrorAsync

@@ -446,4 +446,94 @@ public sealed class SessionTests
         outcome.IsFailure.Should().BeTrue();
         outcome.Fault.Should().Be(SessionFaults.SessionRevoked);
     }
+
+    [Fact]
+    public void RevokeDueToOldRefreshTokenUsage_WhenActive_ShouldRevokeSession()
+    {
+        Session session = Session.Create
+        (
+            id: CreateValidSessionId(),
+            userId: ValidUserId,
+            refreshTokenKey: ValidRefreshTokenKey,
+            refreshTokenHash: ValidRefreshTokenHash,
+            fingerprint: CreateValidFingerprint(),
+            utcNow: UtcNow
+        ).Value;
+
+        DateTimeOffset revokeTime = UtcNow.AddHours(1);
+
+        Outcome outcome = session.RevokeDueToOldRefreshTokenUsage(revokeTime);
+
+        outcome.IsSuccess.Should().BeTrue();
+        session.RevokeReason.Should().Be(SessionRevokeReason.OldRefreshTokenUsed);
+        session.RevokedAt.Should().Be(revokeTime);
+    }
+
+    [Fact]
+    public void RevokeDueToOldRefreshTokenUsage_WhenExpired_ShouldReturnFailure()
+    {
+        Session session = Session.Create
+        (
+            id: CreateValidSessionId(),
+            userId: ValidUserId,
+            refreshTokenKey: ValidRefreshTokenKey,
+            refreshTokenHash: ValidRefreshTokenHash,
+            fingerprint: CreateValidFingerprint(),
+            utcNow: UtcNow
+        ).Value;
+
+        DateTimeOffset expiredTime = UtcNow.AddDays(SessionConstants.SessionExpirationDays + 1);
+
+        Outcome outcome = session.RevokeDueToOldRefreshTokenUsage(expiredTime);
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(SessionFaults.SessionExpired);
+    }
+
+    [Fact]
+    public void RevokeDueToOldRefreshTokenUsage_WhenAlreadyRevoked_ShouldReturnFailure()
+    {
+        Session session = Session.Create
+        (
+            id: CreateValidSessionId(),
+            userId: ValidUserId,
+            refreshTokenKey: ValidRefreshTokenKey,
+            refreshTokenHash: ValidRefreshTokenHash,
+            fingerprint: CreateValidFingerprint(),
+            utcNow: UtcNow
+        ).Value;
+
+        session.RevokeDueToLogout(UtcNow);
+
+        Outcome outcome = session.RevokeDueToOldRefreshTokenUsage(UtcNow);
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(SessionFaults.SessionRevoked);
+    }
+
+    [Fact]
+    public void Refresh_WhenValid_ShouldStoreOldRefreshToken()
+    {
+        Session session = Session.Create
+        (
+            id: CreateValidSessionId(),
+            userId: ValidUserId,
+            refreshTokenKey: ValidRefreshTokenKey,
+            refreshTokenHash: ValidRefreshTokenHash,
+            fingerprint: CreateValidFingerprint(),
+            utcNow: UtcNow
+        ).Value;
+
+        session.OldRefreshTokenKey.Should().BeNull();
+        session.OldRefreshTokenHash.Should().BeNull();
+
+        DateTimeOffset refreshTime = UtcNow.AddHours(1);
+
+        session.Refresh("new-key", "new-hash", CreateValidFingerprint(), refreshTime);
+
+        session.OldRefreshTokenKey.Should().Be(ValidRefreshTokenKey);
+        session.OldRefreshTokenHash.Should().Be(ValidRefreshTokenHash);
+        session.RefreshTokenKey.Should().Be("new-key");
+        session.RefreshTokenHash.Should().Be("new-hash");
+    }
 }

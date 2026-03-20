@@ -22,4 +22,6 @@ public interface IStreamPublisher
         CancellationToken cancellationToken);
 
     Task PublishThinkingAsync(string streamId, string phase, CancellationToken cancellationToken);
+
+    Task PublishMemoriesAsync(string streamId, string memoriesJson, CancellationToken cancellationToken);
 }

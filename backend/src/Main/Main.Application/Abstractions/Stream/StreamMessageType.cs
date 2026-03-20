@@ -6,5 +6,6 @@ public enum StreamMessageType
     Status = 1,
     ToolCall = 2,
     ToolCallResult = 3,
-    Thinking = 4
+    Thinking = 4,
+    Memories = 5
 }

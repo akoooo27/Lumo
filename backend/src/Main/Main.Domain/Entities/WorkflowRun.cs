@@ -49,7 +49,9 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
         bool useWebSearchUsed,
         string instructionSnapshot,
         string titleSnapshot,
-        DateTimeOffset utcNow
+        DateTimeOffset utcNow,
+        string? skipReason = null,
+        DateTimeOffset? completedAt = null
     )
     {
         Id = id;
@@ -61,6 +63,8 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
         InstructionSnapshot = instructionSnapshot;
         TitleSnapshot = titleSnapshot;
         CreatedAt = utcNow;
+        SkipReason = skipReason;
+        CompletedAt = completedAt;
     }
 
     internal static Outcome<WorkflowRun> CreateQueued
@@ -147,9 +151,10 @@ public sealed class WorkflowRun : Entity<WorkflowRunId>
             useWebSearchUsed: useWebSearchUsed,
             instructionSnapshot: instructionSnapshot,
             titleSnapshot: titleSnapshot,
-            utcNow: utcNow
-        )
-        { SkipReason = skipReason, CompletedAt = utcNow };
+            utcNow: utcNow,
+            skipReason: skipReason,
+            completedAt: utcNow
+        );
 
         return workflowRun;
     }

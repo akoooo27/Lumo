@@ -152,7 +152,7 @@ csharp_using_directive_placement = outside_namespace:silent
 
 # Unused using directives
 dotnet_diagnostic.IDE0005.severity = warning
-dotnet_diagnostic.IDE0005.suggestion = true
+dotnet_diagnostic.CS8019.severity = warning
 
 #### C# Formatting Rules ####
 

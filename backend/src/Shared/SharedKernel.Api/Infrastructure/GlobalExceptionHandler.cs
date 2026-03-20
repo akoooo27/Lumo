@@ -17,17 +17,46 @@ public sealed class GlobalExceptionHandler(
         ArgumentNullException.ThrowIfNull(httpContext);
         ArgumentNullException.ThrowIfNull(exception);
 
-        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
         Activity? activity = httpContext.Features.Get<IHttpActivityFeature>()?.Activity;
 
-        string title = "An unexpected error occurred.";
+        (int statusCode, string title, string detail, string type) = exception switch
+        {
+            OperationCanceledException => (
+                499,
+                "Client closed request.",
+                "The client disconnected before the request could be completed",
+                "https://httpstatuses.com/499"
+            ),
+            TimeoutException => (
+                StatusCodes.Status504GatewayTimeout,
+                "Request timed out.",
+                "The request timed out while waiting for an upstream service",
+                "https://tools.ietf.org/html/rfc7231#section-6.6.5"
+            ),
+            _ => (
+                StatusCodes.Status500InternalServerError,
+                "An unexpected error occurred.",
+                "An unexpected error occurred",
+                "https://tools.ietf.org/html/rfc7231#section-6.6.1"
+            )
+        };
 
-        string type = "https://tools.ietf.org/html/rfc7231#section-6.6.1";
+        httpContext.Response.StatusCode = statusCode;
 
-        logger.LogError(exception,
-            "An unexpected error occurred while processing the request. RequestId: {RequestId}, TraceId: {TraceId}",
-            httpContext.TraceIdentifier, activity?.Id);
+        if (exception is OperationCanceledException)
+        {
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug("Request was cancelled. RequestId: {RequestId}, TraceId: {TraceId}",
+                    httpContext.TraceIdentifier, activity?.Id);
+            }
+        }
+        else
+        {
+            logger.LogError(exception,
+                "An unexpected error occurred while processing the request. RequestId: {RequestId}, TraceId: {TraceId}",
+                httpContext.TraceIdentifier, activity?.Id);
+        }
 
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
         {
@@ -37,9 +66,9 @@ public sealed class GlobalExceptionHandler(
             {
                 Type = type,
                 Title = title,
-                Detail = "An unexpected error occurred",
+                Detail = detail,
                 Instance = $"{httpContext.Request.Method}:{httpContext.Request.Path}",
-                Status = httpContext.Response.StatusCode,
+                Status = statusCode,
                 Extensions = new Dictionary<string, object?>
                 {
                     ["requestId"] = httpContext.TraceIdentifier,

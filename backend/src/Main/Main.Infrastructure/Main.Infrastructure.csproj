@@ -32,6 +32,8 @@
         <PackageReference Include="Pgvector.EntityFrameworkCore" />
         <PackageReference Include="Microsoft.SemanticKernel" />
         <PackageReference Include="Cronos" />
+        <PackageReference Include="AWSSDK.S3" />
+        <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" />
     </ItemGroup>
 
     <ItemGroup>

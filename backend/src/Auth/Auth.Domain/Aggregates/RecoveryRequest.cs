@@ -105,7 +105,7 @@ public sealed class RecoveryRequest : AggregateRoot<RecoveryRequestId>
         if (CompletedAt is not null)
             return RecoveryRequestFaults.AlreadyCompleted;
 
-        if (ExpiresAt < utcNow)
+        if (ExpiresAt <= utcNow)
             return RecoveryRequestFaults.Expired;
 
         if (NewEmailVerifiedAt is not null)
@@ -121,7 +121,7 @@ public sealed class RecoveryRequest : AggregateRoot<RecoveryRequestId>
         if (CompletedAt is not null)
             return RecoveryRequestFaults.AlreadyCompleted;
 
-        if (ExpiresAt < utcNow)
+        if (ExpiresAt <= utcNow)
             return RecoveryRequestFaults.Expired;
 
         if (NewEmailVerifiedAt is null)
@@ -136,5 +136,5 @@ public sealed class RecoveryRequest : AggregateRoot<RecoveryRequestId>
 
     public bool IsCompleted => CompletedAt is not null;
 
-    public bool IsExpired(DateTimeOffset utcNow) => ExpiresAt < utcNow;
+    public bool IsExpired(DateTimeOffset utcNow) => ExpiresAt <= utcNow;
 }

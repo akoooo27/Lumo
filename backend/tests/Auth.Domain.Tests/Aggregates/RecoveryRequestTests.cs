@@ -450,7 +450,7 @@ public sealed class RecoveryRequestTests
     }
 
     [Fact]
-    public void IsExpired_AtExactExpirationTime_ShouldReturnFalse()
+    public void IsExpired_AtExactExpirationTime_ShouldReturnTrue()
     {
         RecoveryRequest request = RecoveryRequest.Create
         (
@@ -468,8 +468,56 @@ public sealed class RecoveryRequestTests
 
         bool isExpired = request.IsExpired(exactExpirationTime);
 
-        // At exact expiration time, IsExpired returns false because the check is strictly less than (ExpiresAt < utcNow)
-        // This is consistent with the domain logic in VerifyNewEmail and Complete methods
-        isExpired.Should().BeFalse();
+        // At exact expiration time, the request is expired (ExpiresAt <= utcNow)
+        // This is consistent with LoginRequest, Session, and EmailChangeRequest
+        isExpired.Should().BeTrue();
+    }
+
+    [Fact]
+    public void VerifyNewEmail_AtExactExpirationTime_ShouldReturnFailure()
+    {
+        RecoveryRequest request = RecoveryRequest.Create
+        (
+            id: CreateValidRecoveryRequestId(),
+            userId: ValidUserId,
+            tokenKey: ValidTokenKey,
+            newEmailAddress: ValidNewEmail,
+            otpTokenHash: ValidOtpTokenHash,
+            magicLinkTokenHash: ValidMagicLinkTokenHash,
+            fingerprint: CreateValidFingerprint(),
+            utcNow: UtcNow
+        ).Value;
+
+        DateTimeOffset exactExpirationTime = UtcNow.AddMinutes(RecoveryRequestConstants.ExpirationMinutes);
+
+        Outcome outcome = request.VerifyNewEmail(exactExpirationTime);
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(RecoveryRequestFaults.Expired);
+    }
+
+    [Fact]
+    public void Complete_AtExactExpirationTime_ShouldReturnFailure()
+    {
+        RecoveryRequest request = RecoveryRequest.Create
+        (
+            id: CreateValidRecoveryRequestId(),
+            userId: ValidUserId,
+            tokenKey: ValidTokenKey,
+            newEmailAddress: ValidNewEmail,
+            otpTokenHash: ValidOtpTokenHash,
+            magicLinkTokenHash: ValidMagicLinkTokenHash,
+            fingerprint: CreateValidFingerprint(),
+            utcNow: UtcNow
+        ).Value;
+
+        request.VerifyNewEmail(UtcNow);
+
+        DateTimeOffset exactExpirationTime = UtcNow.AddMinutes(RecoveryRequestConstants.ExpirationMinutes);
+
+        Outcome outcome = request.Complete(exactExpirationTime);
+
+        outcome.IsFailure.Should().BeTrue();
+        outcome.Fault.Should().Be(RecoveryRequestFaults.Expired);
     }
 }

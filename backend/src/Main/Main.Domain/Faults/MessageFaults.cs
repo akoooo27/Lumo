@@ -63,4 +63,10 @@ public static class MessageFaults
         title: "Message.MessageSourceNotAllowed",
         detail: "Setting a source is only allowed for assistant messages."
     );
+
+    public static readonly Fault AttachmentNotAllowed = Fault.Validation
+    (
+        title: "Message.AttachmentNotAllowed",
+        detail: "Attachments are only allowed for user messages."
+    );
 }

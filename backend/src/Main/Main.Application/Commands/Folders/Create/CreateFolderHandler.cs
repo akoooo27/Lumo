@@ -35,7 +35,7 @@ internal sealed class CreateFolderHandler(
 
         int folderCount = stats?.Count ?? 0;
 
-        if (folderCount > FolderConstants.MaxFoldersPerUser)
+        if (folderCount >= FolderConstants.MaxFoldersPerUser)
             return FolderOperationFaults.MaxFoldersReached;
         if (folderCount >= FolderConstants.MaxFoldersPerUser)
             return FolderOperationFaults.MaxFoldersReached;

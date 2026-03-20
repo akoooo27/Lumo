@@ -12,4 +12,6 @@ public sealed record StreamMessage
     public string? Query { get; init; }
 
     public string? Sources { get; init; }
+
+    public string? Memories { get; init; }
 }

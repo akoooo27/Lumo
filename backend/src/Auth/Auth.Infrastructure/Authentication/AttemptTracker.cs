@@ -25,8 +25,12 @@ internal sealed class AttemptTracker(IConnectionMultiplexer connectionMultiplexe
         IDatabase db = connectionMultiplexer.GetDatabase();
         string cacheKey = $"{Prefix}{key}";
 
-        await db.StringIncrementAsync(cacheKey);
-        await db.KeyExpireAsync(cacheKey, LockoutWindow, ExpireWhen.HasNoExpiry);
+        ITransaction transaction = db.CreateTransaction();
+
+        _ = transaction.StringIncrementAsync(cacheKey);
+        _ = transaction.KeyExpireAsync(cacheKey, LockoutWindow, ExpireWhen.HasNoExpiry);
+
+        await transaction.ExecuteAsync();
     }
 
     public async Task<bool> IsCooldownActiveAsync(string key, CancellationToken cancellationToken)

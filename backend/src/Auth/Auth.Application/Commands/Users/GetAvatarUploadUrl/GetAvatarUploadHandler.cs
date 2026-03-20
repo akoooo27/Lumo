@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 using SharedKernel.Application.Authentication;
 using SharedKernel.Application.Messaging;
+using SharedKernel.Application.Storage;
 
 namespace Auth.Application.Commands.Users.GetAvatarUploadUrl;
 

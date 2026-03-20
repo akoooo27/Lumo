@@ -177,6 +177,17 @@ internal sealed class StreamReader(IConnectionMultiplexer connectionMultiplexer)
                 ModelName: null,
                 Provider: null
             ),
+            "memories" => new StreamMessage
+            (
+                StreamMessageType.Memories,
+                string.Empty,
+                ts,
+                ModelName: null,
+                Provider: null
+            )
+            {
+                Memories = entry["memories"]
+            },
             _ => null
         };
     }

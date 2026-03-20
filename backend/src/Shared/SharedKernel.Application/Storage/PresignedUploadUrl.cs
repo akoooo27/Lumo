@@ -1,4 +1,4 @@
-namespace Auth.Application.Abstractions.Storage;
+namespace SharedKernel.Application.Storage;
 
 public sealed record PresignedUploadUrl
 (

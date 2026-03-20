@@ -1,3 +1,5 @@
+using SharedKernel.Application.Storage;
+
 namespace Auth.Application.Abstractions.Storage;
 
 public interface IStorageService

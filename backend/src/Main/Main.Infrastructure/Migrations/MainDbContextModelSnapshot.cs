@@ -993,6 +993,37 @@ namespace Main.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_messages_chats_chat_id");
+
+                    b.OwnsOne("Main.Domain.ValueObjects.Attachment", "Attachment", b1 =>
+                        {
+                            b1.Property<string>("MessageId")
+                                .HasColumnType("varchar(30)")
+                                .HasColumnName("id");
+
+                            b1.Property<string>("ContentType")
+                                .IsRequired()
+                                .HasColumnType("varchar(512)")
+                                .HasColumnName("attachment_content_type");
+
+                            b1.Property<string>("FileKey")
+                                .IsRequired()
+                                .HasColumnType("varchar(512)")
+                                .HasColumnName("attachment_file_key");
+
+                            b1.Property<long>("FileSizeInBytes")
+                                .HasColumnType("bigint")
+                                .HasColumnName("attachment_file_size_in_bytes");
+
+                            b1.HasKey("MessageId");
+
+                            b1.ToTable("messages");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MessageId")
+                                .HasConstraintName("fk_messages_messages_id");
+                        });
+
+                    b.Navigation("Attachment");
                 });
 
             modelBuilder.Entity("Main.Domain.Entities.WorkflowRun", b =>

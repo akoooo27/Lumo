@@ -5,5 +5,6 @@ namespace Main.Application.Abstractions.AI;
 public sealed record ChatCompletionMessage
 (
     MessageRole Role,
-    string Content
+    string Content,
+    string? AttachmentFileKey = null
 );
