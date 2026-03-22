@@ -87,4 +87,33 @@ internal sealed class NotificationRealtimePublisher(
             logger.LogWarning(exception, "Failed to push notification.updated to user {UserId}", userId);
         }
     }
+
+    public async Task NotificationDeletedAsync
+    (
+        Guid userId,
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            await hubContext.Clients
+                .Group($"{NotificationsConstants.UserGroupPrefix}{userId}")
+                .SendAsync
+                (
+                    method: $"{NotificationsConstants.NotificationDeletedMethod}",
+                    arg1: new
+                    {
+                        Id = id
+                    },
+                    cancellationToken
+                );
+        }
+#pragma warning disable CA1031
+        catch (Exception exception)
+#pragma warning restore CA1031
+        {
+            logger.LogWarning(exception, "Failed to push notification.deleted to user {UserId}", userId);
+        }
+    }
 }
