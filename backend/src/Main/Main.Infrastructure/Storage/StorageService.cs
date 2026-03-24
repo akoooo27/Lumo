@@ -84,4 +84,15 @@ internal sealed class StorageService(IAmazonS3 s3Client, IOptions<S3Options> s3O
             return false;
         }
     }
+
+    public async Task DeleteFileAsync(string fileKey, CancellationToken cancellationToken = default)
+    {
+        DeleteObjectRequest request = new()
+        {
+            BucketName = _s3Options.BucketName,
+            Key = fileKey
+        };
+
+        await s3Client.DeleteObjectAsync(request, cancellationToken);
+    }
 }
