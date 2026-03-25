@@ -95,4 +95,34 @@ internal sealed class StorageService(IAmazonS3 s3Client, IOptions<S3Options> s3O
 
         await s3Client.DeleteObjectAsync(request, cancellationToken);
     }
+
+    public async Task DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default)
+    {
+        ListObjectsV2Request listRequest = new()
+        {
+            BucketName = _s3Options.BucketName,
+            Prefix = prefix
+        };
+
+        ListObjectsV2Response listResponse;
+
+        do
+        {
+            listResponse = await s3Client.ListObjectsV2Async(listRequest, cancellationToken);
+
+            if (listResponse.S3Objects.Count == 0)
+                break;
+
+            DeleteObjectsRequest deleteRequest = new()
+            {
+                BucketName = _s3Options.BucketName,
+                Objects = [.. listResponse.S3Objects.Select(obj => new KeyVersion { Key = obj.Key })]
+            };
+
+            await s3Client.DeleteObjectsAsync(deleteRequest, cancellationToken);
+
+            listRequest.ContinuationToken = listResponse.NextContinuationToken;
+
+        } while (listResponse.IsTruncated == true);
+    }
 }
