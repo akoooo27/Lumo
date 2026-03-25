@@ -5,7 +5,6 @@ using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 using Notifications.Api.Data;
-using Notifications.Api.ReadModels;
 
 namespace Notifications.Api.Consumers;
 
@@ -17,19 +16,13 @@ internal sealed class UserDeletedConsumer(INotificationDbContext dbContext, ILog
         CancellationToken cancellationToken = context.CancellationToken;
         UserDeleted message = context.Message;
 
-        User? user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.UserId == message.UserId, cancellationToken);
+        await dbContext.Notifications
+            .Where(n => n.UserId == message.UserId)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        if (user is null)
-        {
-            logger.LogWarning(
-                "User with ID {UserId} not found for deletion. EventId: {EventId}, CorrelationId: {CorrelationId}, OccurredAt: {OccurredAt}",
-                message.UserId, message.EventId, message.CorrelationId, message.OccurredAt);
-            return;
-        }
-
-        dbContext.Users.Remove(user);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.Users
+            .Where(u => u.UserId == message.UserId)
+            .ExecuteDeleteAsync(cancellationToken);
 
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(
