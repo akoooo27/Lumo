@@ -11,4 +11,8 @@ public interface IStorageService
         CancellationToken cancellationToken = default);
 
     Task<bool> FileExistsAsync(string fileKey, CancellationToken cancellationToken = default);
+
+    Task DeleteFileAsync(string fileKey, CancellationToken cancellationToken = default);
+
+    Task DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default);
 }

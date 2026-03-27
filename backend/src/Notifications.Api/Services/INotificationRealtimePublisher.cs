@@ -27,4 +27,11 @@ internal interface INotificationRealtimePublisher
         DateTimeOffset? readAt,
         CancellationToken cancellationToken = default
     );
+
+    Task NotificationDeletedAsync
+    (
+        Guid userId,
+        Guid id,
+        CancellationToken cancellationToken = default
+    );
 }

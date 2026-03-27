@@ -7,4 +7,6 @@ internal static class NotificationsConstants
     internal const string NotificationCreatedMethod = "notification.created";
 
     internal const string NotificationUpdatedMethod = "notification.updated";
+
+    internal const string NotificationDeletedMethod = "notification.deleted";
 }

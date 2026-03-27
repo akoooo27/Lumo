@@ -60,17 +60,18 @@ internal sealed class TriggerWorkflowHandler(
             workflowRunId: workflowRunId,
             scheduledFor: utcNow,
             utcNow: utcNow
-        Outcome<WorkflowRun> workflowRunOutcome = workflow.CreateQueuedWorkflowRun
-        (
-            workflowRunId: workflowRunId,
-            scheduledFor: utcNow,
-            utcNow: utcNow
         );
 
         if (workflowRunOutcome.IsFailure)
             return workflowRunOutcome.Fault;
 
         WorkflowRun workflowRun = workflowRunOutcome.Value;
+
+        WorkflowRunRequested workflowRunRequested = new()
+        {
+            EventId = Guid.NewGuid(),
+            OccurredAt = utcNow,
+            WorkflowId = workflow.Id.Value,
             WorkflowRunId = workflowRun.Id.Value,
             UserId = workflow.UserId,
             ModelId = workflow.ModelId,

@@ -34,9 +34,8 @@ internal sealed class CreateFolderHandler(
             .SingleOrDefaultAsync(cancellationToken);
 
         int folderCount = stats?.Count ?? 0;
+        int nextSortOrder = (stats?.MaxSortOrder ?? -1) + 1;
 
-        if (folderCount >= FolderConstants.MaxFoldersPerUser)
-            return FolderOperationFaults.MaxFoldersReached;
         if (folderCount >= FolderConstants.MaxFoldersPerUser)
             return FolderOperationFaults.MaxFoldersReached;
 

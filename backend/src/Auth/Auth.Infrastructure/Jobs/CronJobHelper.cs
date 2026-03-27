@@ -1,4 +1,5 @@
 using Auth.Application.Abstractions.Data;
+using Auth.Application.Abstractions.Storage;
 using Auth.Domain.Aggregates;
 using Auth.Domain.Constants;
 
@@ -14,6 +15,7 @@ namespace Auth.Infrastructure.Jobs;
 internal sealed class CronJobHelper(
     IAuthDbContext dbContext,
     IMessageBus messageBus,
+    IStorageService storageService,
     IDateTimeProvider dateTimeProvider) : ICronJobHelper
 {
     public async Task HardDeleteUsersAsync(CancellationToken cancellationToken = default)
@@ -31,10 +33,31 @@ internal sealed class CronJobHelper(
             if (usersToDelete.Count == 0)
                 return;
 
-            dbContext.Users.RemoveRange(usersToDelete);
-
             foreach (User userToDelete in usersToDelete)
             {
+                string avatarPrefix = $"{AvatarConstants.AvatarFolder}/{userToDelete.Id.Value:N}/";
+                await storageService.DeleteByPrefixAsync(avatarPrefix, cancellationToken);
+
+                await dbContext.Sessions
+                    .Where(s => s.UserId == userToDelete.Id)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                await dbContext.LoginRequests
+                    .Where(lr => lr.UserId == userToDelete.Id)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                await dbContext.EmailChangeRequests
+                    .Where(ecr => ecr.UserId == userToDelete.Id)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                await dbContext.RecoveryRequests
+                    .Where(rr => rr.UserId == userToDelete.Id)
+                    .ExecuteDeleteAsync(cancellationToken);
+
+                await dbContext.RecoveryKeyChains
+                    .Where(rkc => rkc.UserId == userToDelete.Id)
+                    .ExecuteDeleteAsync(cancellationToken);
+
                 UserDeleted userDeleted = new()
                 {
                     EventId = Guid.NewGuid(),
@@ -47,6 +70,7 @@ internal sealed class CronJobHelper(
                 await messageBus.PublishAsync(userDeleted, cancellationToken);
             }
 
+            dbContext.Users.RemoveRange(usersToDelete);
             await dbContext.SaveChangesAsync(cancellationToken);
         }
     }

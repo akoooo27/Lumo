@@ -1,7 +1,7 @@
 using Contracts.IntegrationEvents.Auth;
 
 using Main.Application.Abstractions.Data;
-using Main.Domain.ReadModels;
+using Main.Application.Abstractions.Storage;
 
 using MassTransit;
 
@@ -10,7 +10,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Main.Infrastructure.Consumers;
 
-internal sealed class UserDeletedConsumer(IMainDbContext dbContext, ILogger<UserDeletedConsumer> logger)
+internal sealed class UserDeletedConsumer(
+    IMainDbContext dbContext,
+    IStorageService storageService,
+    ILogger<UserDeletedConsumer> logger)
     : IConsumer<UserDeleted>
 {
     public async Task Consume(ConsumeContext<UserDeleted> context)
@@ -18,19 +21,32 @@ internal sealed class UserDeletedConsumer(IMainDbContext dbContext, ILogger<User
         CancellationToken cancellationToken = context.CancellationToken;
         UserDeleted message = context.Message;
 
-        User? user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.UserId == message.UserId, cancellationToken);
+        string attachmentPrefix = $"{AttachmentConstants.AttachmentFolder}/{message.UserId:N}/";
+        await storageService.DeleteByPrefixAsync(attachmentPrefix, cancellationToken);
 
-        if (user is null)
-        {
-            logger.LogWarning(
-                "User with ID {UserId} not found for deletion. EventId: {EventId}, CorrelationId: {CorrelationId}, OccurredAt: {OccurredAt}",
-                message.UserId, message.EventId, message.CorrelationId, message.OccurredAt);
-            return;
-        }
+        await dbContext.Chats
+            .Where(c => c.UserId == message.UserId)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        dbContext.Users.Remove(user);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.Preferences
+            .Where(p => p.UserId == message.UserId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await dbContext.Workflows
+            .Where(w => w.UserId == message.UserId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await dbContext.SharedChats
+            .Where(sc => sc.OwnerId == message.UserId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await dbContext.Folders
+            .Where(f => f.UserId == message.UserId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await dbContext.Users
+            .Where(u => u.UserId == message.UserId)
+            .ExecuteDeleteAsync(cancellationToken);
 
         if (logger.IsEnabled(LogLevel.Information))
             logger.LogInformation(
