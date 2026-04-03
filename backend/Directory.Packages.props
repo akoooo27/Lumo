@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Static code analysis -->
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.21.0.135717" />
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.22.0.136894" />
     <!-- Application -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
     <PackageVersion Include="Mediator.SourceGenerator" Version="3.1.0-preview.14" />
@@ -31,8 +31,8 @@
     <PackageVersion Include="Serilog.Exceptions.EntityFrameworkCore" Version="8.4.0" />
 
     <!-- Otel Core -->
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.0" />
-    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.15.1" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.15.1" />
 
     <!-- Otel Instrumentations -->
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.15.1" />
@@ -64,9 +64,9 @@
     <PackageVersion Include="UAParser" Version="3.1.47" />
 
     <!-- AWS SDK -->
-    <PackageVersion Include="AWSSDK.S3" Version="4.0.19.1" />
-    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.26" />
-    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.12.3" />
+    <PackageVersion Include="AWSSDK.S3" Version="4.0.20.2" />
+    <PackageVersion Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.3.30" />
+    <PackageVersion Include="AWSSDK.SimpleEmailV2" Version="4.0.12.7" />
 
     <!-- MassTransit -->
     <!-- Avoid updating MassTransit versions beyond 8.5.x, as newer version required license -->
@@ -91,7 +91,7 @@
     <PackageVersion Include="FastEndpoints" Version="8.1.0" />
     <PackageVersion Include="FastEndpoints.Swagger" Version="8.1.0" />
     <PackageVersion Include="FastEndpoints.Generator" Version="8.1.0" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.15" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.13.18" />
     <PackageVersion Include="RedisRateLimiting.AspNetCore" Version="1.2.1" />
     <!-- Tests -->
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />

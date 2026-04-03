@@ -125,4 +125,19 @@ internal sealed class StorageService(IAmazonS3 s3Client, IOptions<S3Options> s3O
 
         } while (listResponse.IsTruncated == true);
     }
+
+    public async Task<byte[]> DownloadFileAsync(string fileKey, CancellationToken cancellationToken = default)
+    {
+        GetObjectRequest request = new()
+        {
+            BucketName = _s3Options.BucketName,
+            Key = fileKey
+        };
+
+        using GetObjectResponse response = await s3Client.GetObjectAsync(request, cancellationToken);
+        using MemoryStream ms = new();
+        await response.ResponseStream.CopyToAsync(ms, cancellationToken);
+
+        return ms.ToArray();
+    }
 }

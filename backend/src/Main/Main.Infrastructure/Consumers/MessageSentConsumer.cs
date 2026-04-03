@@ -57,7 +57,8 @@ internal sealed class MessageSentConsumer(
             (
                 Role: m.MessageRole,
                 Content: m.MessageContent,
-                AttachmentFileKey: m.Attachment != null ? m.Attachment.FileKey : null
+                AttachmentFileKey: m.Attachment != null ? m.Attachment.FileKey : null,
+                AttachmentContentType: m.Attachment != null ? m.Attachment.ContentType : null
             ))
             .ToListAsync(cancellationToken);
 

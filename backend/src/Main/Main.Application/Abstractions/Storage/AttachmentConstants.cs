@@ -8,11 +8,12 @@ public static class AttachmentConstants
 
     public const int PresignedUrlExpirationMinutes = 15;
 
-    public static readonly IReadOnlyList<string> AllowedContentTypes = new[]
-    {
+    public static readonly IReadOnlyList<string> AllowedContentTypes =
+    [
         "image/jpeg",
         "image/png",
         "image/gif",
-        "image/webp"
-    };
+        "image/webp",
+        "application/pdf"
+    ];
 }

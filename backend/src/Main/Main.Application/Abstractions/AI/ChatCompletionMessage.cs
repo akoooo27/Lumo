@@ -6,5 +6,6 @@ public sealed record ChatCompletionMessage
 (
     MessageRole Role,
     string Content,
-    string? AttachmentFileKey = null
+    string? AttachmentFileKey = null,
+    string? AttachmentContentType = null
 );

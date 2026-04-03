@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using Main.Application.Abstractions.AI;
 using Main.Application.Abstractions.Instructions;
 using Main.Application.Abstractions.Memory;
@@ -20,6 +22,7 @@ internal sealed class ChatHistoryBuilder(
 {
     private static readonly TimeSpan ReadUrlExpiration = TimeSpan.FromMinutes(15);
 
+    [Experimental("SKEXP0001")]
     public async Task<ChatHistoryResult> BuildAsync
     (
         IReadOnlyList<ChatCompletionMessage> messages,
@@ -65,13 +68,28 @@ internal sealed class ChatHistoryBuilder(
                         expiration: ReadUrlExpiration,
                         cancellationToken: cancellationToken
                     );
-                    chatHistory.AddUserMessage
-                    (
-                        contentItems:
+                    if (message.AttachmentContentType == "application/pdf")
+                    {
+                        byte[] pdfBytes =
+                            await storageService.DownloadFileAsync(message.AttachmentFileKey, cancellationToken);
+
+                        chatHistory.AddUserMessage(contentItems:
                         [
                             new TextContent(message.Content),
-                            new ImageContent(new Uri(readUrl))
+                            new BinaryContent(pdfBytes, "application/pdf"),
                         ]);
+                    }
+                    else
+                    {
+                        chatHistory.AddUserMessage
+                        (
+                            contentItems:
+                            [
+                                new TextContent(message.Content),
+                                new ImageContent(new Uri(readUrl))
+                            ]);
+                    }
+
                     break;
 
                 case MessageRole.User:

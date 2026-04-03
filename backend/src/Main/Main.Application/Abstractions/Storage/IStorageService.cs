@@ -15,4 +15,6 @@ public interface IStorageService
     Task DeleteFileAsync(string fileKey, CancellationToken cancellationToken = default);
 
     Task DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default);
+
+    Task<byte[]> DownloadFileAsync(string fileKey, CancellationToken cancellationToken = default);
 }

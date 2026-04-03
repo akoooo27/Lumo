@@ -11,7 +11,8 @@ public sealed record Attachment
         "image/jpeg",
         "image/png",
         "image/gif",
-        "image/webp"
+        "image/webp",
+        "application/pdf",
     };
 
     public string FileKey { get; }
