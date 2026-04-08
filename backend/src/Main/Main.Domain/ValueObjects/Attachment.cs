@@ -1,19 +1,25 @@
+using Main.Domain.Enums;
+
 using SharedKernel;
 
 namespace Main.Domain.ValueObjects;
 
 public sealed record Attachment
 {
-    private const long MaxFileSizeInBytes = 10 * 1024 * 1024;
+    public const long MaxFileSizeInBytes = 10 * 1024 * 1024;
 
-    private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-        "application/pdf",
-    };
+    private static readonly Dictionary<string, ContentTypeInfo> SupportedContentTypes =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["image/jpeg"] = new ContentTypeInfo(FileCategory.Image, RequiresBinaryDelivery: false),
+            ["image/png"] = new ContentTypeInfo(FileCategory.Image, RequiresBinaryDelivery: false),
+            ["image/gif"] = new ContentTypeInfo(FileCategory.Image, RequiresBinaryDelivery: false),
+            ["image/webp"] = new ContentTypeInfo(FileCategory.Image, RequiresBinaryDelivery: false),
+            ["application/pdf"] = new ContentTypeInfo(FileCategory.Document, RequiresBinaryDelivery: true),
+        };
+
+    public static IReadOnlyList<string> AllowedContentTypes { get; } =
+        SupportedContentTypes.Keys.ToList().AsReadOnly();
 
     public string FileKey { get; }
 
@@ -38,7 +44,7 @@ public sealed record Attachment
         if (string.IsNullOrWhiteSpace(fileKey))
             return Faults.FileKeyRequired;
 
-        if (!AllowedContentTypes.Contains(contentType))
+        if (!SupportedContentTypes.ContainsKey(contentType))
             return Faults.UnsupportedContentType;
 
         if (fileSizeInBytes is <= 0 or > MaxFileSizeInBytes)
@@ -53,6 +59,12 @@ public sealed record Attachment
 
         return attachment;
     }
+
+    public static bool IsSupported(string contentType) =>
+        SupportedContentTypes.ContainsKey(contentType);
+
+    public static bool TryGetContentTypeInfo(string contentType, out ContentTypeInfo info) =>
+        SupportedContentTypes.TryGetValue(contentType, out info);
 
     private static class Faults
     {
@@ -75,3 +87,5 @@ public sealed record Attachment
         );
     }
 }
+
+public readonly record struct ContentTypeInfo(FileCategory Category, bool RequiresBinaryDelivery);
