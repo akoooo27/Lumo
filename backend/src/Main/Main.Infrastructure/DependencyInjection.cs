@@ -20,6 +20,7 @@ using Main.Infrastructure.AI.Helpers;
 using Main.Infrastructure.AI.Helpers.Interfaces;
 using Main.Infrastructure.AI.Plugins;
 using Main.Infrastructure.AI.Search;
+using Main.Infrastructure.Caching;
 using Main.Infrastructure.Consumers;
 using Main.Infrastructure.Data;
 using Main.Infrastructure.Ephemeral;
@@ -81,6 +82,9 @@ public static class DependencyInjection
 
         services.AddSingleton<IWorkflowScheduleService, WorkflowScheduleService>();
         services.AddScoped<IWorkflowExecutionService, WorkflowExecutionService>();
+
+        services.AddMemoryCache();
+        services.AddSingleton<IFileCache, FileCache>();
 
         return services;
     }

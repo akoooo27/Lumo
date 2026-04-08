@@ -45,7 +45,7 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
             ChatId: endpointRequest.ChatId,
             Message: endpointRequest.Message,
             WebSearchEnabled: endpointRequest.WebSearchEnabled,
-            AttachmentDto: endpointRequest.Attachment is not null
+            AttachmentDto: endpointRequest.Attachment is { FileKey: not null and not "" }
                 ? new AttachmentDto
                 (
                     FileKey: endpointRequest.Attachment.FileKey,
