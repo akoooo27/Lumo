@@ -40,6 +40,9 @@ internal sealed class SharedChatReadStore(IDbConnectionFactory dbConnectionFacto
                                             sequence_number as SequenceNumber,
                                             message_role as MessageRole,
                                             message_content as MessageContent,
+                                            attachment_file_key as AttachmentFileKey,
+                                            attachment_content_type as AttachmentContentType,
+                                            attachment_file_size_in_bytes as AttachmentFileSizeInBytes,
                                             created_at as CreatedAt,
                                             edited_at as EditedAt
                                        FROM shared_chat_messages

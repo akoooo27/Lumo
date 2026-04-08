@@ -57,6 +57,9 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                         SequenceNumber: m.SequenceNumber,
                         MessageRole: m.MessageRole,
                         MessageContent: m.MessageContent,
+                        AttachmentFileKey: m.AttachmentFileKey,
+                        AttachmentContentType: m.AttachmentContentType,
+                        AttachmentFileSizeInBytes: m.AttachmentFileSizeInBytes,
                         CreatedAt: m.CreatedAt,
                         EditedAt: m.EditedAt
                         ))

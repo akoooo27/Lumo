@@ -11,6 +11,9 @@ internal sealed record MessageDto
     long? TotalTokenCount,
     int SequenceNumber,
     string? SourcesJson,
+    string? AttachmentFileKey,
+    string? AttachmentContentType,
+    long? AttachmentFileSizeInBytes,
     DateTimeOffset CreatedAt,
     DateTimeOffset EditedAt
 );

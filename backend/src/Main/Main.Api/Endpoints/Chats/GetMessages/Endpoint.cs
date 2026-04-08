@@ -61,6 +61,9 @@ internal sealed class Endpoint : BaseEndpoint<Request, Response>
                         TotalTokenCount: mrm.TotalTokenCount,
                         SequenceNumber: mrm.SequenceNumber,
                         SourcesJson: mrm.SourcesJson,
+                        AttachmentFileKey: mrm.AttachmentFileKey,
+                        AttachmentContentType: mrm.AttachmentContentType,
+                        AttachmentFileSizeInBytes: mrm.AttachmentFileSizeInBytes,
                         CreatedAt: mrm.CreatedAt,
                         EditedAt: mrm.EditedAt
                     ))
