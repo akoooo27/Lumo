@@ -6,5 +6,7 @@ internal sealed class PluginStreamContext
 
     public IReadOnlyList<ToolCallSource>? LastSearchSources { get; set; }
 
+    public IReadOnlyList<RecalledMemory>? RecalledMemories { get; set; }
+
     public string? SourcesJson { get; set; }
 }

@@ -11,24 +11,22 @@ namespace Main.Infrastructure.AI.Plugins;
 internal sealed class MemoryPlugin
 (
     PluginUserContext userContext,
+    PluginStreamContext pluginStreamContext,
     IMemoryStore memoryStore,
     ILogger<MemoryPlugin> logger
 )
 {
     [KernelFunction("save")]
     [Description(
-        "Save important information about the user to memory for future conversations. " +
-        "Before saving, always search existing memories first to avoid duplicates. " +
-        "If a similar memory exists, update it instead of creating a new one. " +
-        "Use when the user shares preferences, personal facts, or instructions they want remembered. " +
-        "Examples: 'I prefer dark mode', 'My name is John', 'Always respond in Spanish'.")]
+        "Save a user fact, preference, or instruction to memory. " +
+        "Search first to avoid duplicates; update existing entries when possible.")]
     public async Task<string> SaveMemoryAsync
     (
-        [Description("The specific information to remember about the user. Be concise but complete.")]
+        [Description("Concise information to remember about the user.")]
         string content,
-        [Description("The type of memory: 'preference' for user preferences, 'fact' for personal information, 'instruction' for behavioral guidelines.")]
+        [Description("'preference', 'fact', or 'instruction'.")]
         MemoryCategory category,
-        [Description("How important this memory is from 1-10. Use 8-10 for core identity/critical preferences, 5-7 for useful context, 1-4 for minor details.")]
+        [Description("1-10. High (8-10): core identity. Medium (5-7): useful context. Low (1-4): minor details.")]
         int importance,
         CancellationToken cancellationToken
     )
@@ -69,19 +67,16 @@ internal sealed class MemoryPlugin
 
     [KernelFunction("update")]
     [Description(
-        "Update an existing memory when information changes. " +
-        "Use when the user corrects or updates previously saved information. " +
-        "Example: user previously said 'I work at Google' but now says 'I switched to Microsoft'. " +
-        "You must provide the memory ID from a previous search result.")]
+        "Update an existing memory by ID (from find results) when information changes.")]
     public async Task<string> UpdateMemoryAsync
     (
-        [Description("The ID of the memory to update (from search results).")]
+        [Description("Memory ID from find results.")]
         string memoryId,
-        [Description("The updated content for this memory. Leave null if only updating category/importance.")]
+        [Description("New content, or null to keep existing.")]
         string? newContent = null,
-        [Description("Optional new category: 'preference', 'fact', or 'instruction'.")]
+        [Description("New category, or null to keep existing.")]
         MemoryCategory? newCategory = null,
-        [Description("Optional new importance from 1-10.")]
+        [Description("New importance 1-10, or null to keep existing.")]
         int? newImportance = null,
         CancellationToken cancellationToken = default
     )
@@ -125,13 +120,10 @@ internal sealed class MemoryPlugin
 
     [KernelFunction("delete")]
     [Description(
-        "Delete a memory that is no longer accurate or relevant. " +
-        "Use when the user explicitly asks you to forget something, " +
-        "or when information is clearly outdated and no update makes sense. " +
-        "You must provide the memory ID from a previous search result.")]
+        "Delete a memory by ID (from find results) when it is outdated or the user asks to forget.")]
     public async Task<string> DeleteMemoryAsync
     (
-        [Description("The ID of the memory to delete (from search results).")]
+        [Description("Memory ID from find results.")]
         string memoryId,
         CancellationToken cancellationToken
     )
@@ -168,12 +160,10 @@ internal sealed class MemoryPlugin
 
     [KernelFunction("find")]
     [Description(
-        "Search your stored memories about this user. " +
-        "Use before saving a new memory to check for duplicates. " +
-        "Use when you need to recall specific stored information or find a memory ID for update/delete.")]
+        "Search stored memories. Use to check for duplicates before saving or to get a memory ID for update/delete.")]
     public async Task<string> FindMemoriesAsync
     (
-        [Description("What to search for in memories. Be specific.")]
+        [Description("Specific search query.")]
         string query,
         CancellationToken cancellationToken
     )
@@ -215,14 +205,11 @@ internal sealed class MemoryPlugin
 
     [KernelFunction("recall")]
     [Description(
-        "Recall stored memories about this user that are relevant to the current conversation. " +
-        "Use when you need personalized context — the user's name, preferences, past topics, " +
-        "or when the user references something from a previous conversation or asks 'do you remember'. " +
-        "Do NOT use for general knowledge questions like math, coding, or facts.")]
+        "Retrieve memories relevant to the current conversation for personalization. " +
+        "Use when the user's name, preferences, or past topics would help. Not for general knowledge.")]
     public async Task<string> RecallMemoriesAsync
     (
-        [Description(
-            "Describe what you need to know about the user. Be specific — e.g. 'programming language preferences' rather than 'everything'.")]
+        [Description("What you need to know about the user — be specific.")]
         string context,
         CancellationToken cancellationToken
     )
@@ -246,6 +233,15 @@ internal sealed class MemoryPlugin
 
             if (memories.Count == 0)
                 return "No relevant memories found for this user.";
+
+            pluginStreamContext.RecalledMemories =
+            [
+                .. memories.Select(m => new RecalledMemory
+                (
+                    Content: m.Content,
+                    MemoryCategory: m.MemoryCategory.ToString()
+                ))
+            ];
 
             return string.Join("\n", memories.Select(m =>
                 $"[{m.MemoryCategory}] {m.Content}"));

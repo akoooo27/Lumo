@@ -63,6 +63,23 @@ internal sealed class ToolCallStreamFilter(
 
             await next(context);
 
+            if (pluginStreamContext.RecalledMemories is { Count: > 0 } recalledMemories)
+            {
+                string memoriesJson = JsonSerializer.Serialize
+                (
+                    recalledMemories.Select(m => new { m.Content, m.MemoryCategory })
+                );
+
+                await streamPublisher.PublishMemoriesAsync
+                (
+                    streamId: pluginStreamContext.StreamId,
+                    memoriesJson: memoriesJson,
+                    cancellationToken: context.CancellationToken
+                );
+
+                pluginStreamContext.RecalledMemories = null;
+            }
+
             if (pluginStreamContext.LastSearchSources is { Count: > 0 } sources)
             {
                 string sourcesJson = JsonSerializer.Serialize

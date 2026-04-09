@@ -17,4 +17,4 @@ internal interface IChatHistoryBuilder
     );
 }
 
-internal sealed record ChatHistoryResult (ChatHistory ChatHistory);
+internal sealed record ChatHistoryResult(ChatHistory ChatHistory);

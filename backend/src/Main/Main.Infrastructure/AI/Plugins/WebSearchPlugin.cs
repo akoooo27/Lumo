@@ -17,19 +17,14 @@ internal sealed class WebSearchPlugin
 )
 {
     [KernelFunction("__ws")]
-    [Description
-        (
-        "Search the web for current information. " +
-        "Use this when the user asks about current events, recent news, real-time data, " +
-        "or topics that may have changed after your knowledge cutoff. " +
-        "Do NOT use for general knowledge, creative writing, math, or coding questions."
-        )
-    ]
+    [Description(
+        "Search the web for current events, recent news, or post-cutoff information. " +
+        "Not for general knowledge, creative writing, math, or coding.")]
     public async Task<string> SearchAsync
     (
-        [Description("The search query to find current information on the web.")]
+        [Description("Search query.")]
         string query,
-        [Description("The type of search: 'general' for broad searches, 'news' for recent news. Defaults to 'general'.")]
+        [Description("'general' or 'news'. Defaults to 'general'.")]
         string topic = "general",
         CancellationToken cancellationToken = default
     )
