@@ -26,14 +26,14 @@ internal static class SystemPromptBuilder
         string currentDate = dateTimeProvider.UtcNow
             .ToString("dddd, MMMM d, yyyy", CultureInfo.InvariantCulture);
 
-        SystemPromptParts systemPromptParts = new
+        SystemPromptParts parts = new
         (
             Core: BuildCore(modelDisplay, currentDate),
             UserInstructions: BuildUserInstructions(instructions),
             ToolGuidance: BuildToolGuidance(memoryToolsEnabled, webSearchToolEnabled)
         );
 
-        return systemPromptParts;
+        return parts;
     }
 
     private static string BuildCore(string modelDisplay, string currentDate)

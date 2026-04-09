@@ -212,4 +212,53 @@ internal sealed class MemoryPlugin
             return "Failed to search memories. You may save a new memory instead.";
         }
     }
+
+    [KernelFunction("recall")]
+    [Description(
+        "Recall stored memories about this user that are relevant to the current conversation. " +
+        "Use when you need personalized context — the user's name, preferences, past topics, " +
+        "or when the user references something from a previous conversation or asks 'do you remember'. " +
+        "Do NOT use for general knowledge questions like math, coding, or facts.")]
+    public async Task<string> RecallMemoriesAsync
+    (
+        [Description(
+            "Describe what you need to know about the user. Be specific — e.g. 'programming language preferences' rather than 'everything'.")]
+        string context,
+        CancellationToken cancellationToken
+    )
+    {
+        Guid userId = userContext.UserId;
+
+        if (logger.IsEnabled(LogLevel.Information))
+            logger.LogInformation(
+                "RecallMemoriesAsync called for user {UserId}, context length: {ContextLength}",
+                userId, context.Length);
+
+        try
+        {
+            IReadOnlyList<MemoryEntry> memories = await memoryStore.GetRelevantAsync
+            (
+                userId: userId,
+                context: context,
+                limit: MemoryConstants.MaxMemoriesInContext,
+                cancellationToken: cancellationToken
+            );
+
+            if (memories.Count == 0)
+                return "No relevant memories found for this user.";
+
+            return string.Join("\n", memories.Select(m =>
+                $"[{m.MemoryCategory}] {m.Content}"));
+        }
+        catch (ClientResultException exception)
+        {
+            logger.LogWarning(exception, "Failed to recall memories for user {UserId} (API error)", userId);
+            return "Memory recall is temporarily unavailable.";
+        }
+        catch (HttpRequestException exception)
+        {
+            logger.LogWarning(exception, "Failed to recall memories for user {UserId} (network error)", userId);
+            return "Memory recall is temporarily unavailable.";
+        }
+    }
 }

@@ -19,7 +19,8 @@ internal sealed class ToolCallStreamFilter(
         ["save"] = "save_memory",
         ["update"] = "update_memory",
         ["delete"] = "delete_memory",
-        ["find"] = "find_memories"
+        ["find"] = "find_memories",
+        ["recall"] = "recall_memories"
     };
 
     public async Task OnAutoFunctionInvocationAsync(AutoFunctionInvocationContext context, Func<AutoFunctionInvocationContext, Task> next)
@@ -45,7 +46,8 @@ internal sealed class ToolCallStreamFilter(
                 {
                     "web_search" => "Searching the web...",
                     "save_memory" => "Saving to memory...",
-                    "find_memories" => "Recalling memories...",
+                    "find_memories" => "Searching memories...",
+                    "recall_memories" => "Recalling memories...",
                     _ => "Processing..."
                 },
                 cancellationToken: context.CancellationToken

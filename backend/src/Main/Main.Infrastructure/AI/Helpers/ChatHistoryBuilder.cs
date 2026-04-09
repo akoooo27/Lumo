@@ -20,7 +20,6 @@ namespace Main.Infrastructure.AI.Helpers;
 
 internal sealed class ChatHistoryBuilder(
     IInstructionStore instructionStore,
-    IMemoryStore memoryStore,
     IStorageService storageService,
     IFileCache fileCache,
     IDateTimeProvider dateTimeProvider) : IChatHistoryBuilder
@@ -38,29 +37,25 @@ internal sealed class ChatHistoryBuilder(
         CancellationToken cancellationToken
     )
     {
-
-        string latestUserMessage = messages
-            .Where(m => m.Role == MessageRole.User)
-            .Select(m => m.Content)
-            .LastOrDefault() ?? string.Empty;
-
-        IReadOnlyList<MemoryEntry> memories = await memoryStore.GetRelevantAsync(
-            userId, latestUserMessage, MemoryConstants.MaxMemoriesInContext, cancellationToken);
-
         IReadOnlyList<InstructionEntry> instructions = await instructionStore
             .GetForUserAsync(userId, cancellationToken);
 
-        string systemPrompt = SystemPromptBuilder.Build
+        SystemPromptParts parts = SystemPromptBuilder.Build
         (
             instructions: instructions,
-            memories: memories,
             modelInfo: modelInfo,
             memoryToolsEnabled: memoryToolsEnabled,
             webSearchToolEnabled: webSearchToolEnabled,
             dateTimeProvider: dateTimeProvider
         );
 
-        ChatHistory chatHistory = new(systemPrompt);
+        ChatHistory chatHistory = new(parts.Core);
+
+        if (parts.UserInstructions is not null)
+            chatHistory.AddSystemMessage(parts.UserInstructions);
+
+        if (parts.ToolGuidance is not null)
+            chatHistory.AddSystemMessage(parts.ToolGuidance);
 
         foreach (ChatCompletionMessage message in messages)
         {
@@ -136,11 +131,7 @@ internal sealed class ChatHistoryBuilder(
             }
         }
 
-        ChatHistoryResult chatHistoryResult = new
-        (
-            ChatHistory: chatHistory,
-            MemoryEntries: memories
-        );
+        ChatHistoryResult chatHistoryResult = new(chatHistory);
 
         return chatHistoryResult;
     }
