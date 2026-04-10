@@ -2,6 +2,7 @@ using System.ClientModel;
 using System.ComponentModel;
 
 using Main.Application.Abstractions.Memory;
+using Main.Infrastructure.AI.Models;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;

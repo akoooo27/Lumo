@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Text;
 
+using Main.Infrastructure.AI.Models;
 using Main.Infrastructure.AI.Search;
 
 using Microsoft.Extensions.Logging;

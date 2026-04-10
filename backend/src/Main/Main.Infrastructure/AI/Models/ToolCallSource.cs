@@ -1,4 +1,4 @@
-namespace Main.Infrastructure.AI;
+namespace Main.Infrastructure.AI.Models;
 
 internal sealed record ToolCallSource
 (
