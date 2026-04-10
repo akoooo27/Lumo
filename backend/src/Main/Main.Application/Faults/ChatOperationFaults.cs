@@ -28,4 +28,10 @@ internal static class ChatOperationFaults
         title: "Chat.AttachmentsNotSupported",
         detail: "The specified model does not support attachments."
     );
+
+    internal static readonly Fault NotGenerating = Fault.Conflict
+    (
+        title: "Chat.NotGenerating",
+        detail: "The chat is not currently generating a response."
+    );
 }

@@ -15,4 +15,10 @@ internal static class EphemeralChatOperationFaults
         title: "EphemeralChat.GenerationInProgress",
         detail: "The ephemeral chat is currently generating a response. Please wait until the generation is complete."
     );
+
+    internal static readonly Fault NotGenerating = Fault.Conflict
+    (
+        title: "EphemeralChat.NotGenerating",
+        detail: "The ephemeral chat is not currently generating a response."
+    );
 }
