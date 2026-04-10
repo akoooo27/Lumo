@@ -27,6 +27,13 @@ internal sealed class StopGenerationHandler(
 
         ChatId chatId = chatIdOutcome.Value;
 
+        Outcome<StreamId> streamIdOutcome = StreamId.From(request.StreamId);
+
+        if (streamIdOutcome.IsFailure)
+            return streamIdOutcome.Fault;
+
+        StreamId streamId = streamIdOutcome.Value;
+
         bool chatExists = await dbContext.Chats
             .AnyAsync(c => c.Id == chatId && c.UserId == userId, cancellationToken);
 
@@ -38,7 +45,7 @@ internal sealed class StopGenerationHandler(
         if (!isGenerating)
             return ChatOperationFaults.NotGenerating;
 
-        await chatLockService.RequestCancellationAsync(request.StreamId, cancellationToken);
+        await chatLockService.RequestCancellationAsync(streamId.Value, cancellationToken);
 
         return Outcome.Success();
     }

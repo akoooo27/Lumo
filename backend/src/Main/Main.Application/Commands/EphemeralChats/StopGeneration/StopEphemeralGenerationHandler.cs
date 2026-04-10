@@ -2,6 +2,7 @@ using Main.Application.Abstractions.Ephemeral;
 using Main.Application.Abstractions.Stream;
 using Main.Application.Faults;
 using Main.Domain.Models;
+using Main.Domain.ValueObjects;
 
 using SharedKernel;
 using SharedKernel.Application.Authentication;
@@ -18,6 +19,13 @@ internal sealed class StopEphemeralGenerationHandler(
     {
         Guid userId = userContext.UserId;
 
+        Outcome<StreamId> streamIdOutcome = StreamId.From(request.StreamId);
+
+        if (streamIdOutcome.IsFailure)
+            return streamIdOutcome.Fault;
+
+        StreamId streamId = streamIdOutcome.Value;
+
         EphemeralChat? ephemeralChat = await ephemeralChatStore.GetAsync(request.EphemeralChatId, cancellationToken);
 
         if (ephemeralChat is null || ephemeralChat.UserId != userId)
@@ -28,7 +36,7 @@ internal sealed class StopEphemeralGenerationHandler(
         if (!isGenerating)
             return EphemeralChatOperationFaults.NotGenerating;
 
-        await chatLockService.RequestCancellationAsync(request.StreamId, cancellationToken);
+        await chatLockService.RequestCancellationAsync(streamId.Value, cancellationToken);
 
         return Outcome.Success();
     }
