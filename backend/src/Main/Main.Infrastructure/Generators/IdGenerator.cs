@@ -37,4 +37,7 @@ internal sealed class IdGenerator : IIdGenerator
 
     public FolderId NewFolderId() =>
         FolderId.UnsafeFrom($"{FolderId.PrefixValue}{Ulid.NewUlid()}");
+
+    public GoogleConnectionId NewGoogleConnectionId() =>
+        GoogleConnectionId.UnsafeFrom($"{GoogleConnectionId.PrefixValue}{Ulid.NewUlid()}");
 }

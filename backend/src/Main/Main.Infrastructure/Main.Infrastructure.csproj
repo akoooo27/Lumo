@@ -34,6 +34,9 @@
         <PackageReference Include="Cronos" />
         <PackageReference Include="AWSSDK.S3" />
         <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" />
+        <PackageReference Include="Google.Apis.Auth" />
+        <PackageReference Include="Google.Apis.Oauth2.v2" />
+        <PackageReference Include="Google.Apis.Gmail.v1" />
     </ItemGroup>
 
     <ItemGroup>

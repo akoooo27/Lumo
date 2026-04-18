@@ -3,10 +3,14 @@ using System.ComponentModel.DataAnnotations;
 
 using Amazon.S3;
 
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+
 using Main.Application.Abstractions.AI;
 using Main.Application.Abstractions.Data;
 using Main.Application.Abstractions.Ephemeral;
 using Main.Application.Abstractions.Generators;
+using Main.Application.Abstractions.Google;
 using Main.Application.Abstractions.Instructions;
 using Main.Application.Abstractions.Memory;
 using Main.Application.Abstractions.Services;
@@ -25,6 +29,7 @@ using Main.Infrastructure.Consumers;
 using Main.Infrastructure.Data;
 using Main.Infrastructure.Ephemeral;
 using Main.Infrastructure.Generators;
+using Main.Infrastructure.Google;
 using Main.Infrastructure.Instructions;
 using Main.Infrastructure.Jobs;
 using Main.Infrastructure.Memory;
@@ -70,7 +75,8 @@ public static class DependencyInjection
             .AddStorage(configuration)
             .AddMessaging(configuration)
             .AddAi(configuration)
-            .AddBackgroundJobs();
+            .AddBackgroundJobs()
+            .AddGoogleIntegration(configuration);
 
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
@@ -312,6 +318,40 @@ public static class DependencyInjection
         services.AddScoped<ICronJobHelper, CronJobHelper>();
 
         services.AddTickerQ();
+
+        return services;
+    }
+
+    private static IServiceCollection AddGoogleIntegration(this IServiceCollection services, IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        services.AddOptions<GoogleOptions>()
+            .Bind(configuration.GetSection(GoogleOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        GoogleOptions googleOptions = new();
+        configuration.GetSection(GoogleOptions.SectionName).Bind(googleOptions);
+
+        services.AddSingleton(googleOptions);
+
+        services.AddSingleton(_ => new GoogleAuthorizationCodeFlow(new GoogleAuthorizationCodeFlow.Initializer
+        {
+            ClientSecrets = new ClientSecrets
+            {
+                ClientId = googleOptions.ClientId,
+                ClientSecret = googleOptions.ClientSecret
+            },
+            Scopes =
+            [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly"
+            ]
+        }));
+
+        services.AddScoped<IGoogleOAuthStateStore, GoogleOAuthStateStore>();
+        services.AddSingleton<IGoogleOAuthClient, GoogleOAuthClient>();
 
         return services;
     }

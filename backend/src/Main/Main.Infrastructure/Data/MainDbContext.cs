@@ -30,6 +30,8 @@ internal sealed class MainDbContext(DbContextOptions<MainDbContext> options) : D
 
     public DbSet<Folder> Folders { get; set; }
 
+    public DbSet<GoogleConnection> GoogleConnections { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

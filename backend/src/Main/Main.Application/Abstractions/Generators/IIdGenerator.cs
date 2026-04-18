@@ -25,4 +25,6 @@ public interface IIdGenerator
     WorkflowRunId NewWorkflowRunId();
 
     FolderId NewFolderId();
+
+    GoogleConnectionId NewGoogleConnectionId();
 }
