@@ -353,6 +353,8 @@ public static class DependencyInjection
         services.AddScoped<IGoogleOAuthStateStore, GoogleOAuthStateStore>();
         services.AddSingleton<IGoogleOAuthClient, GoogleOAuthClient>();
 
+        services.AddScoped<IGoogleTokenProvider, GoogleTokenProvider>();
+
         return services;
     }
 }

@@ -8,13 +8,15 @@ using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 using SharedKernel.Application.Authentication;
 using SharedKernel.Application.Messaging;
+using SharedKernel.Application.Security;
 
 namespace Main.Application.Commands.GoogleConnections.Revoke;
 
 internal sealed class RevokeGoogleConnectionHandler(
     IMainDbContext dbContext,
     IUserContext userContext,
-    IGoogleOAuthClient googleOAuthClient) : ICommandHandler<RevokeGoogleConnectionCommand>
+    IGoogleOAuthClient googleOAuthClient,
+    IDataProtectorWrapper dataProtectorWrapper) : ICommandHandler<RevokeGoogleConnectionCommand>
 {
     public async ValueTask<Outcome> Handle(RevokeGoogleConnectionCommand request, CancellationToken cancellationToken)
     {
@@ -24,7 +26,7 @@ internal sealed class RevokeGoogleConnectionHandler(
         if (googleConnection is null)
             return GoogleConnectionOperationFaults.ConnectionNotFound;
 
-        string refreshToken = googleConnection.ProtectedRefreshToken;
+        string refreshToken = dataProtectorWrapper.Unprotect(googleConnection.ProtectedRefreshToken);
 
         await googleOAuthClient.RevokeTokenAsync(refreshToken, cancellationToken);
 

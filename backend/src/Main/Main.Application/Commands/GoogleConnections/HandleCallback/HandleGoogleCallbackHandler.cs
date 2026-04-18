@@ -56,6 +56,8 @@ internal sealed class HandleGoogleCallbackHandler(
 
             if (createOutcome.IsFailure)
                 return createOutcome.Fault;
+
+            dbContext.GoogleConnections.Add(createOutcome.Value);
         }
         else
         {
