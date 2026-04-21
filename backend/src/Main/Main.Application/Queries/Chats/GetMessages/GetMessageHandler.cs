@@ -34,6 +34,9 @@ internal sealed class GetMessageHandler(IDbConnectionFactory dbConnectionFactory
                                             total_token_count as TotalTokenCount,
                                             sequence_number as SequenceNumber,
                                             sources_json as SourcesJson,
+                                            attachment_file_key as AttachmentFileKey,
+                                            attachment_content_type as AttachmentContentType,
+                                            attachment_file_size_in_bytes as AttachmentFileSizeInBytes,
                                             created_at as CreatedAt,
                                             edited_at as EditedAt
                                           FROM messages
@@ -53,6 +56,9 @@ internal sealed class GetMessageHandler(IDbConnectionFactory dbConnectionFactory
                                                       total_token_count as TotalTokenCount,
                                                       sequence_number as SequenceNumber,
                                                       sources_json as SourcesJson,
+                                                      attachment_file_key as AttachmentFileKey,
+                                                      attachment_content_type as AttachmentContentType,
+                                                      attachment_file_size_in_bytes as AttachmentFileSizeInBytes,
                                                       created_at as CreatedAt,
                                                       edited_at as EditedAt
                                                     FROM messages

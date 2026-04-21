@@ -1,13 +1,11 @@
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using Main.Application.Abstractions.AI;
-using Main.Application.Abstractions.Memory;
 using Main.Application.Abstractions.Services;
 using Main.Application.Abstractions.Stream;
 using Main.Infrastructure.AI.Helpers;
 using Main.Infrastructure.AI.Helpers.Interfaces;
+using Main.Infrastructure.AI.Models;
 using Main.Infrastructure.AI.Plugins;
 
 using Microsoft.Extensions.Logging;
@@ -37,12 +35,6 @@ internal sealed class NativeChatCompletionService(
 ) : INativeChatCompletionService
 {
     private static readonly TimeSpan StreamExpiration = TimeSpan.FromHours(1);
-
-    private static readonly JsonSerializerOptions MemoriesJsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-    };
 
     public Task StreamCompletionAsync(string chatId, string streamId, string modelId, string correlationId, IReadOnlyList<ChatCompletionMessage> messages,
         CancellationToken cancellationToken)
@@ -103,13 +95,13 @@ internal sealed class NativeChatCompletionService(
         {
             await InitializeStreamAsync(streamId, cancellationToken);
 
-            TokenUsage tokenUsage;
+            StreamingResult streamingResult;
 
             if (userId is not null)
             {
                 pluginUserContext.UserId = userId.Value;
 
-                tokenUsage = await StreamWithToolsAsync
+                streamingResult = await StreamWithToolsAsync
                 (
                     streamId: streamId,
                     modelId: modelId,
@@ -122,7 +114,7 @@ internal sealed class NativeChatCompletionService(
             }
             else
             {
-                tokenUsage = await StreamSimpleAsync
+                streamingResult = await StreamSimpleAsync
                 (
                     streamId: streamId,
                     modelId: modelId,
@@ -132,13 +124,30 @@ internal sealed class NativeChatCompletionService(
                 );
             }
 
+            if (streamingResult.WasCancelled)
+            {
+                if (logger.IsEnabled(LogLevel.Information))
+                    logger.LogInformation("Generation cancelled for chat {ChatId}, stream {StreamId}", chatId,
+                        streamId);
+
+                await streamPublisher.PublishStatusAsync
+                (
+                    streamId: streamId,
+                    status: StreamStatus.Done,
+                    cancellationToken: CancellationToken.None
+                );
+
+                await chatLockService.ClearCancellationAsync(streamId, CancellationToken.None);
+                return;
+            }
+
             await streamFinalizer.FinalizeAsync
             (
                 streamId: streamId,
                 chatId: chatId,
                 modelId: modelId,
                 messageContent: messageContent,
-                tokenUsage: tokenUsage,
+                tokenUsage: streamingResult.TokenUsage,
                 isAdvanced: userId is not null,
                 cancellationToken: cancellationToken
             );
@@ -147,7 +156,7 @@ internal sealed class NativeChatCompletionService(
         {
             // OpenAI SDK throws when it encounters a finish_reason it doesn't recognise.
             // This happens with OpenRouter-proxied models (e.g. Gemini MALFORMED_FUNCTION_CALL → "error").
-            // Retrying won't help — mark stream as failed and swallow so MassTransit doesn't retry.
+            // Retrying won't help — mark stream as failed and swallow, so MassTransit doesn't retry.
             logger.LogWarning(exception,
                 "Model returned an unrecognized finish reason for chat {ChatId}. The model may not support function calling.",
                 chatId);
@@ -164,7 +173,7 @@ internal sealed class NativeChatCompletionService(
         }
     }
 
-    private async Task<TokenUsage> StreamWithToolsAsync
+    private async Task<StreamingResult> StreamWithToolsAsync
     (
         string streamId,
         string modelId,
@@ -192,23 +201,6 @@ internal sealed class NativeChatCompletionService(
         );
 
         ChatHistory chatHistory = chatHistoryResult.ChatHistory;
-        IReadOnlyList<MemoryEntry> memories = chatHistoryResult.MemoryEntries;
-
-        if (memories.Count > 0)
-        {
-            string memoriesJson = JsonSerializer.Serialize
-            (
-                memories.Select(me => new { me.Content, me.MemoryCategory }),
-                MemoriesJsonOptions
-            );
-
-            await streamPublisher.PublishMemoriesAsync
-            (
-                streamId: streamId,
-                memoriesJson: memoriesJson,
-                cancellationToken: cancellationToken
-            );
-        }
 
         string openRouterId = modelRegistry.GetOpenRouterModelId(modelId);
 
@@ -245,6 +237,8 @@ internal sealed class NativeChatCompletionService(
         OpenAIChatCompletionService chatService = GetSkChatService(openRouterId);
 
         TokenUsage tokenUsage = TokenUsage.Empty;
+        int chunkCount = 0;
+        bool wasCancelled = false;
 
 #pragma warning disable S3267
         await foreach (StreamingChatMessageContent chunk in chatService.GetStreamingChatMessageContentsAsync(
@@ -264,11 +258,24 @@ internal sealed class NativeChatCompletionService(
             if (string.IsNullOrWhiteSpace(chunk.Content))
                 continue;
 
+            chunkCount++;
+
+            if (chunkCount % 10 == 0)
+            {
+                bool cancelled = await chatLockService.IsCancellationRequestedAsync(streamId, cancellationToken);
+
+                if (cancelled)
+                {
+                    wasCancelled = true;
+                    break;
+                }
+            }
+
             messageContent.Append(chunk.Content);
             await streamPublisher.PublishChunkAsync(streamId, chunk.Content, cancellationToken);
         }
 
-        if (tokenUsage == TokenUsage.Empty && messageContent.Length > 0)
+        if (!wasCancelled && tokenUsage == TokenUsage.Empty && messageContent.Length > 0)
         {
             int estimatedOutput = messageContent.Length / 4;
             tokenUsage = new TokenUsage
@@ -283,10 +290,12 @@ internal sealed class NativeChatCompletionService(
                 modelId);
         }
 
-        return tokenUsage;
+        StreamingResult result = new(tokenUsage, wasCancelled);
+
+        return result;
     }
 
-    private async Task<TokenUsage> StreamSimpleAsync
+    private async Task<StreamingResult> StreamSimpleAsync
     (
         string streamId,
         string modelId,
@@ -302,6 +311,8 @@ internal sealed class NativeChatCompletionService(
             .ToList();
 
         TokenUsage tokenUsage = TokenUsage.Empty;
+        int chunkCount = 0;
+        bool wasCancelled = false;
 
         await foreach (StreamingChatCompletionUpdate update in chatClient.CompleteChatStreamingAsync(chatMessages,
                            cancellationToken: cancellationToken))
@@ -323,13 +334,31 @@ internal sealed class NativeChatCompletionService(
                 if (string.IsNullOrWhiteSpace(chunk))
                     continue;
 
+                chunkCount++;
+
+                if (chunkCount % 10 == 0)
+                {
+                    bool cancelled = await chatLockService.IsCancellationRequestedAsync(streamId, cancellationToken);
+
+                    if (cancelled)
+                    {
+                        wasCancelled = true;
+                        break;
+                    }
+                }
+
                 messageContent.Append(chunk);
 
                 await streamPublisher.PublishChunkAsync(streamId, chunk, cancellationToken);
             }
+
+            if (wasCancelled)
+                break;
         }
 
-        return tokenUsage;
+        StreamingResult result = new(tokenUsage, wasCancelled);
+
+        return result;
     }
 
     private OpenAIChatCompletionService GetSkChatService(string openRouterId)

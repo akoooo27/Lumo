@@ -17,6 +17,9 @@ internal sealed record SharedChatMessageDto
     int SequenceNumber,
     string MessageRole,
     string MessageContent,
+    string? AttachmentFileKey,
+    string? AttachmentContentType,
+    long? AttachmentFileSizeInBytes,
     DateTimeOffset CreatedAt,
     DateTimeOffset EditedAt
 );

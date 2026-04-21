@@ -24,5 +24,7 @@ public interface IMainDbContext
 
     DbSet<Folder> Folders { get; }
 
+    DbSet<GoogleConnection> GoogleConnections { get; }
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

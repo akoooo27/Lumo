@@ -1,5 +1,6 @@
 using Contracts.IntegrationEvents.Chat;
 
+using Main.Application.Abstractions.AI;
 using Main.Application.Abstractions.Data;
 using Main.Application.Abstractions.Generators;
 using Main.Application.Abstractions.Storage;
@@ -22,6 +23,7 @@ internal sealed class SendMessageHandler(
     IMainDbContext dbContext,
     IUserContext userContext,
     IRequestContext requestContext,
+    IModelRegistry modelRegistry,
     IChatLockService chatLockService,
     IIdGenerator idGenerator,
     IStorageService storageService,
@@ -50,6 +52,14 @@ internal sealed class SendMessageHandler(
 
         if (chat is null)
             return ChatOperationFaults.NotFound;
+
+        if (request.AttachmentDto is not null)
+        {
+            ModelInfo? modelInfo = modelRegistry.GetModelInfo(chat.ModelId);
+
+            if (modelInfo is null || !modelInfo.ModelCapabilities.SupportsVision)
+                return ChatOperationFaults.AttachmentsNotSupported;
+        }
 
         bool lockAcquired = await chatLockService.TryAcquireLockAsync
         (

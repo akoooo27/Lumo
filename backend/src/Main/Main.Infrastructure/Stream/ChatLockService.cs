@@ -100,4 +100,62 @@ internal sealed class ChatLockService(
             return false;
         }
     }
+
+    public async Task RequestCancellationAsync(string streamId, CancellationToken cancellationToken)
+    {
+        string cancellationKey = $"{StreamConstants.CancelKeyPrefix}{streamId}";
+
+        IDatabase db = connectionMultiplexer.GetDatabase();
+
+        try
+        {
+            await db.StringSetAsync
+            (
+                key: cancellationKey,
+                value: "1",
+                expiry: TimeSpan.FromSeconds(60)
+            );
+
+            if (logger.IsEnabled(LogLevel.Information))
+                logger.LogInformation("Cancellation requested for streamId: {StreamId}", streamId);
+        }
+        catch (RedisException exception)
+        {
+            logger.LogError(exception, "Error requesting cancellation for streamId: {StreamId}", streamId);
+            throw;
+        }
+    }
+
+    public async Task<bool> IsCancellationRequestedAsync(string streamId, CancellationToken cancellationToken)
+    {
+        string cancellationKey = $"{StreamConstants.CancelKeyPrefix}{streamId}";
+
+        IDatabase db = connectionMultiplexer.GetDatabase();
+
+        try
+        {
+            return await db.KeyExistsAsync(cancellationKey);
+        }
+        catch (RedisException exception)
+        {
+            logger.LogError(exception, "Error checking cancellation for streamId: {StreamId}", streamId);
+            return false;
+        }
+    }
+
+    public async Task ClearCancellationAsync(string streamId, CancellationToken cancellationToken)
+    {
+        string cancellationKey = $"{StreamConstants.CancelKeyPrefix}{streamId}";
+
+        IDatabase db = connectionMultiplexer.GetDatabase();
+
+        try
+        {
+            await db.KeyDeleteAsync(cancellationKey);
+        }
+        catch (RedisException exception)
+        {
+            logger.LogError(exception, "Error clearing cancellation for streamId: {StreamId}", streamId);
+        }
+    }
 }

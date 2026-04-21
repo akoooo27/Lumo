@@ -196,6 +196,11 @@ services:
             - Tavily__MaxResults=${TAVILY_MAX_RESULTS:-5}
             - Tavily__SearchDepth=${TAVILY_SEARCH_DEPTH:-basic}
 
+            # GoogleOptions
+            - Google__ClientId=${GOOGLE_OAUTH_CLIENT_ID:?GOOGLE_OAUTH_CLIENT_ID is required}
+            - Google__ClientSecret=${GOOGLE_OAUTH_CLIENT_SECRET:?GOOGLE_OAUTH_CLIENT_SECRET is required}
+            - Google__RedirectUri=${GOOGLE_OAUTH_REDIRECT_URI:?GOOGLE_OAUTH_REDIRECT_URI is required}
+
             # RabbitMqOptions
             - RabbitMq__Host=${RABBITMQ_HOST:?RABBITMQ_HOST is required}
             - RabbitMq__Port=${RABBITMQ_PORT:?RABBITMQ_PORT is required}

@@ -20,6 +20,12 @@ public sealed record MessageReadModel
 
     public string? SourcesJson { get; init; }
 
+    public string? AttachmentFileKey { get; init; }
+
+    public string? AttachmentContentType { get; init; }
+
+    public long? AttachmentFileSizeInBytes { get; init; }
+
     public DateTimeOffset CreatedAt { get; init; }
 
     public DateTimeOffset EditedAt { get; init; }

@@ -11,4 +11,5 @@ internal static class CustomTags
     public const string EphemeralChats = "EphemeralChats";
     public const string Workflows = "Workflows";
     public const string Folders = "Folders";
+    public const string GoogleConnections = "GoogleConnections";
 }

@@ -1,15 +1,18 @@
 using System.Text;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
 using SharedKernel.Application.Authentication;
+using SharedKernel.Application.Security;
 using SharedKernel.Infrastructure.Authentication;
 using SharedKernel.Infrastructure.Caching;
 using SharedKernel.Infrastructure.Observability;
 using SharedKernel.Infrastructure.Options;
+using SharedKernel.Infrastructure.Security;
 using SharedKernel.Infrastructure.Time;
 
 namespace SharedKernel.Infrastructure;
@@ -25,13 +28,37 @@ public static class DependencyInjection
             .AddServices()
             .AddAuthenticationInternal(configuration)
             .AddOpenTelemetrySetup(configuration)
-            .AddValkeySetup(configuration);
+            .AddValkeySetup(configuration)
+            .AddDataProtectionInternal();
 
         return services;
     }
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddDataProtectionInternal(this IServiceCollection services)
+    {
+        // Development-only key persistence. Keys are stored unencrypted on the
+        // local filesystem and are per-instance. For production, keys MUST be:
+        //   1. Persisted in durable, shared storage so instances share a key ring
+        //      (e.g. PersistKeysToStackExchangeRedis using the existing Valkey
+        //      IConnectionMultiplexer, PersistKeysToAzureBlobStorage,
+        //      PersistKeysToAwsSystemsManager, etc.).
+        //   2. Encrypted at rest via ProtectKeysWith... (certificate, KMS,
+        //      Azure Key Vault).
+        // Without both, scale-out will silently fail to decrypt and key material
+        // is readable by anyone with disk access.
+        string keysPath = Path.Combine(AppContext.BaseDirectory, "dp-keys");
+
+        services.AddDataProtection()
+            .SetApplicationName("Lumo")
+            .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+
+        services.AddSingleton<IDataProtectorWrapper, DataProtectorWrapper>();
 
         return services;
     }

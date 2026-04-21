@@ -1,5 +1,4 @@
 using Main.Application.Abstractions.AI;
-using Main.Application.Abstractions.Memory;
 
 using Microsoft.SemanticKernel.ChatCompletion;
 
@@ -18,8 +17,4 @@ internal interface IChatHistoryBuilder
     );
 }
 
-internal sealed record ChatHistoryResult
-(
-    ChatHistory ChatHistory,
-    IReadOnlyList<MemoryEntry> MemoryEntries
-);
+internal sealed record ChatHistoryResult(ChatHistory ChatHistory);
